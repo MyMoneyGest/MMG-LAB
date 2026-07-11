@@ -24,6 +24,7 @@ Sans `.env` renseigné, l'app fonctionne normalement — seul le tracking d'év�
 npm run test:notifications  # routage, retrait, déduplication et configuration sonore
 npm run test:format         # masque JJ/MM/AAAA et validation des dates
 npm run test:inputs         # champs, clavier, défilement et surfaces de saisie
+npm run test:postpone       # borne du report au prochain rappel mensuel
 npx tsc --noEmit            # cohérence TypeScript de toute l'application
 npx expo export --platform android --output-dir /tmp/mmg-android-check
 ```

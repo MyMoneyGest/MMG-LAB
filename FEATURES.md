@@ -89,9 +89,14 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Saisie** : les `/` de la date précise sont ajoutés automatiquement. La fenêtre compacte
   reste défilable au-dessus du clavier et peut toujours être fermée par son bouton Annuler,
   le bouton retour Android ou un appui sur l'arrière-plan.
-- **Comment** : `postponeReminder()` revérifie la permission, replanifie la notification,
-  trace `reminder_postponed`.
-- **Où** : `src/components/report-modal.tsx`, `src/lib/actions.ts`.
+- **Limite** : un report doit être futur et ne peut jamais dépasser l'occurrence mensuelle
+  suivant le rappel courant. La fenêtre affiche cette date maximale, masque les raccourcis qui
+  la dépasseraient et refuse une date précise hors limite. La même règle est imposée dans
+  `postponeReminder()` afin qu'un autre écran ne puisse pas la contourner.
+- **Comment** : après validation de la date, `postponeReminder()` revérifie la permission,
+  replanifie la notification et trace `reminder_postponed`.
+- **Où** : `src/components/report-modal.tsx`, `src/lib/plan.ts`
+  (`postponeDateLimit`, `canPostponeReminderTo`), `src/lib/actions.ts`.
 
 ## 8. Montant différent / Retrait
 
@@ -176,4 +181,6 @@ Dernière mise à jour : 2026-07-12 (Codex).
   sombre `#2B211A`, radius généreux) et primitives (Screen, Card, Button 4 variantes, Field,
   ProgressBar, Eyebrow). Les champs sont compacts, bordés, signalent clairement le focus et
   les erreurs ; `Screen` centralise l'évitement du clavier et le défilement des formulaires.
+  `KeyboardSafeScrollView` révèle le champ dès le focus puis recalcule sa position après
+  l'animation du clavier Android, sans attendre la première frappe.
 - **Où** : `src/constants/theme.ts`, `src/components/ui.tsx`.

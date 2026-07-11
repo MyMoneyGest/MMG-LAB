@@ -3,7 +3,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -11,9 +10,10 @@ import {
 
 import { colors, radius } from '@/constants/theme';
 import { postponeReminder } from '@/lib/actions';
-import { formatDateInput, formatDayMonth, parseDateInput } from '@/lib/format';
+import { formatDate, formatDateInput, formatDayMonth, parseDateInput } from '@/lib/format';
+import { canPostponeReminderTo, postponeDateLimit } from '@/lib/plan';
 import { Goal } from '@/lib/types';
-import { Button, Field } from './ui';
+import { Button, Field, KeyboardSafeScrollView } from './ui';
 
 // Report du rappel : « Quand te le rappeler ? » — Demain / 3 jours / 7 jours
 // ou date précise. Échoue proprement si la permission de notification manque.
@@ -35,6 +35,8 @@ export function ReportModal({
 }) {
   const [dateText, setDateText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const latestDate = postponeDateLimit(goal);
+  const dateLimitError = `Choisis une date au plus tard le ${formatDate(latestDate)}, sans dépasser le rappel mensuel suivant.`;
 
   useEffect(() => {
     if (visible) {
@@ -44,9 +46,13 @@ export function ReportModal({
   }, [visible]);
 
   const apply = async (date: Date) => {
+    if (!canPostponeReminderTo(goal, date)) {
+      setError(dateLimitError);
+      return;
+    }
     const result = await postponeReminder(goal, date, isTestAction ? 'test_notification' : 'app');
     if (!result.ok) {
-      setError(PERMISSION_ERROR);
+      setError(result.reason === 'permission' ? PERMISSION_ERROR : dateLimitError);
       return;
     }
     onDone();
@@ -77,14 +83,14 @@ export function ReportModal({
     { label: 'Demain', date: inDays(1) },
     { label: 'Dans 3 jours', date: inDays(3) },
     { label: 'Dans 7 jours', date: inDays(7) },
-  ];
+  ].filter((option) => canPostponeReminderTo(goal, option.date));
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoider}
         behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView
+        <KeyboardSafeScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardDismissMode={process.env.EXPO_OS === 'ios' ? 'interactive' : 'on-drag'}
           keyboardShouldPersistTaps="handled">
@@ -92,7 +98,10 @@ export function ReportModal({
             <Pressable style={styles.sheet} onPress={() => {}}>
               <Text style={styles.eyebrow}>Report</Text>
               <Text style={styles.title}>Quand te le rappeler ?</Text>
-              <Text style={styles.subtitle}>Choisis une date qui colle à ton vrai rythme.</Text>
+              <Text style={styles.subtitle}>
+                Choisis une date sans dépasser le prochain rappel mensuel du{' '}
+                {formatDayMonth(latestDate)}.
+              </Text>
 
               {quickOptions.map((opt) => (
                 <Pressable key={opt.label} style={styles.option} onPress={() => apply(opt.date)}>
@@ -119,7 +128,7 @@ export function ReportModal({
               </View>
             </Pressable>
           </Pressable>
-        </ScrollView>
+        </KeyboardSafeScrollView>
       </KeyboardAvoidingView>
     </Modal>
   );

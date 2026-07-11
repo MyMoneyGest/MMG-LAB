@@ -9,6 +9,16 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Codex — [DÉCISION] Borne des reports de rappel
+
+Décision de Patrick après test Android : un rappel peut être reporté à une date future, mais
+jamais après l'occurrence mensuelle suivante du plan. Cette règle appartient à la logique
+métier (`src/lib/plan.ts` et `src/lib/actions.ts`), pas seulement à la fenêtre de report. Une
+future interface doit donc réutiliser `canPostponeReminderTo()` au lieu de refaire son propre
+calcul de date.
+
+---
+
 ## 2026-07-12 — Codex — [DÉCISION] Tests avant annonce de disponibilité
 
 Clarification de Patrick : Claude Code et Codex doivent exécuter eux-mêmes les tests

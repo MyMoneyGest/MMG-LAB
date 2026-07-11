@@ -3,7 +3,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -11,7 +10,7 @@ import {
 
 import { colors, radius } from '@/constants/theme';
 import { formatEuro, parseAmountInput } from '@/lib/format';
-import { Button, Field } from './ui';
+import { Button, Field, KeyboardSafeScrollView } from './ui';
 
 export function AmountModal({
   visible,
@@ -59,7 +58,7 @@ export function AmountModal({
       <KeyboardAvoidingView
         style={styles.keyboardAvoider}
         behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView
+        <KeyboardSafeScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardDismissMode={process.env.EXPO_OS === 'ios' ? 'interactive' : 'on-drag'}
           keyboardShouldPersistTaps="handled">
@@ -85,7 +84,7 @@ export function AmountModal({
               </View>
             </Pressable>
           </Pressable>
-        </ScrollView>
+        </KeyboardSafeScrollView>
       </KeyboardAvoidingView>
     </Modal>
   );

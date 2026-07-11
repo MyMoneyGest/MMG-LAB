@@ -11,6 +11,8 @@ const newGoal = read('src/app/onboarding/new-goal.tsx');
 
 assert.match(ui, /<KeyboardAvoidingView/);
 assert.match(ui, /keyboardDismissMode=/);
+assert.match(ui, /scrollResponderScrollNativeHandleToKeyboard/);
+assert.match(ui, /revealFocusedField\(event\.nativeEvent\.target\)/);
 assert.match(ui, /fieldWrapFocused/);
 assert.match(ui, /Boolean\(error\) && styles\.fieldWrapError/);
 
@@ -19,13 +21,16 @@ for (const [name, source] of [
   ['report-modal', reportModal],
 ]) {
   assert.match(source, /<KeyboardAvoidingView/, `${name} doit éviter le clavier`);
-  assert.match(source, /<ScrollView/, `${name} doit rester défilable avec le clavier`);
+  assert.match(source, /<KeyboardSafeScrollView/, `${name} doit rester défilable avec le clavier`);
   assert.match(
     source,
     /style={styles\.backdrop} onPress={onClose}/,
     `${name} doit rester fermable par appui sur l'arrière-plan`,
   );
 }
+
+assert.match(reportModal, /canPostponeReminderTo\(goal, date\)/);
+assert.match(reportModal, /\.filter\(\(option\) => canPostponeReminderTo\(goal, option\.date\)\)/);
 
 for (const [name, source] of [
   ['new-goal', newGoal],

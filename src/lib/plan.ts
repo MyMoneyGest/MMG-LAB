@@ -106,6 +106,19 @@ export function nextReminderAfter(from: Date, reminderDay: number): Date {
   return d;
 }
 
+/** Dernière date de report autorisée : l'occurrence mensuelle suivant le rappel courant. */
+export function postponeDateLimit(goal: Goal, now: Date = new Date()): Date {
+  const currentReminder = new Date(goal.nextReminderAt);
+  const reference = currentReminder > now ? currentReminder : now;
+  return nextReminderAfter(reference, goal.reminderDay);
+}
+
+/** Un report doit être futur et ne jamais dépasser le prochain rappel mensuel. */
+export function canPostponeReminderTo(goal: Goal, date: Date, now: Date = new Date()): boolean {
+  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
+  return at > now && at <= postponeDateLimit(goal, now);
+}
+
 /**
  * Échéance suivante après confirmation d'un versement : le versement marque
  * le mois en cours comme fait, donc prochain rappel = occurrence du jour de

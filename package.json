@@ -45,7 +45,8 @@
     "lint": "expo lint",
     "test:notifications": "node scripts/test-notifications.mjs",
     "test:format": "node scripts/test-format.mjs",
-    "test:inputs": "node scripts/test-input-surfaces.mjs"
+    "test:inputs": "node scripts/test-input-surfaces.mjs",
+    "test:postpone": "node scripts/test-postpone.mjs"
   },
   "private": true
 }

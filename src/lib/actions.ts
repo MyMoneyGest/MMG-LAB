@@ -1,6 +1,7 @@
 import { track } from './analytics';
 import {
   bucketAmount,
+  canPostponeReminderTo,
   nextReminderAfter,
   reminderAfterConfirmation,
   suggestedAmount,
@@ -108,7 +109,8 @@ export async function postponeReminder(
   goal: Goal,
   date: Date,
   source: 'app' | 'test_notification' = 'app'
-): Promise<{ ok: true } | { ok: false; reason: 'permission' }> {
+): Promise<{ ok: true } | { ok: false; reason: 'permission' | 'date' }> {
+  if (!canPostponeReminderTo(goal, date)) return { ok: false, reason: 'date' };
   if (!(await hasNotificationPermission())) {
     const granted = await requestNotificationPermission();
     if (!granted) return { ok: false, reason: 'permission' };

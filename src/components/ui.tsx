@@ -1,8 +1,9 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
+  ScrollViewProps,
   StyleSheet,
   Text,
   TextInput,
@@ -14,13 +15,45 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, radius, spacing } from '@/constants/theme';
 
+const KeyboardScrollContext = createContext<(target: number) => void>(() => {});
+
+/**
+ * ScrollView qui révèle le champ dès le focus, puis une seconde fois à la fin
+ * de l'animation du clavier. Le second passage évite d'attendre la première
+ * frappe sur Android pour obtenir la bonne hauteur visible.
+ */
+export function KeyboardSafeScrollView(props: ScrollViewProps) {
+  const scrollRef = useRef<ScrollView>(null);
+  const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealFocusedField = useCallback((target: number) => {
+    const reveal = () =>
+      scrollRef.current?.scrollResponderScrollNativeHandleToKeyboard(target, 28, true);
+    requestAnimationFrame(reveal);
+    if (focusTimer.current) clearTimeout(focusTimer.current);
+    focusTimer.current = setTimeout(reveal, 320);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (focusTimer.current) clearTimeout(focusTimer.current);
+    },
+    []
+  );
+
+  return (
+    <KeyboardScrollContext.Provider value={revealFocusedField}>
+      <ScrollView {...props} ref={scrollRef} />
+    </KeyboardScrollContext.Provider>
+  );
+}
+
 export function Screen({ children }: { children: ReactNode }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoider}
         behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView
+        <KeyboardSafeScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           contentInsetAdjustmentBehavior="automatic"
@@ -29,7 +62,7 @@ export function Screen({ children }: { children: ReactNode }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           {children}
-        </ScrollView>
+        </KeyboardSafeScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -93,6 +126,7 @@ export function Field({
   ...inputProps
 }: TextInputProps & { label?: string; suffix?: string; error?: string | null }) {
   const [focused, setFocused] = useState(false);
+  const revealFocusedField = useContext(KeyboardScrollContext);
   return (
     <View style={styles.field}>
       {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
@@ -108,6 +142,7 @@ export function Field({
           style={[styles.fieldInput, style]}
           onFocus={(event) => {
             setFocused(true);
+            revealFocusedField(event.nativeEvent.target);
             onFocus?.(event);
           }}
           onBlur={(event) => {

@@ -9,6 +9,30 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 4 : correctifs après confirmation du lot saisie
+
+### Fait
+- Corrigé la remontée tardive des formulaires : la primitive `Field` demande désormais à son
+  conteneur défilable de la révéler dès le focus, puis une seconde fois après l'animation du
+  clavier Android. Le texte n'a plus besoin d'une première frappe pour devenir visible.
+- Borné le report au rappel mensuel suivant. Les raccourcis hors limite disparaissent, la
+  fenêtre annonce la date maximale et une date précise trop tardive produit une erreur claire.
+- Placé la validation dans `src/lib/plan.ts` et `postponeReminder()` : la règle ne peut pas être
+  contournée par un autre point d'entrée ou une future interface.
+- Ajouté `npm run test:postpone` et renforcé `npm run test:inputs`. Les tests ciblés et le
+  contrôle TypeScript passent.
+- Passe complète réussie : tests format, saisie, report et notifications, `npx tsc --noEmit`,
+  `git diff --check` et export Android Metro (1 361 modules, bundle Hermes sans erreur).
+
+### En cours
+- Aucun code partiellement implémenté. Confirmation native Android en attente après le push.
+
+### Ensuite
+- Confirmation Android par Patrick des deux comportements corrigés.
+- Puis chantier 2 : bloc de progression du projet.
+
+---
+
 ## 2026-07-12 — Codex — Session 3 : chantier 2, lot « saisie »
 
 ### Fait
