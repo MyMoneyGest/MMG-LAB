@@ -17,12 +17,15 @@ ce qui vient ensuite.
   un nom personnalisé est conservé. La catégorie « Autre » vide le champ.
 - Documentation de la fonctionnalité mise à jour dans `FEATURES.md`.
 - Vérifications réussies : `npx tsc --noEmit` et `git diff --check`.
+- Item 1.2 commit et push effectués : `708ca80`.
+- **Chantier 1.4 — Plan actif en premier** : le menu construit désormais une liste d'affichage
+  avec le projet courant en tête, sans muter ni réordonner les données persistées.
 
 ### En cours
-- Aucun item partiellement implémenté : préparation du commit et du push de l'item 1.2.
+- Aucun item partiellement implémenté : vérification de l'item 1.4 avant commit et push.
 
 ### Ensuite
-- **Chantier 1.4 — Plan actif en premier** dans `src/components/menu-modal.tsx`.
+- **Chantier 1.5 — Confidentialité et CGU enrichies** dans `src/app/legal.tsx`.
 
 ---
 

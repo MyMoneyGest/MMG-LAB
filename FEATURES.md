@@ -102,7 +102,8 @@ Dernière mise à jour : 2026-07-11 (Codex).
 
 - **Quoi** : accessible depuis tous les écrans — liste « Mes projets » (nom, % atteint,
   restants, badge Actif, Supprimer avec confirmation), puis Nouveau projet, Accueil,
-  Ajuster ce plan, Voir un exemple, Ajuster mon budget, Confidentialité et CGU.
+  Ajuster ce plan, Voir un exemple, Ajuster mon budget, Confidentialité et CGU. Le projet
+  actuellement consulté est toujours présenté en tête de liste, sans modifier l'ordre stocké.
 - **Où** : `src/components/menu-modal.tsx`, ouvert par `src/components/app-header.tsx`.
 
 ## 11. Exemple et pages légales

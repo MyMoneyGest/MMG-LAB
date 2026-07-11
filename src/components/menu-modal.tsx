@@ -21,6 +21,10 @@ export function MenuModal({
 }) {
   const router = useRouter();
   const goals = useStore((s) => s.goals);
+  const activeGoal = currentGoalId ? goals.find((goal) => goal.id === currentGoalId) : undefined;
+  const orderedGoals = activeGoal
+    ? [activeGoal, ...goals.filter((goal) => goal.id !== activeGoal.id)]
+    : goals;
 
   const go = (fn: () => void) => {
     onClose();
@@ -53,7 +57,7 @@ export function MenuModal({
             <Text style={styles.eyebrow}>Menu</Text>
             <Text style={styles.title}>Mes projets</Text>
 
-            {goals.map((g) => {
+            {orderedGoals.map((g) => {
               const active = g.id === currentGoalId;
               return (
                 <Pressable
