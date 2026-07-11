@@ -9,6 +9,34 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 2 : correctifs après test Android
+
+### Fait
+- Corrigé l'erreur native `Custom sound 'default' not found` : aucune chaîne de son
+  personnalisé n'est désormais envoyée et le canal de test passe à `reminder_tests_v2` pour
+  ne pas réutiliser la configuration immuable de l'ancien canal Android.
+- Toute interaction avec une notification (tap simple, Fait, Modifier ou Reporter) appelle
+  maintenant `dismissNotificationAsync()` avant d'ouvrir le projet ciblé.
+- À l'ouverture normale de MMG, les notifications encore présentées sont récupérées avec
+  `getPresentedNotificationsAsync()`, retirées du tiroir et transformées en une fenêtre globale
+  Fait / Modifier / Reporter / Ignorer. Le même traitement s'applique au premier plan.
+- Ajout d'un modèle pur et testable (`notification-model.ts`) : extraction du projet, routage
+  des actions, déduplication, file d'attente et retrait via un adaptateur.
+- Ajout de `npm run test:notifications`. Contrôles Codex réussis : tests notifications,
+  `npx tsc --noEmit`, `git diff --check` et export complet du bundle Android par Metro
+  (1 361 modules, bundle Hermes généré sans erreur).
+- Confirmation Android par Patrick réussie sur les trois scénarios : absence d'erreur au test,
+  disparition après interaction, ouverture normale avec fenêtre d'actions.
+
+### En cours
+- Correctif validé et prêt pour commit/push.
+
+### Ensuite
+- Reprendre le chantier 2, lot « saisie » : zones de saisie, masque JJ/MM/AAAA et protection
+  contre le clavier.
+
+---
+
 ## 2026-07-11 — Codex — Session 1 : chantier 1 démarré
 
 ### Fait

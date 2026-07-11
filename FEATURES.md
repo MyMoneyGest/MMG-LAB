@@ -4,7 +4,7 @@ Description technique de toutes les fonctionnalités : ce qu'elles font, comment
 fonctionnent, où elles vivent dans le code. **Mis à jour à chaque fonctionnalité ajoutée ou
 modifiée**, pas après coup.
 
-Dernière mise à jour : 2026-07-11 (Codex).
+Dernière mise à jour : 2026-07-12 (Codex).
 
 ---
 
@@ -106,15 +106,25 @@ Dernière mise à jour : 2026-07-11 (Codex).
   15 secondes pour le projet affiché (ou le dernier projet actif). Une confirmation immédiate
   indique quel projet sera utilisé. Sur Android, il faut déplier la notification pour voir les
   trois actions. Une seule notification de test reste programmée à la fois.
+- **Ouverture normale de l'app** : si un rappel est encore dans le tiroir Android, MMG le retire
+  puis affiche une fenêtre compacte au-dessus de l'écran courant avec **Fait**, **Modifier**,
+  **Reporter** et **Ignorer pour le moment**. Plusieurs rappels sont mis en file sans doublon.
+  Un rappel reçu pendant que l'app est déjà ouverte utilise la même fenêtre.
+- **Nettoyage système** : un tap simple ou une action effectuée directement depuis la
+  notification retire explicitement celle-ci du tiroir avant le routage vers le projet.
 - **Comment** : `scheduleGoalReminder()` (trigger DATE, channel Android `reminders`) et
-  `scheduleTestReminder()` (trigger TIME_INTERVAL, channel `reminder_tests`) utilisent la
+  `scheduleTestReminder()` (trigger TIME_INTERVAL, channel `reminder_tests_v2`) utilisent la
   catégorie `mmg_reminder_actions`. `addReminderOpenListener()` déduplique les réponses,
-  efface la dernière réponse native après traitement et route vers `/goal/[id]` à chaud comme
-  à froid. L'écran projet attend l'hydratation du store avant de décider qu'un projet manque.
-  Les ouvertures et gestes issus du test ne sont pas envoyés à Supabase.
+  retire la notification, efface la dernière réponse native après traitement et route vers
+  `/goal/[id]` à chaud comme à froid. `takePresentedReminders()` inspecte les notifications
+  présentes à l'ouverture. L'écran projet attend l'hydratation du store avant de décider qu'un
+  projet manque. Les ouvertures et gestes issus du test ne sont pas envoyés à Supabase.
+  Aucun son personnalisé n'est déclaré : cela évite qu'Android interprète `default` comme un
+  fichier absent du binaire.
   ⚠️ expo-notifications est chargé **paresseusement** : indisponible sur web et Expo Go
   Android (crash à l'import sinon) — support complet sur iOS Expo Go et dev builds.
 - **Où** : `src/lib/notifications.ts` (unique point d'accès au module), `src/app/_layout.tsx`,
+  `src/lib/notification-model.ts`, `src/components/pending-reminder-modal.tsx`,
   `src/components/app-header.tsx`, `src/app/goal/[id].tsx`.
 
 ## 10. Menu / switcher de projets (⋯)

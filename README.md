@@ -18,6 +18,17 @@ npx expo start         # i = iOS (Expo Go), a = Android, w = web
 
 Sans `.env` renseigné, l'app fonctionne normalement — seul le tracking d'événements est désactivé.
 
+## Vérifications avant livraison
+
+```bash
+npm run test:notifications  # routage, retrait, déduplication et configuration sonore
+npx tsc --noEmit            # cohérence TypeScript de toute l'application
+npx expo export --platform android --output-dir /tmp/mmg-android-check
+```
+
+Ces contrôles sont exécutés par l'IA avant qu'une modification soit annoncée comme prête. Le
+test sur téléphone sert ensuite de confirmation du comportement natif Android.
+
 ## Architecture
 
 - `src/app/` — écrans (expo-router, deep-linkables). `index.tsx` fait l'aiguillage d'ouverture :

@@ -2,6 +2,12 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
 import { formatEuro } from './format';
+import {
+  createReminderInbox,
+  REMINDER_ACTION_IDENTIFIERS,
+  reminderActionFromIdentifier,
+} from './notification-model';
+import type { PendingReminder, ReminderNotificationAction } from './notification-model';
 import { Goal } from './types';
 
 // Un rappel local par objectif actif, programmé à sa date d'échéance (9h),
@@ -27,11 +33,10 @@ function getNotifications(): NotificationsModule | null {
   if (!cachedModule) {
     cachedModule = require('expo-notifications') as NotificationsModule;
     cachedModule.setNotificationHandler({
-      handleNotification: async (notification) => ({
+      handleNotification: async () => ({
         shouldShowBanner: true,
         shouldShowList: true,
-        // Le test doit rester visible même si l'app est encore au premier plan.
-        shouldPlaySound: notification.request.content.data?.isTest === true,
+        shouldPlaySound: false,
         shouldSetBadge: false,
       }),
     });
@@ -40,16 +45,11 @@ function getNotifications(): NotificationsModule | null {
 }
 
 const CHANNEL_ID = 'reminders';
-const TEST_CHANNEL_ID = 'reminder_tests';
+const TEST_CHANNEL_ID = 'reminder_tests_v2';
 const ACTION_CATEGORY_ID = 'mmg_reminder_actions';
 
-const ACTION_DONE = 'done';
-const ACTION_EDIT = 'edit';
-const ACTION_POSTPONE = 'postpone';
-
-export type ReminderNotificationAction = 'open' | 'done' | 'edit' | 'postpone';
-
 export interface ReminderNotificationResponse {
+  notificationId: string;
   goalId: string;
   responseKey: string;
   action: ReminderNotificationAction;
@@ -62,6 +62,7 @@ export type TestReminderResult =
 
 let lastTestNotificationId: string | null = null;
 const deliveredResponseKeys = new Set<string>();
+const reminderInbox = createReminderInbox();
 
 async function ensureAndroidChannel(N: NotificationsModule): Promise<void> {
   if (Platform.OS !== 'android') return;
@@ -76,14 +77,13 @@ async function ensureAndroidTestChannel(N: NotificationsModule): Promise<void> {
   await N.setNotificationChannelAsync(TEST_CHANNEL_ID, {
     name: 'Tests de rappels',
     importance: N.AndroidImportance.HIGH,
-    sound: 'default',
   });
 }
 
 async function ensureReminderActions(N: NotificationsModule): Promise<void> {
   await N.setNotificationCategoryAsync(ACTION_CATEGORY_ID, [
     {
-      identifier: ACTION_DONE,
+      identifier: REMINDER_ACTION_IDENTIFIERS.done,
       buttonTitle: 'Fait',
       options: {
         opensAppToForeground: true,
@@ -92,7 +92,7 @@ async function ensureReminderActions(N: NotificationsModule): Promise<void> {
       },
     },
     {
-      identifier: ACTION_EDIT,
+      identifier: REMINDER_ACTION_IDENTIFIERS.edit,
       buttonTitle: 'Modifier',
       options: {
         opensAppToForeground: true,
@@ -101,7 +101,7 @@ async function ensureReminderActions(N: NotificationsModule): Promise<void> {
       },
     },
     {
-      identifier: ACTION_POSTPONE,
+      identifier: REMINDER_ACTION_IDENTIFIERS.postpone,
       buttonTitle: 'Reporter',
       options: {
         opensAppToForeground: true,
@@ -195,7 +195,6 @@ export async function scheduleTestReminder(
         body: `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`,
         data: { goalId: goal.id, url: `mmg://goal/${goal.id}`, isTest: true },
         categoryIdentifier: ACTION_CATEGORY_ID,
-        sound: 'default',
       },
       trigger: {
         type: N.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -207,6 +206,45 @@ export async function scheduleTestReminder(
   } catch {
     return { ok: false, reason: 'error' };
   }
+}
+
+/** Retire du tiroir système les rappels MMG déjà présentés et les retourne à l'interface. */
+export async function takePresentedReminders(): Promise<PendingReminder[]> {
+  const N = getNotifications();
+  if (!N) return [];
+  try {
+    const notifications = await N.getPresentedNotificationsAsync();
+    const reminders = await Promise.all(
+      [...notifications]
+        .sort((a, b) => a.date - b.date)
+        .map((notification) =>
+          reminderInbox.consume(notification, (notificationId) =>
+            N.dismissNotificationAsync(notificationId).catch(() => {})
+          )
+        )
+    );
+    return reminders.filter((reminder): reminder is PendingReminder => reminder !== null);
+  } catch {
+    return [];
+  }
+}
+
+/** Capte aussi un rappel reçu pendant que l'application reste au premier plan. */
+export function addReminderReceivedListener(
+  onReceived: (reminder: PendingReminder) => void
+): () => void {
+  const N = getNotifications();
+  if (!N) return () => {};
+  const subscription = N.addNotificationReceivedListener((notification) => {
+    void reminderInbox
+      .consume(notification, (notificationId) =>
+        N.dismissNotificationAsync(notificationId).catch(() => {})
+      )
+      .then((reminder) => {
+        if (reminder) onReceived(reminder);
+      });
+  });
+  return () => subscription.remove();
 }
 
 export async function cancelGoalReminder(goal: Goal): Promise<void> {
@@ -226,32 +264,26 @@ export function addReminderOpenListener(
   const N = getNotifications();
   if (!N) return () => {};
 
-  const handle = (response: import('expo-notifications').NotificationResponse) => {
-    const goalId = response.notification.request.content.data?.goalId as string | undefined;
-    if (!goalId) return;
-    const action: ReminderNotificationAction =
-      response.actionIdentifier === ACTION_DONE
-        ? 'done'
-        : response.actionIdentifier === ACTION_EDIT
-          ? 'edit'
-          : response.actionIdentifier === ACTION_POSTPONE
-            ? 'postpone'
-            : 'open';
+  const handle = async (response: import('expo-notifications').NotificationResponse) => {
     const responseKey = `${response.notification.request.identifier}:${response.actionIdentifier}`;
     if (deliveredResponseKeys.has(responseKey)) return;
     deliveredResponseKeys.add(responseKey);
+    const pending = await reminderInbox.dismissResponse(response.notification, (notificationId) =>
+      N.dismissNotificationAsync(notificationId).catch(() => {})
+    );
+    if (!pending) return;
+    const action = reminderActionFromIdentifier(response.actionIdentifier);
     onOpen({
-      goalId,
+      ...pending,
       responseKey,
       action,
-      isTest: response.notification.request.content.data?.isTest === true,
     });
-    N.clearLastNotificationResponseAsync().catch(() => {});
+    await N.clearLastNotificationResponseAsync().catch(() => {});
   };
 
   // Ouverture à froid depuis une notification.
   N.getLastNotificationResponseAsync().then((response) => {
-    if (response) handle(response);
+    if (response) void handle(response);
   });
   const subscription = N.addNotificationResponseReceivedListener(handle);
   return () => subscription.remove();

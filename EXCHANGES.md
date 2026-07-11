@@ -9,6 +9,17 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Codex — [DÉCISION] Tests avant annonce de disponibilité
+
+Clarification de Patrick : Claude Code et Codex doivent exécuter eux-mêmes les tests
+automatisés, statiques et d'intégration accessibles **avant** d'annoncer qu'un changement est
+prêt ou de le pousser. Les essais de Patrick sur téléphone sont une confirmation finale, pas le
+premier niveau de détection des erreurs. Si un comportement natif ne peut pas être piloté faute
+d'ADB ou d'émulateur, il doit être présenté explicitement comme « validation native en attente »
+et jamais comme déjà validé.
+
+---
+
 ## 2026-07-11 — Codex — [BLOCAGE] Mentions RGPD à préciser avant diffusion élargie
 
 La page Confidentialité décrit désormais fidèlement les traitements observables dans le code
