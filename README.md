@@ -1,56 +1,54 @@
-# Welcome to your Expo app 👋
+# MMG — MyMoneyGest
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App d'épargne de projet **100 % manuelle** : budget → capacité d'épargne → plan réaliste →
+versements manuels confirmés → encouragements. Ce n'est pas une banque, elle n'est pas connectée
+à ta banque, pas de compte à créer. Le tout-manuel est la méthode (référence YNAB), pas une
+contrainte technique.
 
-## Get started
+Reconstruction complète après perte du code d'origine — les décisions produit de référence sont
+dans `../brief-reconstruction-mmg.md`.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Démarrage
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env   # puis renseigner EXPO_PUBLIC_SUPABASE_ANON_KEY
+npx expo start         # i = iOS (Expo Go), a = Android, w = web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Sans `.env` renseigné, l'app fonctionne normalement — seul le tracking d'événements est désactivé.
 
-### Other setup steps
+## Architecture
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- `src/app/` — écrans (expo-router, deep-linkables). `index.tsx` fait l'aiguillage d'ouverture :
+  projet avec versement dû/en retard (le plus urgent d'abord) → sinon dernier projet consulté.
+- `src/lib/plan.ts` — logique pure du plan : capacité prudente (reste à vivre − marge 20 %),
+  montant conseillé (restant lissé sur les mois restants), recalcul non-punitif après tout
+  versement (n'importe quel montant marque le mois comme fait).
+- `src/lib/notifications.ts` — un rappel local par objectif à son échéance (9h), montant conseillé
+  dans le message, deep link `mmg://goal/[id]`. Permission demandée uniquement à la création du
+  premier objectif. Inactif sur web.
+- `src/lib/analytics.ts` — insertion d'événements dans la table Supabase `events`
+  (tracking de rétention uniquement, aucune donnée utilisateur) : `app_open`, `goal_created`,
+  `contribution_logged` (montants bucketisés), `reminder_opened`, `reminder_postponed`,
+  `goal_deleted`.
+- `src/lib/store.ts` — état persistant local (zustand + AsyncStorage), seule source de vérité
+  des données utilisateur.
 
-## Learn more
+## Boucle de rétention (priorité n°1)
 
-To learn more about developing your project with Expo, look at the following resources:
+Notification locale → deep link vers le bon projet → **confirmation du versement en un tap**
+(« Versement fait (X €) ») → écran sombre de confirmation → rappel suivant reprogrammé.
+C'est cette boucle qui conditionne la validité du test de rétention au 3e rappel.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Builds
 
-## Join the community
+- **Android (APK, lien direct)** : `eas build --profile preview --platform android`
+- **Dev build Android** : `eas build --profile development --platform android`
+- **iOS (TestFlight)** : `eas build --profile production --platform ios` puis `eas submit`
+- Compte Expo : `mymoneygest` (projet historique : `mmg-france-expo-go-lab`).
 
-Join our community of developers creating universal apps.
+## Suivi de rétention
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Requêtes SQL directes dans Supabase (projet MMG-LAB, ref `ffoxlogtnstbagxitein`), pas de
+dashboard. Seuils de décision et protocole : voir le brief, section 5.

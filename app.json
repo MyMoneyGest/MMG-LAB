@@ -1,18 +1,20 @@
 {
   "expo": {
-    "name": "mmg-app",
-    "slug": "mmg-app",
+    "name": "MMG",
+    "slug": "mmg-france-expo-go-lab",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mmgapp",
-    "userInterfaceStyle": "automatic",
+    "scheme": "mmg",
+    "userInterfaceStyle": "light",
     "ios": {
+      "bundleIdentifier": "com.mymoneygest.mmglab",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.mymoneygest.mmglab",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#B5432A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -28,9 +30,15 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F4EFE6",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#B5432A"
         }
       ]
     ],
