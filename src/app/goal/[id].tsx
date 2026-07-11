@@ -9,6 +9,7 @@ import { ReportModal } from '@/components/report-modal';
 import { Button, Card, Eyebrow, ProgressBar, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { confirmContribution, withdraw } from '@/lib/actions';
+import type { ContributionSource } from '@/lib/actions';
 import { formatDate, formatEuro } from '@/lib/format';
 import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
 import {
@@ -30,14 +31,23 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'history', label: 'Historique' },
 ];
 
+const handledNotificationActions = new Set<string>();
+
 export default function GoalScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, notificationAction, notificationIsTest, responseKey } = useLocalSearchParams<{
+    id: string;
+    notificationAction?: 'done' | 'edit' | 'postpone';
+    notificationIsTest?: string;
+    responseKey?: string;
+  }>();
   const goal = useStore((s) => s.goals.find((g) => g.id === id));
   const setLastViewed = useStore((s) => s.setLastViewed);
+  const [hydrated, setHydrated] = useState(useStore.persist.hasHydrated());
 
   const [tab, setTab] = useState<Tab>('today');
   const [amountModal, setAmountModal] = useState<'deposit' | 'withdrawal' | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [modalFromTest, setModalFromTest] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
   const [confirmation, setConfirmation] = useState<{
     amount: number;
@@ -45,6 +55,15 @@ export default function GoalScreen() {
     nextAmount?: number;
     done: boolean;
   } | null>(null);
+
+  useEffect(() => {
+    if (hydrated) return;
+    if (useStore.persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    return useStore.persist.onFinishHydration(() => setHydrated(true));
+  }, [hydrated]);
 
   useEffect(() => {
     if (goal) setLastViewed(goal.id);
@@ -55,16 +74,8 @@ export default function GoalScreen() {
     hasNotificationPermission().then((granted) => setNotifBlocked(!granted));
   }, []);
 
-  if (!goal) return <Redirect href="/" />;
-
-  const saved = savedTotal(goal);
-  const remaining = remainingAmount(goal);
-  const pct = progressPct(goal);
-  const suggested = suggestedAmount(goal);
-  const reached = remaining <= 0;
-  const pending = hasPendingAction(goal);
-
-  const confirm = async (amount: number, source: 'one_tap' | 'custom_amount') => {
+  const confirm = async (amount: number, source: ContributionSource) => {
+    if (!goal) return;
     setAmountModal(null);
     await confirmContribution(goal, amount, source);
     const updated = useStore.getState().goals.find((g) => g.id === goal.id);
@@ -75,6 +86,37 @@ export default function GoalScreen() {
       done: updated ? remainingAmount(updated) <= 0 : false,
     });
   };
+
+  useEffect(() => {
+    if (!goal || !notificationAction) return;
+    const actionKey = responseKey ?? `${goal.id}:${notificationAction}:${notificationIsTest ?? '0'}`;
+    if (handledNotificationActions.has(actionKey)) return;
+    handledNotificationActions.add(actionKey);
+    setTab('today');
+
+    if (notificationAction === 'edit') {
+      setModalFromTest(notificationIsTest === '1');
+      setAmountModal('deposit');
+    } else if (notificationAction === 'postpone') {
+      setModalFromTest(notificationIsTest === '1');
+      setReportOpen(true);
+    } else {
+      const amount = suggestedAmount(goal);
+      if (amount > 0) {
+        void confirm(amount, notificationIsTest === '1' ? 'test_notification' : 'one_tap');
+      }
+    }
+  }, [goal?.id, notificationAction, notificationIsTest, responseKey]);
+
+  if (!hydrated) return null;
+  if (!goal) return <Redirect href="/" />;
+
+  const saved = savedTotal(goal);
+  const remaining = remainingAmount(goal);
+  const pct = progressPct(goal);
+  const suggested = suggestedAmount(goal);
+  const reached = remaining <= 0;
+  const pending = hasPendingAction(goal);
 
   return (
     <Screen>
@@ -144,13 +186,19 @@ export default function GoalScreen() {
                   <Button
                     label="Montant différent"
                     variant="secondary"
-                    onPress={() => setAmountModal('deposit')}
+                    onPress={() => {
+                      setModalFromTest(false);
+                      setAmountModal('deposit');
+                    }}
                     style={{ flex: 1 }}
                   />
                   <Button
                     label="Reporter"
                     variant="secondary"
-                    onPress={() => setReportOpen(true)}
+                    onPress={() => {
+                      setModalFromTest(false);
+                      setReportOpen(true);
+                    }}
                     style={{ flex: 1 }}
                   />
                 </View>
@@ -224,8 +272,15 @@ export default function GoalScreen() {
         title="Montant différent"
         subtitle="N'importe quel montant compte : le plan s'ajustera."
         confirmLabel="Valider"
-        onConfirm={(amount) => confirm(amount, 'custom_amount')}
-        onClose={() => setAmountModal(null)}
+        onConfirm={(amount) => {
+          const source = modalFromTest ? 'test_notification' : 'custom_amount';
+          setModalFromTest(false);
+          confirm(amount, source);
+        }}
+        onClose={() => {
+          setModalFromTest(false);
+          setAmountModal(null);
+        }}
       />
       <AmountModal
         visible={amountModal === 'withdrawal'}
@@ -242,8 +297,15 @@ export default function GoalScreen() {
       <ReportModal
         visible={reportOpen}
         goal={goal}
-        onClose={() => setReportOpen(false)}
-        onDone={() => setReportOpen(false)}
+        isTestAction={modalFromTest}
+        onClose={() => {
+          setModalFromTest(false);
+          setReportOpen(false);
+        }}
+        onDone={() => {
+          setModalFromTest(false);
+          setReportOpen(false);
+        }}
       />
       <ConfirmationOverlay
         visible={confirmation !== null}

@@ -1,6 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { colors } from '@/constants/theme';
 import { track } from '@/lib/analytics';
@@ -9,7 +9,6 @@ import { useStore } from '@/lib/store';
 
 export default function RootLayout() {
   const router = useRouter();
-  const handledResponse = useRef<string | null>(null);
 
   // app_open : après hydratation du store pour tracer avec le bon install_id.
   useEffect(() => {
@@ -23,11 +22,31 @@ export default function RootLayout() {
   // Boucle de rétention : notification → deep link vers le bon projet.
   useEffect(
     () =>
-      addReminderOpenListener((goalId, responseKey) => {
-        if (handledResponse.current === responseKey) return;
-        handledResponse.current = responseKey;
-        track('reminder_opened', { goalId, metadata: { goalId } });
-        router.push({ pathname: '/goal/[id]', params: { id: goalId, from: 'reminder' } });
+      addReminderOpenListener(({ goalId, responseKey, action, isTest }) => {
+        if (!isTest) {
+          if (useStore.persist.hasHydrated()) {
+            track('reminder_opened', { goalId, metadata: { goalId } });
+          } else {
+            const unsubscribe = useStore.persist.onFinishHydration(() => {
+              unsubscribe();
+              track('reminder_opened', { goalId, metadata: { goalId } });
+            });
+          }
+        }
+        router.push({
+          pathname: '/goal/[id]',
+          params: {
+            id: goalId,
+            from: isTest ? 'test-reminder' : 'reminder',
+            ...(action === 'open'
+              ? {}
+              : {
+                  notificationAction: action,
+                  notificationIsTest: isTest ? '1' : '0',
+                  responseKey,
+                }),
+          },
+        });
       }),
     [router]
   );

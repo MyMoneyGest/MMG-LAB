@@ -32,14 +32,30 @@ ce qui vient ensuite.
 - Compatibilité préservée : un ancien projet sans champ `rhythm` est traité comme stable.
 - Vérifications réussies : typecheck TypeScript et assertions de calcul (somme exacte,
   monotonie progressive/régressive, compatibilité ancien projet, cohérence rappel/échéancier).
+- Item 1.3 commit et push effectués : `7749ddb`.
+- **Chantier 1.1 — Test des notifications interactives** : appui long (700 ms) sur le M,
+  programmation à 15 secondes, actions Fait / Modifier / Reporter, sélection du projet actif,
+  feedback en cas d'absence de projet, permission, plateforme non supportée ou erreur.
+- Routage à chaud et à froid vers le projet porté par la notification : Fait réutilise la
+  confirmation en un tap ; Modifier ouvre la saisie du montant ; Reporter ouvre la fenêtre de
+  report. L'écran projet attend maintenant les données persistées avant une redirection.
+- Les rappels de test et tous les gestes issus de leurs actions sont exclus de Supabase pour ne
+  pas polluer les mesures de rétention. Les rappels mensuels réels bénéficient aussi des trois
+  actions et conservent leur tracking normal.
+- Vérification effectuée contre la documentation exacte Expo SDK 57 sur les catégories,
+  `actionIdentifier`, les réponses à chaud/froid et le trigger TIME_INTERVAL.
+- Vérifications locales réussies : `npx tsc --noEmit`, `git diff --check`, absence d'import
+  statique d'`expo-notifications`, export Expo web des 9 routes.
 
 ### En cours
-- Aucun item partiellement implémenté : item 1.3 prêt pour commit et push.
+- Item 1.1 prêt pour commit/push. Le comportement natif des boutons reste à valider sur le dev
+  build Android (indisponible dans Expo Go Android).
 
 ### Ensuite
-- **Chantier 1.1 — Système de test des notifications** selon la conception dans
-  `EXCHANGES.md` : appui long sur le M, rappel test à 15 secondes, actions Fait / Modifier /
-  Reporter et routage vers le bon projet.
+- Installer/ouvrir le dev build Android et exécuter les quatre scénarios : tap simple, Fait,
+  Modifier et Reporter. Une notification distincte est nécessaire pour chaque scénario.
+- Une fois la boucle native validée, passer au chantier 2, lot « saisie » (zones de saisie,
+  masque JJ/MM/AAAA, clavier qui ne masque pas le champ).
 
 ---
 

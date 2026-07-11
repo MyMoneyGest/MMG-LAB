@@ -17,11 +17,13 @@ export function ReportModal({
   goal,
   onClose,
   onDone,
+  isTestAction = false,
 }: {
   visible: boolean;
   goal: Goal;
   onClose: () => void;
   onDone: () => void;
+  isTestAction?: boolean;
 }) {
   const [dateText, setDateText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function ReportModal({
   }, [visible]);
 
   const apply = async (date: Date) => {
-    const result = await postponeReminder(goal, date);
+    const result = await postponeReminder(goal, date, isTestAction ? 'test_notification' : 'app');
     if (!result.ok) {
       setError(PERMISSION_ERROR);
       return;

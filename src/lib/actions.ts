@@ -26,6 +26,8 @@ export interface NewGoalInput {
   rhythm: SavingsRhythm;
 }
 
+export type ContributionSource = 'one_tap' | 'custom_amount' | 'test_notification';
+
 export async function createGoal(input: NewGoalInput): Promise<Goal> {
   const state = useStore.getState();
   const now = new Date();
@@ -43,7 +45,8 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
     contributions: [],
   };
 
-  // Permission demandée uniquement ici (création d'objectif), jamais à l'ouverture.
+  // Dans le parcours normal, permission demandée uniquement ici, jamais à l'ouverture.
+  // L'appui long de test est l'autre geste explicite pouvant la demander.
   if (!state.notifPermissionAsked) {
     await requestNotificationPermission();
     state.setNotifPermissionAsked();
@@ -74,7 +77,7 @@ async function reschedule(goalId: string): Promise<void> {
 export async function confirmContribution(
   goal: Goal,
   amount: number,
-  source: 'one_tap' | 'custom_amount'
+  source: ContributionSource
 ): Promise<void> {
   const state = useStore.getState();
   state.logContribution(goal.id, 'deposit', amount);
@@ -82,10 +85,13 @@ export async function confirmContribution(
     nextReminderAt: reminderAfterConfirmation(goal).toISOString(),
   });
   await reschedule(goal.id);
-  track('contribution_logged', {
-    goalId: goal.id,
-    metadata: { type: 'deposit', goalId: goal.id, amountBucket: bucketAmount(amount), source },
-  });
+  // Le test modifie bien le plan, mais n'alimente pas la mesure de rétention.
+  if (source !== 'test_notification') {
+    track('contribution_logged', {
+      goalId: goal.id,
+      metadata: { type: 'deposit', goalId: goal.id, amountBucket: bucketAmount(amount), source },
+    });
+  }
 }
 
 export async function withdraw(goal: Goal, amount: number): Promise<void> {
@@ -100,7 +106,8 @@ export async function withdraw(goal: Goal, amount: number): Promise<void> {
 /** Reporte le rappel. Échoue si la permission de notification manque. */
 export async function postponeReminder(
   goal: Goal,
-  date: Date
+  date: Date,
+  source: 'app' | 'test_notification' = 'app'
 ): Promise<{ ok: true } | { ok: false; reason: 'permission' }> {
   if (!(await hasNotificationPermission())) {
     const granted = await requestNotificationPermission();
@@ -109,7 +116,9 @@ export async function postponeReminder(
   const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
   useStore.getState().updateGoal(goal.id, { nextReminderAt: at.toISOString() });
   await reschedule(goal.id);
-  track('reminder_postponed', { goalId: goal.id, metadata: { goalId: goal.id } });
+  if (source !== 'test_notification') {
+    track('reminder_postponed', { goalId: goal.id, metadata: { goalId: goal.id } });
+  }
   return { ok: true };
 }
 

@@ -27,10 +27,11 @@ function getNotifications(): NotificationsModule | null {
   if (!cachedModule) {
     cachedModule = require('expo-notifications') as NotificationsModule;
     cachedModule.setNotificationHandler({
-      handleNotification: async () => ({
+      handleNotification: async (notification) => ({
         shouldShowBanner: true,
         shouldShowList: true,
-        shouldPlaySound: false,
+        // Le test doit rester visible même si l'app est encore au premier plan.
+        shouldPlaySound: notification.request.content.data?.isTest === true,
         shouldSetBadge: false,
       }),
     });
@@ -39,6 +40,28 @@ function getNotifications(): NotificationsModule | null {
 }
 
 const CHANNEL_ID = 'reminders';
+const TEST_CHANNEL_ID = 'reminder_tests';
+const ACTION_CATEGORY_ID = 'mmg_reminder_actions';
+
+const ACTION_DONE = 'done';
+const ACTION_EDIT = 'edit';
+const ACTION_POSTPONE = 'postpone';
+
+export type ReminderNotificationAction = 'open' | 'done' | 'edit' | 'postpone';
+
+export interface ReminderNotificationResponse {
+  goalId: string;
+  responseKey: string;
+  action: ReminderNotificationAction;
+  isTest: boolean;
+}
+
+export type TestReminderResult =
+  | { ok: true }
+  | { ok: false; reason: 'unsupported' | 'permission' | 'completed' | 'error' };
+
+let lastTestNotificationId: string | null = null;
+const deliveredResponseKeys = new Set<string>();
 
 async function ensureAndroidChannel(N: NotificationsModule): Promise<void> {
   if (Platform.OS !== 'android') return;
@@ -48,9 +71,50 @@ async function ensureAndroidChannel(N: NotificationsModule): Promise<void> {
   });
 }
 
+async function ensureAndroidTestChannel(N: NotificationsModule): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await N.setNotificationChannelAsync(TEST_CHANNEL_ID, {
+    name: 'Tests de rappels',
+    importance: N.AndroidImportance.HIGH,
+    sound: 'default',
+  });
+}
+
+async function ensureReminderActions(N: NotificationsModule): Promise<void> {
+  await N.setNotificationCategoryAsync(ACTION_CATEGORY_ID, [
+    {
+      identifier: ACTION_DONE,
+      buttonTitle: 'Fait',
+      options: {
+        opensAppToForeground: true,
+        isAuthenticationRequired: false,
+        isDestructive: false,
+      },
+    },
+    {
+      identifier: ACTION_EDIT,
+      buttonTitle: 'Modifier',
+      options: {
+        opensAppToForeground: true,
+        isAuthenticationRequired: false,
+        isDestructive: false,
+      },
+    },
+    {
+      identifier: ACTION_POSTPONE,
+      buttonTitle: 'Reporter',
+      options: {
+        opensAppToForeground: true,
+        isAuthenticationRequired: false,
+        isDestructive: false,
+      },
+    },
+  ]);
+}
+
 /**
- * Demande la permission de notification. À appeler uniquement à la création
- * du premier objectif — jamais à l'ouverture de l'app.
+ * Demande la permission de notification. À appeler à la création du premier
+ * objectif ou après une action explicite de test — jamais à l'ouverture de l'app.
  */
 export async function requestNotificationPermission(): Promise<boolean> {
   const N = getNotifications();
@@ -85,11 +149,13 @@ export async function scheduleGoalReminder(
     const when = new Date(goal.nextReminderAt);
     if (when <= new Date() || suggestedAmount <= 0) return null;
     await ensureAndroidChannel(N);
+    await ensureReminderActions(N);
     return await N.scheduleNotificationAsync({
       content: {
         title: 'MMG — ton rituel du mois',
         body: `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`,
         data: { goalId: goal.id, url: `mmg://goal/${goal.id}` },
+        categoryIdentifier: ACTION_CATEGORY_ID,
       },
       trigger: {
         type: N.SchedulableTriggerInputTypes.DATE,
@@ -102,6 +168,47 @@ export async function scheduleGoalReminder(
   }
 }
 
+/**
+ * Programme un rappel interactif 15 secondes après l'appui long sur le M.
+ * Une seule notification de test reste programmée à la fois.
+ */
+export async function scheduleTestReminder(
+  goal: Goal,
+  suggestedAmount: number
+): Promise<TestReminderResult> {
+  const N = getNotifications();
+  if (!N) return { ok: false, reason: 'unsupported' };
+  if (suggestedAmount <= 0) return { ok: false, reason: 'completed' };
+
+  try {
+    if (!(await hasNotificationPermission()) && !(await requestNotificationPermission())) {
+      return { ok: false, reason: 'permission' };
+    }
+    await ensureAndroidTestChannel(N);
+    await ensureReminderActions(N);
+    if (lastTestNotificationId) {
+      await N.cancelScheduledNotificationAsync(lastTestNotificationId).catch(() => {});
+    }
+    lastTestNotificationId = await N.scheduleNotificationAsync({
+      content: {
+        title: 'MMG — rappel test',
+        body: `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`,
+        data: { goalId: goal.id, url: `mmg://goal/${goal.id}`, isTest: true },
+        categoryIdentifier: ACTION_CATEGORY_ID,
+        sound: 'default',
+      },
+      trigger: {
+        type: N.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 15,
+        channelId: TEST_CHANNEL_ID,
+      },
+    });
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: 'error' };
+  }
+}
+
 export async function cancelGoalReminder(goal: Goal): Promise<void> {
   const N = getNotifications();
   if (!N || !goal.notificationId) return;
@@ -109,19 +216,37 @@ export async function cancelGoalReminder(goal: Goal): Promise<void> {
 }
 
 /**
- * Boucle de rétention : appelle `onOpen(goalId, responseKey)` quand l'app est
- * ouverte via une notification (à chaud comme à froid). Retourne la fonction
- * de désabonnement. `responseKey` sert à dédupliquer les ouvertures.
+ * Boucle de rétention : décrit l'action choisie quand l'app est ouverte via une
+ * notification (à chaud comme à froid). Les réponses sont dédupliquées et la
+ * dernière réponse native est effacée après traitement pour éviter sa relecture.
  */
 export function addReminderOpenListener(
-  onOpen: (goalId: string, responseKey: string) => void
+  onOpen: (response: ReminderNotificationResponse) => void
 ): () => void {
   const N = getNotifications();
   if (!N) return () => {};
 
   const handle = (response: import('expo-notifications').NotificationResponse) => {
     const goalId = response.notification.request.content.data?.goalId as string | undefined;
-    if (goalId) onOpen(goalId, response.notification.request.identifier);
+    if (!goalId) return;
+    const action: ReminderNotificationAction =
+      response.actionIdentifier === ACTION_DONE
+        ? 'done'
+        : response.actionIdentifier === ACTION_EDIT
+          ? 'edit'
+          : response.actionIdentifier === ACTION_POSTPONE
+            ? 'postpone'
+            : 'open';
+    const responseKey = `${response.notification.request.identifier}:${response.actionIdentifier}`;
+    if (deliveredResponseKeys.has(responseKey)) return;
+    deliveredResponseKeys.add(responseKey);
+    onOpen({
+      goalId,
+      responseKey,
+      action,
+      isTest: response.notification.request.content.data?.isTest === true,
+    });
+    N.clearLastNotificationResponseAsync().catch(() => {});
   };
 
   // Ouverture à froid depuis une notification.

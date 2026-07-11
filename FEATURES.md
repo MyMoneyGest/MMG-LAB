@@ -97,13 +97,25 @@ Dernière mise à jour : 2026-07-11 (Codex).
 
 - **Quoi** : un rappel local par objectif actif, à sa date d'échéance à 9h, avec le montant de
   la prochaine échéance calculé selon le rythme choisi (« Mets X € de côté pour “Nom”. Même
-  moins, c'est déjà bien. »). Le tap ouvre l'app directement sur le bon projet.
-- **Comment** : `scheduleGoalReminder()` (trigger DATE, channel Android `reminders`),
-  `data.goalId` dans la notification ; `addReminderOpenListener()` dans `_layout.tsx` route
-  vers `/goal/[id]` (à chaud et à froid) et trace `reminder_opened`.
+  moins, c'est déjà bien. »). Le tap ouvre l'app directement sur le bon projet. La notification
+  propose aussi trois actions : **Fait**, **Modifier**, **Reporter**.
+- **Actions** : Fait exécute la même confirmation en un tap et affiche l'écran de confirmation ;
+  Modifier ouvre la saisie d'un autre montant ; Reporter ouvre les choix de date. Dans les trois
+  cas, l'onglet Aujourd'hui du projet porté par `data.goalId` est ouvert.
+- **Test caché** : maintenir le **M** du logo pendant 700 ms programme un rappel test après
+  15 secondes pour le projet affiché (ou le dernier projet actif). Une confirmation immédiate
+  indique quel projet sera utilisé. Sur Android, il faut déplier la notification pour voir les
+  trois actions. Une seule notification de test reste programmée à la fois.
+- **Comment** : `scheduleGoalReminder()` (trigger DATE, channel Android `reminders`) et
+  `scheduleTestReminder()` (trigger TIME_INTERVAL, channel `reminder_tests`) utilisent la
+  catégorie `mmg_reminder_actions`. `addReminderOpenListener()` déduplique les réponses,
+  efface la dernière réponse native après traitement et route vers `/goal/[id]` à chaud comme
+  à froid. L'écran projet attend l'hydratation du store avant de décider qu'un projet manque.
+  Les ouvertures et gestes issus du test ne sont pas envoyés à Supabase.
   ⚠️ expo-notifications est chargé **paresseusement** : indisponible sur web et Expo Go
   Android (crash à l'import sinon) — support complet sur iOS Expo Go et dev builds.
-- **Où** : `src/lib/notifications.ts` (unique point d'accès au module), `src/app/_layout.tsx`.
+- **Où** : `src/lib/notifications.ts` (unique point d'accès au module), `src/app/_layout.tsx`,
+  `src/components/app-header.tsx`, `src/app/goal/[id].tsx`.
 
 ## 10. Menu / switcher de projets (⋯)
 
@@ -137,6 +149,8 @@ Dernière mise à jour : 2026-07-11 (Codex).
   `reminder_opened`, `reminder_postponed`, `goal_deleted`. Aucune donnée utilisateur.
 - **Comment** : `track()` fire-and-forget, no-op si `.env` absent. Montants bucketisés
   (`0_50`, `50_100`, `100_250`, `250_plus`). RLS « anon insert only » → jamais de `.select()`.
+  Les notifications marquées `isTest` et les gestes déclenchés depuis leurs actions sont
+  volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
 - **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.
 
 ## 14. Thème et composants UI
