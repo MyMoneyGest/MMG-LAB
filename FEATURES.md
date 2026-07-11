@@ -37,14 +37,18 @@ Dernière mise à jour : 2026-07-11 (Codex).
 
 - **Quoi** : catégorie (chips colorées : Fonds d'urgence, Voiture, Déménagement, Vacances,
   Autre), nom, montant cible, déjà disponible, date cible (JJ/MM/AAAA), jour de rappel (1-28),
-  aperçu en direct : carte « Rythme stable », récap sombre (à mettre de côté, durée, reste à
-  financer, diagnostic Confortable/Juste/Trop serré, rappel) et carte de compatibilité budget.
-  Mode édition via `?editId=` (menu « Ajuster ce plan »).
+  puis choix entre trois rythmes : **stable** (même montant), **progressif** (effort croissant)
+  et **régressif** (effort décroissant). Chaque carte affiche la moyenne et le mois-pic.
+  L'aperçu sombre indique le rythme et, si le montant varie, la première et la dernière
+  échéance. Le diagnostic de compatibilité est calculé sur le mois le plus élevé, pas sur la
+  moyenne. Mode édition via `?editId=` (menu « Ajuster ce plan »).
 - **Suggestions** : sélectionner une catégorie préremplit le nom correspondant. Changer de
   catégorie actualise un nom suggéré, sans écraser un nom personnalisé ; « Autre » vide le
   champ pour laisser l'utilisateur nommer librement son projet.
-- **Comment** : `createGoal()` orchestre : store + première demande de permission notifications
-  (uniquement ici, jamais à l'ouverture) + programmation du rappel + événement `goal_created`.
+- **Comment** : les rythmes progressif et régressif utilisent des poids linéaires bornés de
+  0,7 à 1,3, dont la moyenne vaut 1. La répartition conserve le total exact au centime.
+  `createGoal()` orchestre : store + première demande de permission notifications (uniquement
+  ici, jamais à l'ouverture) + programmation du rappel + événement `goal_created`.
 - **Où** : `src/app/onboarding/new-goal.tsx`, `src/lib/actions.ts` (`createGoal`),
   `src/components/plan-summary.tsx`.
 
@@ -54,12 +58,15 @@ Dernière mise à jour : 2026-07-11 (Codex).
   déjà mis / restants / cible) + 3 onglets :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (X €)** (1 tap), Montant différent, Reporter, Retrait.
-  - **Échéancier** : occurrences mensuelles futures jusqu'à la cible avec montant lissé.
+  - **Échéancier** : occurrences mensuelles futures jusqu'à la cible avec montants reflétant
+    le rythme stable, progressif ou régressif choisi.
   - **Historique** : versements (+vert) et retraits (−terracotta) datés.
   Bannière si permission de notification manquante (fidèle à l'ancienne app).
-- **Comment** : montant conseillé = reste à financer / mois restants (recalculé à chaque
-  affichage → absorbe les écarts, non-punitif). Un versement (peu importe le montant) marque
-  le mois comme fait : `reminderAfterConfirmation` = jour de rappel du mois suivant.
+- **Comment** : le reste à financer est redistribué sur les échéances selon le rythme choisi,
+  puis recalculé après chaque geste : les écarts sont absorbés sans pénalité. Les projets créés
+  avant l'ajout de ce réglage restent automatiquement en rythme stable (`rhythm ?? 'stable'`).
+  Un versement (peu importe le montant) marque le mois comme fait :
+  `reminderAfterConfirmation` = jour de rappel du mois suivant.
 - **Où** : `src/app/goal/[id].tsx`, `src/lib/plan.ts` (`suggestedAmount`, `upcomingSchedule`,
   `savedTotal`…), `src/lib/actions.ts` (`confirmContribution`, `withdraw`).
 
@@ -88,9 +95,9 @@ Dernière mise à jour : 2026-07-11 (Codex).
 
 ## 9. Notifications locales + deep link (boucle de rétention)
 
-- **Quoi** : un rappel local par objectif actif, à sa date d'échéance à 9h, montant conseillé
-  dans le message (« Mets X € de côté pour “Nom”. Même moins, c'est déjà bien. »). Le tap
-  ouvre l'app directement sur le bon projet.
+- **Quoi** : un rappel local par objectif actif, à sa date d'échéance à 9h, avec le montant de
+  la prochaine échéance calculé selon le rythme choisi (« Mets X € de côté pour “Nom”. Même
+  moins, c'est déjà bien. »). Le tap ouvre l'app directement sur le bon projet.
 - **Comment** : `scheduleGoalReminder()` (trigger DATE, channel Android `reminders`),
   `data.goalId` dans la notification ; `addReminderOpenListener()` dans `_layout.tsx` route
   vers `/goal/[id]` (à chaud et à froid) et trace `reminder_opened`.
@@ -116,16 +123,17 @@ Dernière mise à jour : 2026-07-11 (Codex).
 
 ## 12. Persistance locale
 
-- **Quoi** : budget, projets, versements, dernier projet consulté, installId — tout survit au
-  redémarrage, uniquement sur le téléphone.
+- **Quoi** : budget, projets (dont leur rythme), versements, dernier projet consulté,
+  installId — tout survit au redémarrage, uniquement sur le téléphone.
 - **Comment** : zustand + middleware `persist` sur AsyncStorage (`mmg-store-v1`).
   `installId` généré une fois (`install-<timestamp>-<aléa>`, format de l'ancienne app).
 - **Où** : `src/lib/store.ts`, types dans `src/lib/types.ts`.
 
 ## 13. Tracking de rétention (Supabase)
 
-- **Quoi** : événements anonymes dans la table `events` du projet MMG-LAB — `app_open`,
-  `goal_created`, `contribution_logged` (type deposit/withdrawal + bucket de montant),
+- **Quoi** : événements pseudonymisés dans la table `events` du projet MMG-LAB — `app_open`,
+  `goal_created` (catégorie générale + rythme), `contribution_logged` (type
+  deposit/withdrawal + bucket de montant),
   `reminder_opened`, `reminder_postponed`, `goal_deleted`. Aucune donnée utilisateur.
 - **Comment** : `track()` fire-and-forget, no-op si `.env` absent. Montants bucketisés
   (`0_50`, `50_100`, `100_250`, `250_plus`). RLS « anon insert only » → jamais de `.select()`.

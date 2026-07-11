@@ -8,12 +8,33 @@ import { Button, Card, Eyebrow, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { createGoal } from '@/lib/actions';
 import { formatDate, formatEuro, parseAmountInput, parseDateInput } from '@/lib/format';
-import { diagnostic, nextReminderAfter, prudentCapacity, suggestedAmount } from '@/lib/plan';
+import {
+  diagnostic,
+  nextReminderAfter,
+  plannedAmounts,
+  prudentCapacity,
+  scheduledMonths,
+  suggestedAmount,
+} from '@/lib/plan';
 import { scheduleGoalReminder } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
-import { CATEGORY_DESCRIPTIONS, CATEGORY_LABELS, GoalCategory } from '@/lib/types';
+import {
+  CATEGORY_DESCRIPTIONS,
+  CATEGORY_LABELS,
+  GoalCategory,
+  SavingsRhythm,
+} from '@/lib/types';
 
 const CATEGORIES: GoalCategory[] = ['emergency', 'car', 'moving', 'travel', 'other'];
+const RHYTHMS: {
+  key: SavingsRhythm;
+  title: string;
+  description: string;
+}[] = [
+  { key: 'stable', title: 'Stable', description: 'Le même effort chaque mois, facile à suivre.' },
+  { key: 'progressive', title: 'Progressif', description: 'Tu commences plus doucement, puis tu augmentes.' },
+  { key: 'regressive', title: 'Régressif', description: 'Tu commences plus fort, puis tu allèges l’effort.' },
+];
 
 export default function NewGoalScreen() {
   const router = useRouter();
@@ -32,6 +53,7 @@ export default function NewGoalScreen() {
   const [reminderDayText, setReminderDayText] = useState(
     String(editing?.reminderDay ?? Math.min(28, new Date().getDate()))
   );
+  const [rhythm, setRhythm] = useState<SavingsRhythm>(editing?.rhythm ?? 'stable');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -56,17 +78,28 @@ export default function NewGoalScreen() {
   const now = new Date();
   const previewValid =
     parsedTarget !== null && parsedTarget > 0 && parsedDate !== null && parsedDate > now;
-  let preview: { monthly: number; months: number } | null = null;
+  let preview: {
+    average: number;
+    first: number;
+    last: number;
+    peak: number;
+    months: number;
+  } | null = null;
   if (previewValid) {
-    const months = Math.max(
-      1,
-      (parsedDate!.getFullYear() - now.getFullYear()) * 12 + (parsedDate!.getMonth() - now.getMonth())
-    );
+    const firstReminder = nextReminderAfter(now, reminderDay);
+    const months = scheduledMonths(firstReminder, parsedDate!);
     const remaining = Math.max(0, parsedTarget! - parsedAvailable);
-    preview = { monthly: Math.ceil((remaining / months) * 100) / 100, months };
+    const amounts = plannedAmounts(remaining, months, rhythm);
+    preview = {
+      average: Math.round((remaining / months) * 100) / 100,
+      first: amounts[0],
+      last: amounts[amounts.length - 1],
+      peak: Math.max(...amounts),
+      months,
+    };
   }
   const previewRemaining = previewValid ? Math.max(0, parsedTarget! - parsedAvailable) : 0;
-  const previewDiagnostic = preview ? diagnostic(preview.monthly, budget) : null;
+  const previewDiagnostic = preview ? diagnostic(preview.peak, budget) : null;
 
   const validate = (): string | null => {
     if (!name.trim()) return 'Donne un nom à ton projet.';
@@ -93,6 +126,7 @@ export default function NewGoalScreen() {
           alreadyAvailable: parsedAvailable,
           targetDate: parsedDate!.toISOString(),
           reminderDay,
+          rhythm,
           // Le jour de rappel a-t-il bougé ? Alors on repart de la prochaine occurrence.
           ...(reminderDay !== editing.reminderDay
             ? { nextReminderAt: nextReminderAfter(new Date(), reminderDay).toISOString() }
@@ -111,6 +145,7 @@ export default function NewGoalScreen() {
           alreadyAvailable: parsedAvailable,
           targetDate: parsedDate!,
           reminderDay,
+          rhythm,
         });
         router.replace({ pathname: '/goal/[id]', params: { id: goal.id } });
       }
@@ -215,12 +250,40 @@ export default function NewGoalScreen() {
           placeholder="1"
         />
 
-        <View style={styles.rhythmCard}>
-          <View style={styles.rhythmHeader}>
-            <Text style={styles.rhythmTitle}>Rythme stable</Text>
-            {preview ? <Text style={styles.rhythmAmount}>{formatEuro(preview.monthly)} moy.</Text> : null}
-          </View>
-          <Text style={styles.rhythmBody}>Le même effort chaque mois, facile à suivre.</Text>
+        <View style={styles.rhythmChoices}>
+          {RHYTHMS.map((option) => {
+            const selected = rhythm === option.key;
+            const optionAmounts = preview
+              ? plannedAmounts(previewRemaining, preview.months, option.key)
+              : [];
+            const optionPeak = optionAmounts.length ? Math.max(...optionAmounts) : 0;
+            return (
+              <Pressable
+                key={option.key}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => {
+                  setRhythm(option.key);
+                  setError(null);
+                }}
+                style={[styles.rhythmCard, selected && styles.rhythmCardSelected]}>
+                <View style={styles.rhythmHeader}>
+                  <Text style={[styles.rhythmTitle, selected && styles.rhythmTextSelected]}>
+                    {option.title}
+                  </Text>
+                  {selected ? <Text style={styles.rhythmSelected}>Choisi</Text> : null}
+                </View>
+                {preview ? (
+                  <Text style={[styles.rhythmAmount, selected && styles.rhythmTextSelected]}>
+                    {formatEuro(preview.average)} moy. · pic {formatEuro(optionPeak)}
+                  </Text>
+                ) : null}
+                <Text style={[styles.rhythmBody, selected && styles.rhythmBodySelected]}>
+                  {option.description}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </Card>
 
@@ -228,18 +291,23 @@ export default function NewGoalScreen() {
         <>
           <PlanSummaryDark
             description={CATEGORY_DESCRIPTIONS[category]}
-            monthly={`${formatEuro(preview.monthly)} / mois`}
+            monthly={
+              rhythm === 'stable'
+                ? `${formatEuro(preview.average)} / mois`
+                : `${formatEuro(preview.first)} → ${formatEuro(preview.last)}`
+            }
             targetDate={formatDate(parsedDate!)}
             months={`${preview.months} mois`}
             remaining={formatEuro(previewRemaining)}
             diagnostic={previewDiagnostic}
             reminderDay={reminderDay}
+            rhythm={RHYTHMS.find((option) => option.key === rhythm)!.title}
           />
           {previewDiagnostic === 'Confortable' && budget ? (
             <View style={styles.compatCard}>
               <Text style={styles.compatTitle}>Plan compatible avec ton budget</Text>
               <Text style={styles.compatBody}>
-                Le mois le plus haut reste à {formatEuro(preview.monthly)}, pour une capacité prudente de{' '}
+                Le mois le plus haut reste à {formatEuro(preview.peak)}, pour une capacité prudente de{' '}
                 {formatEuro(prudentCapacity(budget))}.
               </Text>
             </View>
@@ -297,11 +365,22 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   capacityHint: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
-  rhythmCard: { backgroundColor: colors.dark, borderRadius: 20, padding: 18, marginTop: 4 },
+  rhythmChoices: { gap: 10, marginTop: 4 },
+  rhythmCard: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    padding: 16,
+  },
+  rhythmCardSelected: { backgroundColor: colors.dark, borderColor: colors.dark },
   rhythmHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rhythmTitle: { fontSize: 19, fontWeight: '800', color: colors.textOnDark },
-  rhythmAmount: { fontSize: 17, fontWeight: '800', color: colors.textOnDark },
-  rhythmBody: { fontSize: 15, color: colors.textOnDarkMuted, marginTop: 6, lineHeight: 21 },
+  rhythmTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  rhythmAmount: { fontSize: 15, fontWeight: '800', color: colors.accent, marginTop: 7 },
+  rhythmSelected: { fontSize: 13, fontWeight: '800', color: colors.textOnDarkMuted },
+  rhythmTextSelected: { color: colors.textOnDark },
+  rhythmBody: { fontSize: 14, color: colors.textSecondary, marginTop: 5, lineHeight: 20 },
+  rhythmBodySelected: { color: colors.textOnDarkMuted },
   compatCard: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,

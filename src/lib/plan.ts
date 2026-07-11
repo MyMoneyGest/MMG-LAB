@@ -4,7 +4,7 @@
 // fait ; l'écart avec le montant conseillé est absorbé par le recalcul
 // (remaining / mois restants), jamais par une pénalité ou un blocage.
 
-import { Budget, Goal } from './types';
+import { Budget, Goal, SavingsRhythm } from './types';
 
 /** Part du reste à vivre gardée en réserve pour éviter un plan trop serré. */
 export const SAFETY_MARGIN = 0.2;
@@ -44,11 +44,44 @@ export function monthsLeft(goal: Goal, now: Date = new Date()): number {
   return Math.max(1, diff);
 }
 
-/** Montant conseillé du mois : le restant lissé sur les mois restants. */
-export function suggestedAmount(goal: Goal, now: Date = new Date()): number {
-  const remaining = remainingAmount(goal);
-  if (remaining <= 0) return 0;
-  return Math.ceil((remaining / monthsLeft(goal, now)) * 100) / 100;
+/** Nombre d'occurrences mensuelles entre la première échéance et la cible, borné à 1. */
+export function scheduledMonths(firstReminder: Date, target: Date): number {
+  const diff =
+    (target.getFullYear() - firstReminder.getFullYear()) * 12 +
+    (target.getMonth() - firstReminder.getMonth()) +
+    1;
+  return Math.max(1, diff);
+}
+
+/**
+ * Répartit un montant en mensualités dont la somme reste exacte au centime.
+ * Progressif : poids linéaires de 0,7 à 1,3 ; régressif : ordre inverse.
+ * La moyenne des poids vaut toujours 1, donc seul le profil change.
+ */
+export function plannedAmounts(
+  total: number,
+  months: number,
+  rhythm: SavingsRhythm = 'stable'
+): number[] {
+  const count = Math.max(1, Math.round(months));
+  const totalCents = Math.max(0, Math.round(total * 100));
+  const weights = Array.from({ length: count }, (_, index) => {
+    if (rhythm === 'stable' || count === 1) return 1;
+    const progressiveWeight = 0.7 + (0.6 * index) / (count - 1);
+    return rhythm === 'progressive' ? progressiveWeight : 2 - progressiveWeight;
+  });
+  const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
+  const rawCents = weights.map((weight) => (totalCents * weight) / weightSum);
+  const allocatedCents = rawCents.map(Math.floor);
+  const centsToAllocate = totalCents - allocatedCents.reduce((sum, cents) => sum + cents, 0);
+  const remainderOrder = rawCents
+    .map((raw, index) => ({ index, fraction: raw - Math.floor(raw) }))
+    .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
+
+  for (let i = 0; i < centsToAllocate; i++) {
+    allocatedCents[remainderOrder[i % remainderOrder.length].index] += 1;
+  }
+  return allocatedCents.map((cents) => cents / 100);
 }
 
 export type Diagnostic = 'Confortable' | 'Juste' | 'Trop serré';
@@ -96,16 +129,18 @@ export function upcomingSchedule(
   const target = new Date(goal.targetDate);
   let cursor = new Date(goal.nextReminderAt);
   if (cursor < now) cursor = nextReminderAfter(now, goal.reminderDay);
-  const months = Math.max(
-    1,
-    (target.getFullYear() - cursor.getFullYear()) * 12 + (target.getMonth() - cursor.getMonth()) + 1
-  );
-  const amount = Math.ceil((remaining / months) * 100) / 100;
+  const months = scheduledMonths(cursor, target);
+  const amounts = plannedAmounts(remaining, months, goal.rhythm ?? 'stable');
   for (let i = 0; i < months && i < maxRows; i++) {
-    rows.push({ date: new Date(cursor), amount });
+    rows.push({ date: new Date(cursor), amount: amounts[i] });
     cursor = nextReminderAfter(cursor, goal.reminderDay);
   }
   return rows;
+}
+
+/** Montant conseillé à la prochaine échéance, selon le rythme choisi. */
+export function suggestedAmount(goal: Goal, now: Date = new Date()): number {
+  return upcomingSchedule(goal, now, 1)[0]?.amount ?? 0;
 }
 
 /** Bucket anonymisé pour le tracking (mêmes valeurs que l'ancienne app). */

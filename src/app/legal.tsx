@@ -47,10 +47,11 @@ export default function LegalScreen() {
           identifiant d'installation aléatoire, pas à un nom, une adresse e-mail ou un compte.
         </Text>
         <Text style={styles.paragraph}>
-          Les événements peuvent contenir l'identifiant technique du projet, la plateforme,
-          la version de l'app et, pour un mouvement, une tranche de montant. Les montants
-          exacts, le nom des projets et le détail du budget ne sont jamais transmis. Ces
-          données ne servent ni à la publicité ni à la revente.
+          Les événements peuvent contenir l'identifiant technique du projet, sa catégorie
+          générale et le rythme choisi, la plateforme, la version de l'app et, pour un
+          mouvement, une tranche de montant. Les montants exacts, le nom des projets et le
+          détail du budget ne sont jamais transmis. Ces données ne servent ni à la publicité
+          ni à la revente.
         </Text>
 
         <Text style={styles.section}>Notifications</Text>

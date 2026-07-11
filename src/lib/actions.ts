@@ -12,7 +12,7 @@ import {
   scheduleGoalReminder,
 } from './notifications';
 import { newGoalId, useStore } from './store';
-import { Goal, GoalCategory } from './types';
+import { Goal, GoalCategory, SavingsRhythm } from './types';
 
 // Orchestration store + notifications + tracking, partagée entre les écrans.
 
@@ -23,6 +23,7 @@ export interface NewGoalInput {
   alreadyAvailable: number;
   targetDate: Date;
   reminderDay: number;
+  rhythm: SavingsRhythm;
 }
 
 export async function createGoal(input: NewGoalInput): Promise<Goal> {
@@ -36,6 +37,7 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
     alreadyAvailable: input.alreadyAvailable,
     targetDate: input.targetDate.toISOString(),
     reminderDay: input.reminderDay,
+    rhythm: input.rhythm,
     nextReminderAt: nextReminderAfter(now, input.reminderDay).toISOString(),
     createdAt: now.toISOString(),
     contributions: [],
@@ -51,7 +53,10 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
   const notificationId = await scheduleGoalReminder(goal, suggestedAmount(goal, now));
   if (notificationId) state.updateGoal(goal.id, { notificationId });
 
-  track('goal_created', { goalId: goal.id, metadata: { goalId: goal.id, category: goal.category } });
+  track('goal_created', {
+    goalId: goal.id,
+    metadata: { goalId: goal.id, category: goal.category, rhythm: goal.rhythm },
+  });
   return goal;
 }
 

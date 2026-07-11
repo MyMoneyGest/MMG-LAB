@@ -1,5 +1,7 @@
 export type GoalCategory = 'emergency' | 'car' | 'moving' | 'travel' | 'other';
 
+export type SavingsRhythm = 'stable' | 'progressive' | 'regressive';
+
 export type ContributionType = 'deposit' | 'withdrawal';
 
 export interface Contribution {
@@ -21,6 +23,8 @@ export interface Goal {
   targetDate: string;
   /** Jour du mois du rappel (1..28) */
   reminderDay: number;
+  /** Rythme d'épargne. Absent sur les anciens projets, qui restent stables. */
+  rhythm?: SavingsRhythm;
   /** ISO datetime de la prochaine action attendue (rappel à 9h) */
   nextReminderAt: string;
   /** Identifiant de la notification locale programmée */

@@ -24,12 +24,22 @@ ce qui vient ensuite.
 - **Chantier 1.5 — Confidentialité et CGU** : contenu séparé en cartes lisibles et enrichi
   avec l'éditeur, le contact `mymoneygest@mail.com`, les données locales, les événements
   pseudonymisés, les notifications, la suppression, les droits et les conditions de test.
+- Item 1.5 vérifié, commit et push effectués : `bba31e7`.
+- **Chantier 1.3 — Trois rythmes d'épargne** : choix stable, progressif ou régressif à la
+  création et à l'ajustement d'un plan. Les profils variables sont bornés de 70 % à 130 % de
+  la moyenne et conservent le total exact au centime. L'aperçu, le diagnostic sur le mois-pic,
+  l'échéancier, le montant du jour et les notifications utilisent tous le rythme choisi.
+- Compatibilité préservée : un ancien projet sans champ `rhythm` est traité comme stable.
+- Vérifications réussies : typecheck TypeScript et assertions de calcul (somme exacte,
+  monotonie progressive/régressive, compatibilité ancien projet, cohérence rappel/échéancier).
 
 ### En cours
-- Aucun item partiellement implémenté : vérification de l'item 1.5 avant commit et push.
+- Aucun item partiellement implémenté : item 1.3 prêt pour commit et push.
 
 ### Ensuite
-- **Chantier 1.3 — Trois rythmes d'épargne** selon la conception dans `EXCHANGES.md`.
+- **Chantier 1.1 — Système de test des notifications** selon la conception dans
+  `EXCHANGES.md` : appui long sur le M, rappel test à 15 secondes, actions Fait / Modifier /
+  Reporter et routage vers le bon projet.
 
 ---
 
