@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { colors, radius } from '@/constants/theme';
 import { formatEuro, parseAmountInput } from '@/lib/format';
@@ -48,42 +56,52 @@ export function AmountModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={() => {}}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-          <Field
-            value={value}
-            onChangeText={(t) => {
-              setValue(t);
-              setError(null);
-            }}
-            keyboardType="decimal-pad"
-            placeholder="0"
-            suffix="EUR"
-            autoFocus
-            error={error}
-          />
-          <View style={styles.buttons}>
-            <Button label="Annuler" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
-            <Button label={confirmLabel} onPress={submit} style={{ flex: 1 }} />
-          </View>
-        </Pressable>
-      </Pressable>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoider}
+        behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardDismissMode={process.env.EXPO_OS === 'ios' ? 'interactive' : 'on-drag'}
+          keyboardShouldPersistTaps="handled">
+          <Pressable style={styles.backdrop} onPress={onClose}>
+            <Pressable style={styles.sheet} onPress={() => {}}>
+              <Text style={styles.title}>{title}</Text>
+              {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+              <Field
+                value={value}
+                onChangeText={(t) => {
+                  setValue(t);
+                  setError(null);
+                }}
+                keyboardType="decimal-pad"
+                placeholder="0"
+                suffix="EUR"
+                autoFocus
+                error={error}
+              />
+              <View style={styles.buttons}>
+                <Button label="Annuler" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
+                <Button label={confirmLabel} onPress={submit} style={{ flex: 1 }} />
+              </View>
+            </Pressable>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoider: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(30, 22, 16, 0.45)',
-    justifyContent: 'flex-start',
-    padding: 16,
-    paddingTop: 120,
+    justifyContent: 'center',
+    padding: 20,
   },
-  sheet: { backgroundColor: colors.card, borderRadius: radius.card, padding: 22 },
-  title: { fontSize: 26, fontWeight: '800', color: colors.text, marginBottom: 6 },
-  subtitle: { fontSize: 15, color: colors.textSecondary, lineHeight: 21, marginBottom: 14 },
-  buttons: { flexDirection: 'row', gap: 12, marginTop: 6 },
+  sheet: { backgroundColor: colors.card, borderRadius: radius.card, padding: 20 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: 5 },
+  subtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginBottom: 12 },
+  buttons: { flexDirection: 'row', gap: 10, marginTop: 4 },
 });

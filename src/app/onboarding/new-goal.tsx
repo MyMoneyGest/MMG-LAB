@@ -7,7 +7,13 @@ import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, Eyebrow, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { createGoal } from '@/lib/actions';
-import { formatDate, formatEuro, parseAmountInput, parseDateInput } from '@/lib/format';
+import {
+  formatDate,
+  formatDateInput,
+  formatEuro,
+  parseAmountInput,
+  parseDateInput,
+} from '@/lib/format';
 import {
   diagnostic,
   nextReminderAfter,
@@ -233,11 +239,12 @@ export default function NewGoalScreen() {
           label="Date cible"
           value={dateText}
           onChangeText={(t) => {
-            setDateText(t);
+            setDateText(formatDateInput(t));
             setError(null);
           }}
           placeholder="JJ/MM/AAAA"
-          keyboardType="numbers-and-punctuation"
+          keyboardType="number-pad"
+          maxLength={10}
         />
         <Field
           label="Jour du rappel dans le mois (1 à 28)"

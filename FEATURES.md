@@ -45,6 +45,9 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Suggestions** : sélectionner une catégorie préremplit le nom correspondant. Changer de
   catégorie actualise un nom suggéré, sans écraser un nom personnalisé ; « Autre » vide le
   champ pour laisser l'utilisateur nommer librement son projet.
+- **Saisie** : le champ de date utilise un clavier numérique et insère automatiquement les
+  séparateurs (`12072027` devient `12/07/2027`). L'écran reste défilable et remonte son contenu
+  lorsque le clavier est affiché afin que le champ actif reste visible.
 - **Comment** : les rythmes progressif et régressif utilisent des poids linéaires bornés de
   0,7 à 1,3, dont la moyenne vaut 1. La répartition conserve le total exact au centime.
   `createGoal()` orchestre : store + première demande de permission notifications (uniquement
@@ -83,6 +86,9 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Quoi** : modal « Quand te le rappeler ? » — Demain / Dans 3 jours / Dans 7 jours (dates
   affichées) ou date précise JJ/MM/AAAA. Message d'erreur si permission de notification
   manquante (« Report impossible pour le moment… »).
+- **Saisie** : les `/` de la date précise sont ajoutés automatiquement. La fenêtre compacte
+  reste défilable au-dessus du clavier et peut toujours être fermée par son bouton Annuler,
+  le bouton retour Android ou un appui sur l'arrière-plan.
 - **Comment** : `postponeReminder()` revérifie la permission, replanifie la notification,
   trace `reminder_postponed`.
 - **Où** : `src/components/report-modal.tsx`, `src/lib/actions.ts`.
@@ -91,6 +97,7 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 - **Quoi** : modals de saisie libre. Montant différent = versement du mois (même effet que le
   1 tap). Retrait = sortie d'argent assumée sans jugement, plafonnée à ce qui est de côté.
+  Les fenêtres sont compactes, défilables et protégées contre le recouvrement par le clavier.
 - **Où** : `src/components/amount-modal.tsx`, `src/lib/actions.ts` (`withdraw`).
 
 ## 9. Notifications locales + deep link (boucle de rétention)
@@ -167,5 +174,6 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 - **Quoi** : tokens de la direction visuelle (fond `#F4EFE6`, accent terracotta `#B5432A`,
   sombre `#2B211A`, radius généreux) et primitives (Screen, Card, Button 4 variantes, Field,
-  ProgressBar, Eyebrow).
+  ProgressBar, Eyebrow). Les champs sont compacts, bordés, signalent clairement le focus et
+  les erreurs ; `Screen` centralise l'évitement du clavier et le défilement des formulaires.
 - **Où** : `src/constants/theme.ts`, `src/components/ui.tsx`.

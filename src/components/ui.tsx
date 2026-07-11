@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,13 +17,20 @@ import { colors, radius, spacing } from '@/constants/theme';
 export function Screen({ children }: { children: ReactNode }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        {children}
-      </ScrollView>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoider}
+        behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          contentInsetAdjustmentBehavior="automatic"
+          automaticallyAdjustKeyboardInsets={process.env.EXPO_OS === 'ios'}
+          keyboardDismissMode={process.env.EXPO_OS === 'ios' ? 'interactive' : 'on-drag'}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -79,15 +87,33 @@ export function Field({
   label,
   suffix,
   error,
+  onBlur,
+  onFocus,
+  style,
   ...inputProps
 }: TextInputProps & { label?: string; suffix?: string; error?: string | null }) {
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={{ marginBottom: 14 }}>
+    <View style={styles.field}>
       {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
-      <View style={styles.fieldWrap}>
+      <View
+        style={[
+          styles.fieldWrap,
+          focused && styles.fieldWrapFocused,
+          Boolean(error) && styles.fieldWrapError,
+        ]}>
         <TextInput
           placeholderTextColor={colors.textSecondary}
-          style={styles.fieldInput}
+          selectionColor={colors.accent}
+          style={[styles.fieldInput, style]}
+          onFocus={(event) => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
           {...inputProps}
         />
         {suffix ? <Text style={styles.fieldSuffix}>{suffix}</Text> : null}
@@ -107,6 +133,7 @@ export function ProgressBar({ pct }: { pct: number }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  keyboardAvoider: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.screen, paddingBottom: 48 },
   card: {
@@ -137,17 +164,22 @@ const styles = StyleSheet.create({
   },
   buttonLightOnDark: { backgroundColor: colors.textOnDark },
   buttonLabel: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
-  fieldLabel: { fontSize: 15, fontWeight: '600', color: colors.text, marginBottom: 8 },
+  field: { marginBottom: 12 },
+  fieldLabel: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 6 },
   fieldWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1E7D8',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.field,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
   },
-  fieldInput: { flex: 1, fontSize: 19, fontWeight: '600', color: colors.text, paddingVertical: 15 },
-  fieldSuffix: { fontSize: 15, fontWeight: '600', color: colors.textSecondary, marginLeft: 8 },
-  fieldError: { color: colors.accent, fontSize: 14, marginTop: 6, fontWeight: '600' },
+  fieldWrapFocused: { borderColor: colors.accent, backgroundColor: colors.card },
+  fieldWrapError: { borderColor: colors.accent },
+  fieldInput: { flex: 1, fontSize: 17, fontWeight: '600', color: colors.text, paddingVertical: 12 },
+  fieldSuffix: { fontSize: 13, fontWeight: '800', color: colors.textSecondary, marginLeft: 8 },
+  fieldError: { color: colors.accent, fontSize: 13, marginTop: 5, fontWeight: '600' },
   progressTrack: {
     height: 9,
     borderRadius: 5,

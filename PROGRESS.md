@@ -9,6 +9,36 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 3 : chantier 2, lot « saisie »
+
+### Fait
+- Redessiné la primitive `Field` : dimensions et textes plus compacts, bordure sobre, état de
+  focus terracotta et état d'erreur visible, sans modifier la direction visuelle existante.
+- Ajouté le masque de saisie de date partagé : l'utilisateur tape uniquement huit chiffres et
+  les `/` sont insérés automatiquement dans la création/édition d'un plan et le report précis.
+  Le clavier numérique est utilisé et la validation calendaire existante reste appliquée.
+- Protégé les formulaires contre le clavier : `Screen` centralise `KeyboardAvoidingView` et le
+  défilement ; les fenêtres Montant et Reporter ont leur propre protection et restent
+  défilables. Leur fermeture par appui sur l'arrière-plan a été explicitement préservée.
+- Ajouté `npm run test:format` et `npm run test:inputs` aux contrôles avant livraison.
+- Contrôles Codex réussis : tests format, saisie et notifications (non-régression),
+  `npx tsc --noEmit`, `git diff --check` et export Android complet par Metro (1 361 modules,
+  bundle Hermes généré sans erreur).
+
+### En cours
+- Aucun code partiellement implémenté. La confirmation visuelle et tactile sur le téléphone
+  Android reste à effectuer après le push.
+- L'automatisation visuelle web n'a pas pu démarrer dans cette session : le moteur Node du
+  navigateur intégré est indisponible. Le serveur Expo web a néanmoins compilé le projet ;
+  cette limite est consignée sans remplacer le test natif de confirmation.
+
+### Ensuite
+- Confirmer sur Android : densité des champs, saisie `JJ/MM/AAAA`, visibilité du champ avec le
+  clavier ouvert et fermeture des deux fenêtres par appui sur l'arrière-plan.
+- Après confirmation, poursuivre le chantier 2 avec le bloc de progression du projet.
+
+---
+
 ## 2026-07-12 — Codex — Session 2 : correctifs après test Android
 
 ### Fait

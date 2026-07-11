@@ -43,7 +43,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test:notifications": "node scripts/test-notifications.mjs"
+    "test:notifications": "node scripts/test-notifications.mjs",
+    "test:format": "node scripts/test-format.mjs",
+    "test:inputs": "node scripts/test-input-surfaces.mjs"
   },
   "private": true
 }
