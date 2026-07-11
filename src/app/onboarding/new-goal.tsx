@@ -25,6 +25,7 @@ export default function NewGoalScreen() {
 
   const [category, setCategory] = useState<GoalCategory>(editing?.category ?? 'emergency');
   const [name, setName] = useState(editing?.name ?? '');
+  const [nameIsSuggested, setNameIsSuggested] = useState(false);
   const [target, setTarget] = useState(editing ? String(editing.targetAmount) : '');
   const [available, setAvailable] = useState(editing ? String(editing.alreadyAvailable) : '');
   const [dateText, setDateText] = useState(editing ? formatDate(editing.targetDate) : '');
@@ -38,6 +39,18 @@ export default function NewGoalScreen() {
   const parsedAvailable = parseAmountInput(available) ?? 0;
   const parsedDate = parseDateInput(dateText);
   const reminderDay = Math.min(28, Math.max(1, Number(reminderDayText) || 1));
+
+  const selectCategory = (nextCategory: GoalCategory) => {
+    setCategory(nextCategory);
+    if (nextCategory === 'other') {
+      setName('');
+      setNameIsSuggested(false);
+    } else if (!name.trim() || nameIsSuggested) {
+      setName(CATEGORY_LABELS[nextCategory]);
+      setNameIsSuggested(true);
+    }
+    setError(null);
+  };
 
   // Aperçu du plan dès que les champs clés sont remplis.
   const now = new Date();
@@ -121,7 +134,7 @@ export default function NewGoalScreen() {
             return (
               <Pressable
                 key={c}
-                onPress={() => setCategory(c)}
+                onPress={() => selectCategory(c)}
                 style={[styles.chip, selected && styles.chipSelected]}>
                 <View style={[styles.chipDot, { backgroundColor: colors.category[c] }]} />
                 <Text style={styles.chipLabel}>{CATEGORY_LABELS[c]}</Text>
@@ -135,6 +148,7 @@ export default function NewGoalScreen() {
           value={name}
           onChangeText={(t) => {
             setName(t);
+            setNameIsSuggested(false);
             setError(null);
           }}
           placeholder={CATEGORY_LABELS[category]}

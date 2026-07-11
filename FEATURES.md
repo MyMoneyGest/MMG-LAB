@@ -4,7 +4,7 @@ Description technique de toutes les fonctionnalités : ce qu'elles font, comment
 fonctionnent, où elles vivent dans le code. **Mis à jour à chaque fonctionnalité ajoutée ou
 modifiée**, pas après coup.
 
-Dernière mise à jour : 2026-07-11 (Claude Code).
+Dernière mise à jour : 2026-07-11 (Codex).
 
 ---
 
@@ -40,6 +40,9 @@ Dernière mise à jour : 2026-07-11 (Claude Code).
   aperçu en direct : carte « Rythme stable », récap sombre (à mettre de côté, durée, reste à
   financer, diagnostic Confortable/Juste/Trop serré, rappel) et carte de compatibilité budget.
   Mode édition via `?editId=` (menu « Ajuster ce plan »).
+- **Suggestions** : sélectionner une catégorie préremplit le nom correspondant. Changer de
+  catégorie actualise un nom suggéré, sans écraser un nom personnalisé ; « Autre » vide le
+  champ pour laisser l'utilisateur nommer librement son projet.
 - **Comment** : `createGoal()` orchestre : store + première demande de permission notifications
   (uniquement ici, jamais à l'ouverture) + programmation du rappel + événement `goal_created`.
 - **Où** : `src/app/onboarding/new-goal.tsx`, `src/lib/actions.ts` (`createGoal`),

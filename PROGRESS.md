@@ -9,6 +9,23 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-11 — Codex — Session 1 : chantier 1 démarré
+
+### Fait
+- **Chantier 1.2 — Suggestions cliquables** : le choix d'une catégorie préremplit maintenant
+  le champ « Nom du projet ». Une autre catégorie remplace uniquement un nom encore suggéré ;
+  un nom personnalisé est conservé. La catégorie « Autre » vide le champ.
+- Documentation de la fonctionnalité mise à jour dans `FEATURES.md`.
+- Vérifications réussies : `npx tsc --noEmit` et `git diff --check`.
+
+### En cours
+- Aucun item partiellement implémenté : préparation du commit et du push de l'item 1.2.
+
+### Ensuite
+- **Chantier 1.4 — Plan actif en premier** dans `src/components/menu-modal.tsx`.
+
+---
+
 ## 2026-07-11 — Claude Code — Session 2 : plan de consolidation validé
 
 ### Fait
