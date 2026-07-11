@@ -46,10 +46,16 @@ ce qui vient ensuite.
   `actionIdentifier`, les réponses à chaud/froid et le trigger TIME_INTERVAL.
 - Vérifications locales réussies : `npx tsc --noEmit`, `git diff --check`, absence d'import
   statique d'`expo-notifications`, export Expo web des 9 routes.
+- Item 1.1 commit et push effectués : `1da7f8e`.
+- Dev build Android EAS `7797c7b7-71e6-4bcd-9cdb-18fb205f38b9` confirmé terminé (SDK 57,
+  APK development client). APK téléchargé et contrôlé dans
+  `/Users/patrickngouala/Downloads/MMG-dev-client-1.0.0.apk` (242 Mo, archive valide,
+  SHA-256 `7bb202f8e3361446bf86be29f1d4195dea85dcd870b92dc644824fed4ff9d019`).
 
 ### En cours
-- Item 1.1 prêt pour commit/push. Le comportement natif des boutons reste à valider sur le dev
-  build Android (indisponible dans Expo Go Android).
+- Validation native en attente : `adb devices -l` ne détecte actuellement aucun téléphone.
+  Brancher l'Android, activer le débogage USB et accepter l'autorisation RSA permettra
+  l'installation de l'APK et le test des boutons.
 
 ### Ensuite
 - Installer/ouvrir le dev build Android et exécuter les quatre scénarios : tap simple, Fait,
