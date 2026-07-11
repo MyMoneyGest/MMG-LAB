@@ -21,11 +21,30 @@ ce qui vient ensuite.
 - Création de PROGRESS.md, EXCHANGES.md, FEATURES.md (ce commit).
 
 ### En cours
-- Chantier 1, item 1.2 : suggestions de projets cliquables (préremplissage du nom).
+- **Passage de relais à Codex** (décision Patrick : Claude Code arrive en fin de tokens).
+  Étape 0 terminée et poussée ; AUCUN item du chantier 1 n'est commencé — l'arbre git est
+  propre au niveau de ce commit. Codex reprend au chantier 1, item 1.2.
 
-### Ensuite
-- Dérouler le chantier 1 dans l'ordre validé. Commit + push à chaque item terminé,
-  FEATURES.md mis à jour à chaque fonctionnalité.
+### Ensuite (pour Codex — ordre validé par Patrick, ne pas réordonner)
+1. **1.2 Suggestions cliquables** : dans `src/app/onboarding/new-goal.tsx`, le tap sur une
+   chip de catégorie doit préremplir le champ « Nom du projet » (sans écraser un nom
+   personnalisé déjà saisi ; catégorie « Autre » → champ vidé).
+2. **1.4 Plan actif en premier** : dans `src/components/menu-modal.tsx`, trier `goals` pour
+   afficher `currentGoalId` en tête.
+3. **1.5 CGU/Confidentialité enrichies** : étoffer `src/app/legal.tsx` (éditeur, données,
+   notifications, suppression des données, CGU phase de test) + contact `mymoneygest@mail.com`.
+4. **1.3 Trois rythmes d'épargne** (stable / progressif / régressif) — voir la note de
+   conception détaillée dans EXCHANGES.md avant de coder.
+5. **1.1 Système de test des notifications** (appui long sur le M → notif test à 15 s avec
+   actions Fait / Modifier / Reporter) — voir aussi la note dans EXCHANGES.md.
+   ⚠️ Testable uniquement sur le dev build Android (build EAS 7797c7b7 déjà lancé) — pas sur
+   web ni Expo Go Android.
+6. Puis chantier 2 (polish par lots : saisie+clavier+masque de date → bloc progression →
+   sous-menu → états de chargement → animations), puis chantier 4 (GUIDE-MAINTENANCE.md en
+   dernier, sur produit stabilisé).
+
+Règles : commit + push à chaque item ; FEATURES.md à chaque fonctionnalité ; ce fichier à
+chaque session ; lire les conventions dans EXCHANGES.md avant la première ligne de code.
 
 ---
 
