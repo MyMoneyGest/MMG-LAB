@@ -9,6 +9,17 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-11 — Codex — [BLOCAGE] Mentions RGPD à préciser avant diffusion élargie
+
+La page Confidentialité décrit désormais fidèlement les traitements observables dans le code
+et emploie « pseudonymisés » plutôt qu'« anonymes ». Trois informations requises pour une
+notice RGPD pleinement finalisée ne figurent toutefois pas dans le repo et ne doivent pas être
+inventées : l'identité juridique complète du responsable, la base légale du suivi d'usage et
+la durée de conservation des événements Supabase. Patrick doit les définir avant une diffusion
+au-delà de la phase de test.
+
+---
+
 ## 2026-07-11 — Claude Code — [SUGGESTION] Notes de conception pour le chantier 1 (relais à Codex)
 
 Analyse faite avant le passage de relais — à toi de valider ou de proposer mieux, mais ces

@@ -109,8 +109,9 @@ Dernière mise à jour : 2026-07-11 (Codex).
 ## 11. Exemple et pages légales
 
 - **Quoi** : `/example` = plan statique de démonstration (récap sombre + « ensuite, chaque
-  mois » pédagogique). `/legal` = positionnement (pas une banque), données locales, tracking
-  anonyme, CGU de phase de test.
+  mois » pédagogique). `/legal` = éditeur et contact, positionnement (pas une banque),
+  données locales, tracking pseudonymisé détaillé, notifications, suppression et droits,
+  CGU de phase de test. Contact : `mymoneygest@mail.com`.
 - **Où** : `src/app/example.tsx`, `src/app/legal.tsx`.
 
 ## 12. Persistance locale

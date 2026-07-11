@@ -8,32 +8,90 @@ export default function LegalScreen() {
   return (
     <Screen>
       <AppHeader showBack />
+
       <Card>
-        <Eyebrow>Confidentialité et CGU</Eyebrow>
+        <Eyebrow>Informations</Eyebrow>
+        <Text style={styles.title}>Éditeur et contact</Text>
+        <Text style={styles.paragraph}>
+          MMG est éditée, pour cette phase de test, sous le nom MyMoneyGest. Pour toute
+          question sur l'app, tes données ou les présentes conditions, écris à :
+        </Text>
+        <Text selectable style={styles.contact}>mymoneygest@mail.com</Text>
+      </Card>
+
+      <Card>
+        <Eyebrow>Le service</Eyebrow>
         <Text style={styles.title}>Ce que MMG est — et n'est pas</Text>
         <Text style={styles.paragraph}>
-          MMG n'est pas une banque. L'app n'est pas connectée à ta banque, ne détient aucun fonds et ne
-          demande aucun compte à créer. C'est un outil de méthode : les virements, c'est toi qui les fais,
+          MMG est un outil de méthode pour préparer et suivre des projets d'épargne manuels.
+          MMG n'est pas une banque, n'est pas connectée à ta banque, ne détient aucun fonds et
+          ne demande aucun compte à créer. Les virements restent toujours réalisés par toi,
           depuis ta banque habituelle.
         </Text>
+      </Card>
 
-        <Text style={styles.section}>Tes données</Text>
+      <Card>
+        <Eyebrow>Confidentialité</Eyebrow>
+        <Text style={styles.title}>Données conservées sur ton téléphone</Text>
         <Text style={styles.paragraph}>
-          Ton budget, tes projets et tes versements sont stockés uniquement sur ce téléphone. Ils ne sont
-          envoyés sur aucun serveur. Si tu supprimes l'app, ces données disparaissent avec elle.
-        </Text>
-        <Text style={styles.paragraph}>
-          Pour améliorer l'app pendant la phase de test, MMG enregistre des événements d'usage anonymes
-          (ouverture de l'app, création d'un projet, versement confirmé…) liés à un identifiant
-          d'installation aléatoire. Les montants exacts ne sont jamais transmis — seulement des ordres de
-          grandeur. Aucune donnée nominative n'est collectée.
+          Ton budget, les noms et montants de tes projets, ainsi que l'historique de tes
+          versements et retraits, sont stockés localement sur ton téléphone. Ces informations
+          financières ne sont pas envoyées à Supabase et MMG ne collecte aucune donnée bancaire.
         </Text>
 
-        <Text style={styles.section}>Conditions d'utilisation (phase de test)</Text>
+        <Text style={styles.section}>Mesure d'usage pendant le test</Text>
         <Text style={styles.paragraph}>
-          MMG est fourni tel quel, gratuitement, dans le cadre d'un test. Les plans proposés sont des
-          calculs indicatifs, pas des conseils financiers. L'équipe peut interrompre ou modifier le service
-          pendant la phase de test.
+          Pour vérifier la fiabilité du rituel et améliorer l'app, MMG transmet à Supabase des
+          événements techniques pseudonymisés : ouverture de l'app, création ou suppression
+          d'un projet, versement confirmé, rappel ouvert ou reporté. Ils sont reliés à un
+          identifiant d'installation aléatoire, pas à un nom, une adresse e-mail ou un compte.
+        </Text>
+        <Text style={styles.paragraph}>
+          Les événements peuvent contenir l'identifiant technique du projet, la plateforme,
+          la version de l'app et, pour un mouvement, une tranche de montant. Les montants
+          exacts, le nom des projets et le détail du budget ne sont jamais transmis. Ces
+          données ne servent ni à la publicité ni à la revente.
+        </Text>
+
+        <Text style={styles.section}>Notifications</Text>
+        <Text style={styles.paragraph}>
+          La permission de notification est demandée lors de la création du premier projet.
+          Les rappels sont programmés localement sur le téléphone et servent uniquement au
+          rituel choisi. Tu peux les désactiver dans les réglages Android ou iOS ; cela
+          n'efface pas tes projets, mais empêche les rappels et leur report.
+        </Text>
+
+        <Text style={styles.section}>Suppression et droits</Text>
+        <Text style={styles.paragraph}>
+          Tu peux supprimer un projet et son historique depuis le menu de l'app. Supprimer
+          l'application retire ses données locales actives du téléphone ; selon tes réglages,
+          une sauvegarde système du téléphone peut toutefois en conserver une copie.
+        </Text>
+        <Text style={styles.paragraph}>
+          Pour toute question ou demande concernant les événements techniques pseudonymisés,
+          contacte mymoneygest@mail.com. Tu peux également adresser une réclamation à la CNIL.
+        </Text>
+      </Card>
+
+      <Card>
+        <Eyebrow>CGU — phase de test</Eyebrow>
+        <Text style={styles.title}>Conditions d'utilisation</Text>
+        <Text style={styles.paragraph}>
+          MMG est mise à disposition gratuitement dans le cadre d'un test. En utilisant
+          l'application, tu acceptes les présentes conditions. Les fonctionnalités peuvent
+          évoluer, être corrigées ou être temporairement indisponibles pendant cette phase.
+        </Text>
+        <Text style={styles.paragraph}>
+          Les plans et diagnostics sont des estimations fondées sur les informations que tu
+          saisis. Ils ne constituent pas un conseil financier, fiscal ou juridique. Tu restes
+          responsable de vérifier les montants et dates, puis d'effectuer toi-même les
+          opérations auprès de ta banque.
+        </Text>
+        <Text style={styles.paragraph}>
+          Utilise MMG uniquement à des fins personnelles et licites. L'équipe MyMoneyGest
+          apporte un soin raisonnable au fonctionnement du service, sans pouvoir garantir une
+          disponibilité continue pendant le test. La version des conditions affichée dans
+          l'app est la version applicable.
         </Text>
       </Card>
     </Screen>
@@ -44,4 +102,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '800', color: colors.text, lineHeight: 35, marginBottom: 12 },
   section: { fontSize: 20, fontWeight: '800', color: colors.text, marginTop: 10, marginBottom: 8 },
   paragraph: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 12 },
+  contact: { fontSize: 18, fontWeight: '800', color: colors.accent, marginBottom: 4 },
 });
