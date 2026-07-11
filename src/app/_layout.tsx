@@ -1,12 +1,10 @@
-import * as Notifications from 'expo-notifications';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 
 import { colors } from '@/constants/theme';
 import { track } from '@/lib/analytics';
-// L'import installe aussi le notification handler au démarrage (hors web).
-import { notificationsSupported } from '@/lib/notifications';
+import { addReminderOpenListener } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
 
 export default function RootLayout() {
@@ -23,24 +21,16 @@ export default function RootLayout() {
   }, []);
 
   // Boucle de rétention : notification → deep link vers le bon projet.
-  useEffect(() => {
-    if (!notificationsSupported) return;
-    const openFromResponse = (response: Notifications.NotificationResponse) => {
-      const goalId = response.notification.request.content.data?.goalId as string | undefined;
-      const key = response.notification.request.identifier;
-      if (!goalId || handledResponse.current === key) return;
-      handledResponse.current = key;
-      track('reminder_opened', { goalId, metadata: { goalId } });
-      router.push({ pathname: '/goal/[id]', params: { id: goalId, from: 'reminder' } });
-    };
-
-    // Ouverture à froid depuis une notification.
-    Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) openFromResponse(response);
-    });
-    const subscription = Notifications.addNotificationResponseReceivedListener(openFromResponse);
-    return () => subscription.remove();
-  }, [router]);
+  useEffect(
+    () =>
+      addReminderOpenListener((goalId, responseKey) => {
+        if (handledResponse.current === responseKey) return;
+        handledResponse.current = responseKey;
+        track('reminder_opened', { goalId, metadata: { goalId } });
+        router.push({ pathname: '/goal/[id]', params: { id: goalId, from: 'reminder' } });
+      }),
+    [router]
+  );
 
   return (
     <>
