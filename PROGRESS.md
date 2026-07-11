@@ -27,9 +27,10 @@ ce qui vient ensuite.
   (1 361 modules, bundle Hermes généré sans erreur).
 - Confirmation Android par Patrick réussie sur les trois scénarios : absence d'erreur au test,
   disparition après interaction, ouverture normale avec fenêtre d'actions.
+- Correctif commit et push effectués : `40bd12f`.
 
 ### En cours
-- Correctif validé et prêt pour commit/push.
+- Aucun item partiellement implémenté. Chantier 1 validé ; chantier 2 prêt à démarrer.
 
 ### Ensuite
 - Reprendre le chantier 2, lot « saisie » : zones de saisie, masque JJ/MM/AAAA et protection
