@@ -34,13 +34,20 @@ assert.deepEqual(pendingReminderFromNotification(notification('notif-1')), {
   notificationId: 'notif-1',
   goalId: 'goal-1',
   isTest: false,
-  reminderKind: 'primary',
+  reminderKind: 'anchor',
+  cycleId: undefined,
 });
-assert.equal(
+assert.deepEqual(
   pendingReminderFromNotification(
-    notification('notif-following', { goalId: 'goal-1', reminderKind: 'following' }),
-  ).reminderKind,
-  'following',
+    notification('notif-postponed', { goalId: 'goal-1', reminderKind: 'postponed', cycleId: 'cycle-july' }),
+  ),
+  {
+    notificationId: 'notif-postponed',
+    goalId: 'goal-1',
+    isTest: false,
+    reminderKind: 'postponed',
+    cycleId: 'cycle-july',
+  },
 );
 assert.equal(pendingReminderFromNotification(notification('invalid', {})), null);
 
@@ -59,9 +66,9 @@ assert.deepEqual(dismissed, ['notif-2', 'notif-3']);
 assert.deepEqual(
   mergePendingReminders(
     [first],
-    [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false, reminderKind: 'primary' }],
+    [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false, reminderKind: 'anchor' }],
   ),
-  [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false, reminderKind: 'primary' }]
+  [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false, reminderKind: 'anchor' }]
 );
 
 const notificationsSource = fs.readFileSync(path.join(root, 'src/lib/notifications.ts'), 'utf8');
@@ -70,7 +77,10 @@ assert.doesNotMatch(
   /sound\s*:\s*['"]default['"]/,
   "'default' ne doit pas être déclaré comme un fichier audio personnalisé"
 );
-assert.match(notificationsSource, /followingNotificationId/);
-assert.match(notificationsSource, /reminderKind: 'primary' \| 'following'/);
+assert.match(notificationsSource, /cycleId: cycle\.id/);
+assert.match(notificationsSource, /surplusForCycle/);
+assert.match(notificationsSource, /getPresentedNotificationsAsync/);
+assert.match(notificationsSource, /notification\.request\.content\.data\?\.goalId === goalId/);
+assert.match(notificationsSource, /notification\.request\.content\.data\?\.cycleId === cycleId/);
 
 console.log('Tests notifications : routage, déduplication, retrait et configuration sonore validés.');

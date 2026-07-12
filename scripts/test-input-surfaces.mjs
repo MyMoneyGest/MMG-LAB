@@ -10,6 +10,7 @@ const reportModal = read('src/components/report-modal.tsx');
 const newGoal = read('src/app/onboarding/new-goal.tsx');
 const goalScreen = read('src/app/goal/[id].tsx');
 const recentContributionModal = read('src/components/recent-contribution-modal.tsx');
+const contributionChoiceModal = read('src/components/contribution-choice-modal.tsx');
 
 assert.match(ui, /<KeyboardAvoidingView/);
 assert.match(ui, /keyboardDismissMode=/);
@@ -34,11 +35,17 @@ for (const [name, source] of [
 
 assert.match(reportModal, /canPostponeReminderTo\(goal, date\)/);
 assert.match(reportModal, /\.filter\(\(option\) => canPostponeReminderTo\(goal, option\.date\)\)/);
-assert.match(reportModal, /postponeNeedsRegularChoice\(goal, date\)/);
-assert.match(reportModal, /Garder le rappel du/);
+assert.match(reportModal, /postponeIsNearNextAnchor\(goal, selectedDate\)/);
+assert.doesNotMatch(reportModal, /Alert\.alert/);
+assert.match(reportModal, /Votre prochain rappel régulier reste prévu/);
+assert.doesNotMatch(reportModal, /Garder le rappel du/);
 assert.match(goalScreen, /Jour mensuel : le \{goal\.reminderDay\} · Modifier/);
 assert.match(goalScreen, /recentDeposits\(currentGoal\)/);
-assert.match(goalScreen, /Ignorer ce rappel/);
+assert.doesNotMatch(goalScreen, /Ignorer ce rappel/);
+assert.match(goalScreen, /contributionPlan\(currentGoal\)/);
+assert.match(contributionChoiceModal, /C’est un extra/);
+assert.match(contributionChoiceModal, /C’est mon versement de/);
+assert.match(contributionChoiceModal, /intent: ContributionIntent/);
 assert.match(recentContributionModal, /contributions\.map/);
 assert.match(recentContributionModal, /formatEuro\(contribution\.amount\)/);
 assert.match(recentContributionModal, /formatDate\(contribution\.date\)/);
@@ -47,7 +54,7 @@ for (const [name, source] of [
   ['new-goal', newGoal],
   ['report-modal', reportModal],
 ]) {
-  assert.match(source, /setDateText\(formatDateInput\(t\)\)/, `${name} doit appliquer le masque date`);
+  assert.match(source, /formatDateInput\(t\)/, `${name} doit appliquer le masque date`);
   assert.match(source, /keyboardType="number-pad"/, `${name} doit afficher le clavier numérique`);
   assert.doesNotMatch(source, /keyboardType="numbers-and-punctuation"/);
 }

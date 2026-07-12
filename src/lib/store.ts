@@ -2,7 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { Budget, Contribution, ContributionType, Goal } from './types';
+import {
+  Budget,
+  Contribution,
+  ContributionAllocation,
+  ContributionType,
+  Goal,
+} from './types';
 
 // Le store est la seule source de vérité des données utilisateur, persistée
 // en local (AsyncStorage). Supabase ne reçoit que des événements d'usage.
@@ -22,7 +28,13 @@ interface MMGState {
   addGoal: (goal: Goal) => void;
   updateGoal: (id: string, patch: Partial<Goal>) => void;
   deleteGoal: (id: string) => void;
-  logContribution: (goalId: string, type: ContributionType, amount: number) => Contribution;
+  logContribution: (
+    goalId: string,
+    type: ContributionType,
+    amount: number,
+    allocation?: ContributionAllocation,
+    cycleId?: string
+  ) => Contribution;
   setLastViewed: (goalId: string) => void;
   setNotifPermissionAsked: () => void;
 }
@@ -49,12 +61,14 @@ export const useStore = create<MMGState>()(
           lastViewedGoalId: s.lastViewedGoalId === id ? undefined : s.lastViewedGoalId,
         })),
 
-      logContribution: (goalId, type, amount) => {
+      logContribution: (goalId, type, amount, allocation, cycleId) => {
         const contribution: Contribution = {
           id: `contrib-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           type,
           amount,
           date: new Date().toISOString(),
+          allocation,
+          cycleId,
         };
         set((s) => ({
           goals: s.goals.map((g) =>

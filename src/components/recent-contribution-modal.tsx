@@ -39,7 +39,7 @@ export function RecentContributionModal({
           <Text style={styles.question}>Confirmer ce nouveau versement ?</Text>
           <View style={styles.buttons}>
             <Button label="Annuler" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
-            <Button label="Confirmer" onPress={onConfirm} style={{ flex: 1 }} />
+            <Button label="Confirmer ce versement" onPress={onConfirm} style={{ flex: 1 }} />
           </View>
         </View>
       </View>

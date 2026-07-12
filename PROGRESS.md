@@ -9,6 +9,45 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 6 : spécification consolidée cycles et versements
+
+### Fait
+- Remplacé les anciens champs actifs « rappel suivant / rappel sauté / ignorer » par un modèle
+  explicite de cycles mensuels, avec migration paresseuse des projets déjà stockés localement.
+- Rattaché chaque versement à la dette la plus ancienne non soldée ; le cycle concerné est
+  affiché après l'enregistrement. Sans dette, le versement reste un surplus par défaut.
+- Ajouté le choix radio obligatoire avant l'ancre : **extra** présélectionné ou **versement du
+  mois**. Le second choix est le seul soldage anticipé possible.
+- Conservé l'alerte indépendante des versements des trois derniers jours, avec liste montant +
+  date et confirmation explicite ; elle précède le choix extra/mois quand les deux s'appliquent.
+- Corrigé le report : un seul rappel ponctuel, limite à la veille de l'ancre suivante, ancre
+  mensuelle immuable, information non bloquante à trois jours ou moins, aucun dialogue de
+  proximité et aucune action d'ignorance.
+- Programmé plusieurs ancres distinctes par cycle. Le soldage annule uniquement les
+  notifications natives du cycle concerné ; les réponses d'un cycle déjà soldé sont filtrées.
+- Ajouté le message d'ancre contextuel qui additionne les surplus du cycle, ainsi que la
+  reprogrammation après chaque versement pour maintenir ce total à jour.
+- Branché le changement permanent du jour de rappel : une nouvelle date encore à venir
+  remplace l'ancre du cycle courant ; sinon le nouveau jour commence au cycle suivant.
+- Réécrit les tests à dates fixes pour les sept scénarios consolidés : report juillet → août,
+  dette la plus ancienne, extras, soldage anticipé, double versement, proximité informative et
+  changement d'ancre.
+- Validations réussies : tests cycles, notifications, saisie et format, `npx tsc --noEmit`,
+  `git diff --check`, export Expo web des 9 routes et bundle Android Hermes de 1 363 modules.
+  `expo lint` reste indisponible car le repo
+  n'a pas de configuration ESLint et l'installation automatique est bloquée hors réseau ; aucun
+  fichier de dépendances n'a été modifié.
+
+### En cours
+- Aucun code partiellement implémenté. Le téléphone n'est pas visible via ADB ; la validation
+  tactile et des notifications natives reste donc à confirmer par Patrick après le push.
+
+### Ensuite
+- Confirmation fonctionnelle sur le dev build Android par Patrick, notamment via l'appui long
+  sur le M et les actions Fait / Modifier / Reporter.
+
+---
+
 ## 2026-07-12 — Codex — Session 5 : reports mensuels et versements rapprochés
 
 ### Fait

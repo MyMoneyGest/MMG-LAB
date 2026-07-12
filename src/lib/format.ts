@@ -33,6 +33,26 @@ export function formatDayMonth(date: Date | string): string {
   return `${dd}/${mm}`;
 }
 
+const MONTHS = [
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
+];
+
+export function formatMonth(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return MONTHS[d.getMonth()];
+}
+
 /** Insère automatiquement les séparateurs d'une saisie JJ/MM/AAAA. */
 export function formatDateInput(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 8);

@@ -79,6 +79,8 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Quoi** : écran sombre plein écran après tout versement — check terracotta, montant,
   message encourageant (« Même moins que prévu, c'est déjà bien »), prochain rappel + montant,
   variante « objectif atteint 🎉 ».
+- **Rattachement visible** : lorsqu'un versement solde une dette, l'écran indique le cycle
+  concerné (« Ce versement compte pour juillet. »).
 - **Où** : `src/components/confirmation-overlay.tsx` (le fond sombre est réservé à ces moments,
   cf. direction visuelle).
 
@@ -93,34 +95,44 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Limite** : un report doit être futur et s'arrête à la veille de l'occurrence mensuelle
   suivante (jour mensuel 28 → report possible jusqu'au 27 inclus). La fenêtre affiche cette
   limite, masque les raccourcis hors limite et la logique métier refuse tout dépassement.
-- **Rappel mensuel conservé** : si le report est à plus de 3 jours du rappel mensuel, celui-ci
-  est conservé automatiquement. À 3 jours ou moins, MMG demande s'il faut le garder. Un refus
-  mémorise et saute uniquement cette date ; les mois suivants restent sur le jour habituel.
-- **Deux notifications temporaires** : quand le rappel mensuel est conservé, MMG programme le
-  report et l'occurrence mensuelle. Après le versement reporté, cette occurrence devient le
-  rappel courant et propose **Ignorer ce rappel** à son arrivée. Ignorer n'ajoute aucun
-  versement et reprend le cycle le mois suivant.
-- **Comment** : `postponeReminder()` revérifie la permission, persiste les deux échéances si
-  nécessaire, reprogramme les notifications et trace `reminder_postponed`.
+- **Ancre immuable** : le report crée un unique rappel ponctuel pour le cycle ciblé ; il ne
+  change jamais le jour mensuel. L'ancre suivante reste donc programmée et ouvre son propre
+  cycle, sans fusion ni mois sauté.
+- **Proximité informative** : si la date choisie se situe à trois jours ou moins de l'ancre
+  suivante, une simple ligne rappelle sa date. Il n'existe aucune question « garder/ignorer »
+  et aucune règle de proximité ne supprime un rappel.
+- **Extinction par cycle** : dès qu'un cycle est soldé, ses notifications programmées sont
+  annulées silencieusement. Une autre ancre ne disparaît que si son propre cycle est soldé.
+- **Comment** : `postponeReminder()` revérifie la permission, rattache le report au cycle le
+  plus ancien en attente, reprogramme les cycles et trace `reminder_postponed`.
 - **Où** : `src/components/report-modal.tsx`, `src/lib/plan.ts`
-  (`postponeDateLimit`, `postponeNeedsRegularChoice`, `upcomingSchedule`),
+  (`postponeDateLimit`, `postponeIsNearNextAnchor`, `cyclesAfterPostpone`),
   `src/lib/actions.ts`, `src/lib/notifications.ts`.
 
 ## 8. Montant différent / Retrait
 
-- **Quoi** : modals de saisie libre. Montant différent = versement du mois (même effet que le
-  1 tap). Retrait = sortie d'argent assumée sans jugement, plafonnée à ce qui est de côté.
+- **Quoi** : modals de saisie libre. Montant différent suit le même parcours que le 1 tap
+  (dette, extra ou choix du mois). Retrait = sortie d'argent assumée sans jugement, plafonnée à ce qui est de côté.
   Les fenêtres sont compactes, défilables et protégées contre le recouvrement par le clavier.
+- **Cycles et dettes** : chaque ancre correspond à un cycle. Un versement solde toujours le
+  cycle non soldé le plus ancien ; dans ce cas, le rattachement est automatique et visible.
+  Le montant peut être inférieur au conseil : le cycle est tout de même soldé.
+- **Sans dette** : le versement est un surplus par défaut. Il augmente la progression et
+  recalcule le plan, sans solder le cycle courant ou un cycle futur. Avant l'ancre, un choix
+  radio permet explicitement de conserver ce défaut ou de compter le geste comme versement du
+  mois ; seule cette seconde option solde le cycle en avance.
 - **Versements rapprochés** : avant un nouveau versement, MMG recherche ceux des trois derniers
   jours. S'il en trouve, une confirmation affiche chaque montant et chaque date ; l'utilisateur
-  peut annuler ou confirmer explicitement le nouveau versement.
+  peut annuler ou confirmer explicitement le nouveau versement. Cette vérification précède le
+  choix surplus/mois lorsque les deux sont nécessaires.
 - **Où** : `src/components/amount-modal.tsx`, `src/components/recent-contribution-modal.tsx`,
-  `src/lib/plan.ts` (`recentDeposits`), `src/lib/actions.ts` (`withdraw`).
+  `src/components/contribution-choice-modal.tsx`, `src/lib/plan.ts` (`recentDeposits`,
+  `contributionPlan`, `settleReminderCycle`), `src/lib/actions.ts`.
 
 ## 9. Notifications locales + deep link (boucle de rétention)
 
-- **Quoi** : un rappel local par objectif actif, temporairement deux lors d'un report conservant
-  l'occurrence mensuelle, à 9h, avec le montant de
+- **Quoi** : des rappels locaux datés et rattachés à leurs cycles (report ponctuel et ancres
+  mensuelles distinctes), à 9h, avec le montant de
   la prochaine échéance calculé selon le rythme choisi (« Mets X € de côté pour “Nom”. Même
   moins, c'est déjà bien. »). Le tap ouvre l'app directement sur le bon projet. La notification
   propose aussi trois actions : **Fait**, **Modifier**, **Reporter**.
@@ -131,13 +143,20 @@ Dernière mise à jour : 2026-07-12 (Codex).
   15 secondes pour le projet affiché (ou le dernier projet actif). Une confirmation immédiate
   indique quel projet sera utilisé. Sur Android, il faut déplier la notification pour voir les
   trois actions. Une seule notification de test reste programmée à la fois.
+- **Message contextuel** : les surplus du cycle sont additionnés dans le rappel d'ancre
+  (« Tu as déjà mis X € ce mois-ci… »). Chaque nouveau surplus reprogramme les rappels afin que
+  le message et le montant conseillé restent à jour.
 - **Ouverture normale de l'app** : si un rappel est encore dans le tiroir Android, MMG le retire
   puis affiche une fenêtre compacte au-dessus de l'écran courant avec **Fait**, **Modifier**,
-  **Reporter** et **Fermer pour le moment**. Si le rappel mensuel conservé suit un versement
-  reporté, la fenêtre propose aussi **Ignorer ce rappel**. Plusieurs rappels sont mis en file sans doublon.
+  **Reporter** et **Fermer pour le moment**. Plusieurs rappels sont mis en file sans doublon.
   Un rappel reçu pendant que l'app est déjà ouverte utilise la même fenêtre.
+- **Extinction fiable** : les identifiants natifs sont stockés par cycle. Un versement qui solde
+  un cycle annule son ancre ou son report, sans toucher aux notifications des autres cycles ;
+  une réponse native déjà associée à un cycle soldé est ignorée lors du routage.
 - **Nettoyage système** : un tap simple ou une action effectuée directement depuis la
-  notification retire explicitement celle-ci du tiroir avant le routage vers le projet.
+  notification retire explicitement celle-ci du tiroir avant le routage vers le projet. Un
+  versement retire également le rappel déjà affiché du cycle qu'il vient de solder, sans
+  retirer celui d'un autre cycle.
 - **Comment** : `scheduleGoalReminders()` (triggers DATE, channel Android `reminders`) et
   `scheduleTestReminder()` (trigger TIME_INTERVAL, channel `reminder_tests_v2`) utilisent la
   catégorie `mmg_reminder_actions`. `addReminderOpenListener()` déduplique les réponses,

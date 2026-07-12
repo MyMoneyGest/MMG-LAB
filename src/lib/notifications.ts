@@ -3,6 +3,14 @@ import { Platform } from 'react-native';
 
 import { formatEuro } from './format';
 import {
+  currentUpcomingCycle,
+  nextReminderFromCycles,
+  normalizedReminderCycles,
+  oldestUnsettledDebt,
+  reminderAtForCycle,
+  surplusForCycle,
+} from './plan';
+import {
   createReminderInbox,
   REMINDER_ACTION_IDENTIFIERS,
   reminderActionFromIdentifier,
@@ -12,11 +20,10 @@ import type {
   ReminderKind,
   ReminderNotificationAction,
 } from './notification-model';
-import { Goal } from './types';
+import { Goal, ReminderCycle } from './types';
 
-// Un rappel local par objectif actif, ou deux pendant un report conservant
-// l'occurrence mensuelle suivante, programmés à 9h,
-// avec le montant conseillé dans le message. Le tap ouvre l'app en deep link
+// Des rappels datés par cycle, programmés à 9h : un éventuel report ponctuel
+// et plusieurs ancres mensuelles indépendantes. Le tap ouvre l'app en deep link
 // sur le bon projet (data.goalId, géré dans app/_layout.tsx).
 //
 // expo-notifications est chargé paresseusement : sur web il n'existe pas, et
@@ -60,6 +67,7 @@ export interface ReminderNotificationResponse {
   action: ReminderNotificationAction;
   isTest: boolean;
   reminderKind: ReminderKind;
+  cycleId?: string;
 }
 
 export type TestReminderResult =
@@ -67,8 +75,13 @@ export type TestReminderResult =
   | { ok: false; reason: 'unsupported' | 'permission' | 'completed' | 'error' };
 
 export interface ScheduledGoalReminders {
-  notificationId: string | undefined;
-  followingNotificationId: string | undefined;
+  reminderCycles: ReminderCycle[];
+  nextReminderAt: string;
+  notificationId: undefined;
+  followingNotificationId: undefined;
+  followingReminderAt: undefined;
+  canIgnoreCurrentReminder: false;
+  skippedRegularReminderAt: undefined;
 }
 
 let lastTestNotificationId: string | null = null;
@@ -153,23 +166,50 @@ export async function scheduleGoalReminders(
   goal: Goal,
   suggestedAmount: number
 ): Promise<ScheduledGoalReminders> {
+  const now = new Date();
+  const cleanCycles = normalizedReminderCycles(goal, now).map((cycle) => ({
+    ...cycle,
+    anchorNotificationId: undefined,
+    postponedNotificationId: undefined,
+  }));
+  const result = (reminderCycles: ReminderCycle[]): ScheduledGoalReminders => ({
+    reminderCycles,
+    nextReminderAt: nextReminderFromCycles(reminderCycles).toISOString(),
+    notificationId: undefined,
+    followingNotificationId: undefined,
+    followingReminderAt: undefined,
+    canIgnoreCurrentReminder: false,
+    skippedRegularReminderAt: undefined,
+  });
   const N = getNotifications();
-  if (!N) return { notificationId: undefined, followingNotificationId: undefined };
+  if (!N) return result(cleanCycles);
   try {
     await cancelGoalReminder(goal);
     if (suggestedAmount <= 0) {
-      return { notificationId: undefined, followingNotificationId: undefined };
+      return result(cleanCycles);
     }
     await ensureAndroidChannel(N);
     await ensureReminderActions(N);
-    const now = new Date();
-    const scheduleAt = async (when: Date, reminderKind: 'primary' | 'following') => {
-      if (when <= now) return undefined;
-      return N.scheduleNotificationAsync({
+    const scheduleCycle = async (cycle: ReminderCycle): Promise<ReminderCycle> => {
+      if (cycle.settledAt) return cycle;
+      const when = reminderAtForCycle(cycle);
+      if (when <= now) return cycle;
+      const isPostponed = Boolean(cycle.postponedTo);
+      const surplus = isPostponed ? 0 : surplusForCycle(goal, cycle);
+      const body =
+        surplus > 0
+          ? `Tu as déjà mis ${formatEuro(surplus)} ce mois-ci. Ton versement prévu (${formatEuro(suggestedAmount)}) — fait, ou tu ajustes ?`
+          : `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
+      const notificationId = await N.scheduleNotificationAsync({
         content: {
           title: 'MMG — ton rituel du mois',
-          body: `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`,
-          data: { goalId: goal.id, url: `mmg://goal/${goal.id}`, reminderKind },
+          body,
+          data: {
+            goalId: goal.id,
+            cycleId: cycle.id,
+            url: `mmg://goal/${goal.id}`,
+            reminderKind: isPostponed ? 'postponed' : 'anchor',
+          },
           categoryIdentifier: ACTION_CATEGORY_ID,
         },
         trigger: {
@@ -178,16 +218,16 @@ export async function scheduleGoalReminders(
           channelId: CHANNEL_ID,
         },
       });
+      return isPostponed
+        ? { ...cycle, postponedNotificationId: notificationId }
+        : { ...cycle, anchorNotificationId: notificationId };
     };
-    const notificationId = await scheduleAt(new Date(goal.nextReminderAt), 'primary').catch(
-      () => undefined
+    const reminderCycles = await Promise.all(
+      cleanCycles.map((cycle) => scheduleCycle(cycle).catch(() => cycle))
     );
-    const followingNotificationId = goal.followingReminderAt
-      ? await scheduleAt(new Date(goal.followingReminderAt), 'following').catch(() => undefined)
-      : undefined;
-    return { notificationId, followingNotificationId };
+    return result(reminderCycles);
   } catch {
-    return { notificationId: undefined, followingNotificationId: undefined };
+    return result(cleanCycles);
   }
 }
 
@@ -209,14 +249,26 @@ export async function scheduleTestReminder(
     }
     await ensureAndroidTestChannel(N);
     await ensureReminderActions(N);
+    const cycle = oldestUnsettledDebt(goal) ?? currentUpcomingCycle(goal);
+    const surplus = cycle ? surplusForCycle(goal, cycle) : 0;
+    const body =
+      surplus > 0
+        ? `Tu as déjà mis ${formatEuro(surplus)} ce mois-ci. Ton versement prévu (${formatEuro(suggestedAmount)}) — fait, ou tu ajustes ?`
+        : `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
     if (lastTestNotificationId) {
       await N.cancelScheduledNotificationAsync(lastTestNotificationId).catch(() => {});
     }
     lastTestNotificationId = await N.scheduleNotificationAsync({
       content: {
         title: 'MMG — rappel test',
-        body: `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`,
-        data: { goalId: goal.id, url: `mmg://goal/${goal.id}`, isTest: true },
+        body,
+        data: {
+          goalId: goal.id,
+          cycleId: cycle?.id,
+          reminderKind: cycle?.postponedTo ? 'postponed' : 'anchor',
+          url: `mmg://goal/${goal.id}`,
+          isTest: true,
+        },
         categoryIdentifier: ACTION_CATEGORY_ID,
       },
       trigger: {
@@ -273,10 +325,34 @@ export function addReminderReceivedListener(
 export async function cancelGoalReminder(goal: Goal): Promise<void> {
   const N = getNotifications();
   if (!N) return;
-  const ids = [goal.notificationId, goal.followingNotificationId].filter(
+  const ids = [
+    goal.notificationId,
+    goal.followingNotificationId,
+    ...(goal.reminderCycles ?? []).flatMap((cycle) => [
+      cycle.anchorNotificationId,
+      cycle.postponedNotificationId,
+    ]),
+  ].filter(
     (id): id is string => Boolean(id)
   );
   await Promise.all(ids.map((id) => N.cancelScheduledNotificationAsync(id).catch(() => {})));
+}
+
+/** Retire uniquement une notification déjà affichée pour le cycle qui vient d'être soldé. */
+export async function dismissPresentedCycle(goalId: string, cycleId: string): Promise<void> {
+  const N = getNotifications();
+  if (!N) return;
+  const presented = await N.getPresentedNotificationsAsync().catch(() => []);
+  const presentedIds = presented
+    .filter(
+      (notification) =>
+        notification.request.content.data?.goalId === goalId &&
+        notification.request.content.data?.cycleId === cycleId
+    )
+    .map((notification) => notification.request.identifier);
+  await Promise.all(
+    presentedIds.map((id) => N.dismissNotificationAsync(id).catch(() => {}))
+  );
 }
 
 /**

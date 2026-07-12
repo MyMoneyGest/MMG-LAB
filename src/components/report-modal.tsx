@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Pressable,
@@ -16,7 +15,7 @@ import {
   canPostponeReminderTo,
   nextRegularReminderAfterCurrent,
   postponeDateLimit,
-  postponeNeedsRegularChoice,
+  postponeIsNearNextAnchor,
 } from '@/lib/plan';
 import { Goal } from '@/lib/types';
 import { Button, Field, KeyboardSafeScrollView } from './ui';
@@ -40,6 +39,7 @@ export function ReportModal({
   isTestAction?: boolean;
 }) {
   const [dateText, setDateText] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const latestDate = postponeDateLimit(goal);
   const nextRegularDate = nextRegularReminderAfterCurrent(goal);
@@ -48,17 +48,17 @@ export function ReportModal({
   useEffect(() => {
     if (visible) {
       setDateText('');
+      setSelectedDate(null);
       setError(null);
     }
   }, [visible]);
 
-  const apply = async (date: Date, keepRegularReminder: boolean) => {
+  const apply = async (date: Date) => {
     if (!canPostponeReminderTo(goal, date)) {
       setError(dateLimitError);
       return;
     }
     const result = await postponeReminder(goal, date, {
-      keepRegularReminder,
       source: isTestAction ? 'test_notification' : 'app',
     });
     if (!result.ok) {
@@ -73,19 +73,9 @@ export function ReportModal({
       setError(dateLimitError);
       return;
     }
-    if (!postponeNeedsRegularChoice(goal, date)) {
-      void apply(date, true);
-      return;
-    }
-    Alert.alert(
-      `Garder le rappel du ${formatDayMonth(nextRegularDate)} ?`,
-      `Le report au ${formatDate(date)} est proche du rappel mensuel. Si tu ne le gardes pas, le prochain rappel sera programmé le mois suivant.`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Non', onPress: () => void apply(date, false) },
-        { text: 'Oui, garder', onPress: () => void apply(date, true) },
-      ]
-    );
+    setSelectedDate(date);
+    setDateText(formatDate(date));
+    setError(null);
   };
 
   const applyPrecise = () => {
@@ -100,7 +90,8 @@ export function ReportModal({
       setError('Choisis une date à venir.');
       return;
     }
-    chooseDate(parsed);
+    setSelectedDate(parsed);
+    void apply(parsed);
   };
 
   const inDays = (n: number) => {
@@ -144,13 +135,20 @@ export function ReportModal({
               <Field
                 value={dateText}
                 onChangeText={(t) => {
-                  setDateText(formatDateInput(t));
+                  const formatted = formatDateInput(t);
+                  setDateText(formatted);
+                  setSelectedDate(parseDateInput(formatted));
                   setError(null);
                 }}
                 placeholder="JJ/MM/AAAA"
                 keyboardType="number-pad"
                 maxLength={10}
               />
+              {selectedDate && postponeIsNearNextAnchor(goal, selectedDate) ? (
+                <Text style={styles.info}>
+                  Votre prochain rappel régulier reste prévu le {formatDate(nextRegularDate)}.
+                </Text>
+              ) : null}
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <View style={styles.buttons}>
                 <Button label="Annuler" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
@@ -198,5 +196,15 @@ const styles = StyleSheet.create({
   optionDate: { fontSize: 16, fontWeight: '700', color: colors.accent },
   fieldTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 6, marginBottom: 6 },
   error: { color: colors.accent, fontSize: 13, fontWeight: '600', marginBottom: 8 },
+  info: {
+    color: colors.textSecondary,
+    backgroundColor: colors.cardSoft,
+    borderRadius: radius.field,
+    padding: 10,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
   buttons: { flexDirection: 'row', gap: 10 },
 });

@@ -5,130 +5,125 @@ import ts from 'typescript';
 
 const source = fs.readFileSync(path.join(process.cwd(), 'src/lib/plan.ts'), 'utf8');
 const compiled = ts.transpileModule(source, {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 const loaded = { exports: {} };
 new Function('exports', 'module', 'require', compiled)(loaded.exports, loaded, () => ({}));
 
 const {
   canPostponeReminderTo,
+  contributionPlan,
+  currentUpcomingCycle,
+  cyclesAfterPostpone,
+  cyclesAfterReminderDayChange,
   daysBeforeRegularReminder,
   nextRegularReminderAfterCurrent,
+  normalizedReminderCycles,
+  oldestUnsettledDebt,
   postponeDateLimit,
-  postponeNeedsRegularChoice,
+  postponeIsNearNextAnchor,
   recentDeposits,
-  reminderStateAfterContribution,
-  upcomingSchedule,
+  reminderAtForCycle,
+  settleReminderCycle,
+  surplusForCycle,
 } = loaded.exports;
-const goal = {
+
+const at = (year, month, day, hour = 9) => new Date(year, month - 1, day, hour, 0, 0, 0);
+const july12 = at(2026, 7, 12, 12);
+const baseGoal = {
   id: 'goal-1',
   name: 'Voiture',
   category: 'car',
   targetAmount: 5000,
   alreadyAvailable: 0,
-  targetDate: '2027-12-31T09:00:00.000Z',
-  reminderDay: 11,
+  targetDate: at(2027, 12, 31).toISOString(),
+  reminderDay: 28,
   rhythm: 'stable',
-  nextReminderAt: '2026-07-11T09:00:00+02:00',
-  createdAt: '2026-01-01T09:00:00.000Z',
+  nextReminderAt: at(2026, 7, 28).toISOString(),
+  createdAt: at(2026, 1, 1).toISOString(),
   contributions: [],
 };
-const now = new Date(2026, 6, 12, 12, 0, 0);
 
-assert.deepEqual(nextRegularReminderAfterCurrent(goal, now), new Date(2026, 7, 11, 9, 0, 0));
-assert.deepEqual(postponeDateLimit(goal, now), new Date(2026, 7, 10, 9, 0, 0));
-assert.equal(canPostponeReminderTo(goal, new Date(2026, 6, 13), now), true);
-assert.equal(canPostponeReminderTo(goal, new Date(2026, 7, 10), now), true);
-assert.equal(canPostponeReminderTo(goal, new Date(2026, 7, 11), now), false);
-assert.equal(canPostponeReminderTo(goal, new Date(2026, 7, 12), now), false);
-assert.equal(canPostponeReminderTo(goal, new Date(2026, 6, 12), now), false);
+// Report ponctuel : juillet va au 5 août, l'ancre d'août reste indépendante.
+assert.deepEqual(nextRegularReminderAfterCurrent(baseGoal, july12), at(2026, 8, 28));
+assert.deepEqual(postponeDateLimit(baseGoal, july12), at(2026, 8, 27));
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 27), july12), true);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 28), july12), false);
+assert.equal(daysBeforeRegularReminder(baseGoal, at(2026, 8, 25), july12), 3);
+assert.equal(postponeIsNearNextAnchor(baseGoal, at(2026, 8, 25), july12), true);
+assert.equal(postponeIsNearNextAnchor(baseGoal, at(2026, 8, 24), july12), false);
 
-const futureGoal = { ...goal, nextReminderAt: new Date(2026, 6, 20, 9).toISOString() };
-assert.deepEqual(postponeDateLimit(futureGoal, now), new Date(2026, 7, 10, 9, 0, 0));
+const reportedCycles = cyclesAfterPostpone(baseGoal, at(2026, 8, 5), july12);
+assert.deepEqual(reminderAtForCycle(reportedCycles[0]), at(2026, 8, 5));
+assert.deepEqual(new Date(reportedCycles[1].anchorAt), at(2026, 8, 28));
 
-const day28Goal = {
-  ...goal,
-  reminderDay: 28,
-  nextReminderAt: new Date(2026, 6, 28, 9).toISOString(),
-};
-assert.deepEqual(nextRegularReminderAfterCurrent(day28Goal, now), new Date(2026, 7, 28, 9));
-assert.deepEqual(postponeDateLimit(day28Goal, now), new Date(2026, 7, 27, 9));
-assert.equal(canPostponeReminderTo(day28Goal, new Date(2026, 7, 27), now), true);
-assert.equal(canPostponeReminderTo(day28Goal, new Date(2026, 7, 28), now), false);
-assert.equal(daysBeforeRegularReminder(day28Goal, new Date(2026, 7, 25), now), 3);
-assert.equal(postponeNeedsRegularChoice(day28Goal, new Date(2026, 7, 25), now), true);
-assert.equal(postponeNeedsRegularChoice(day28Goal, new Date(2026, 7, 27), now), true);
-assert.equal(postponeNeedsRegularChoice(day28Goal, new Date(2026, 7, 24), now), false);
-
-const keptGoal = { ...day28Goal, followingReminderAt: new Date(2026, 7, 28, 9).toISOString() };
-assert.deepEqual(reminderStateAfterContribution(keptGoal, new Date(2026, 7, 10, 10)), {
-  nextReminderAt: new Date(2026, 7, 28, 9),
-  canIgnoreCurrentReminder: true,
-});
-assert.deepEqual(reminderStateAfterContribution(day28Goal, new Date(2026, 7, 27, 10)), {
-  nextReminderAt: new Date(2026, 8, 28, 9),
-  canIgnoreCurrentReminder: false,
-});
-
-const contributionGoal = {
-  ...day28Goal,
+// Le versement du 5 août solde obligatoirement juillet, pas août.
+const august5Goal = { ...baseGoal, reminderCycles: reportedCycles };
+const julyDebtPlan = contributionPlan(august5Goal, 'surplus', at(2026, 8, 5, 10));
+assert.equal(julyDebtPlan.forcedDebt, true);
+assert.equal(julyDebtPlan.cycleId, reportedCycles[0].id);
+const cyclesAfterJulyPayment = settleReminderCycle(
+  reportedCycles,
+  julyDebtPlan.cycleId,
+  'contribution-july',
+  at(2026, 8, 5, 10),
+);
+const julyPaidGoal = {
+  ...august5Goal,
+  reminderCycles: cyclesAfterJulyPayment,
   contributions: [
-    { id: 'recent', type: 'deposit', amount: 120, date: new Date(2026, 7, 25, 8).toISOString() },
-    { id: 'old', type: 'deposit', amount: 80, date: new Date(2026, 7, 24, 8).toISOString() },
-    { id: 'withdrawal', type: 'withdrawal', amount: 20, date: new Date(2026, 7, 27, 8).toISOString() },
+    {
+      id: 'contribution-july',
+      type: 'deposit',
+      amount: 100,
+      date: at(2026, 8, 5, 10).toISOString(),
+      allocation: 'cycle',
+      cycleId: julyDebtPlan.cycleId,
+    },
   ],
 };
-assert.deepEqual(
-  recentDeposits(contributionGoal, new Date(2026, 7, 28, 10)).map((item) => item.id),
-  ['recent'],
-);
+assert.equal(oldestUnsettledDebt(julyPaidGoal, at(2026, 8, 10, 10)), null);
+assert.deepEqual(new Date(currentUpcomingCycle(julyPaidGoal, at(2026, 8, 10, 10)).anchorAt), at(2026, 8, 28));
 
-const scheduleBase = {
-  ...day28Goal,
-  nextReminderAt: new Date(2026, 7, 10, 9).toISOString(),
-  targetDate: new Date(2026, 11, 31, 9).toISOString(),
+// Sans dette, extra par défaut ; le choix explicite peut solder août.
+assert.deepEqual(contributionPlan(julyPaidGoal, 'surplus', at(2026, 8, 10, 10)), {
+  allocation: 'surplus',
+  forcedDebt: false,
+});
+const augustPlan = contributionPlan(julyPaidGoal, 'settle_current', at(2026, 8, 10, 10));
+assert.equal(augustPlan.cycleId, cyclesAfterJulyPayment[1].id);
+assert.equal(augustPlan.forcedDebt, false);
+
+// Les surplus du cycle d'août alimentent le message contextuel, pas le rattrapage de juillet.
+const extrasGoal = {
+  ...julyPaidGoal,
+  contributions: [
+    ...julyPaidGoal.contributions,
+    { id: 'extra-1', type: 'deposit', amount: 30, date: at(2026, 8, 10, 10).toISOString(), allocation: 'surplus' },
+    { id: 'extra-2', type: 'deposit', amount: 40, date: at(2026, 8, 18, 10).toISOString(), allocation: 'surplus' },
+    { id: 'extra-3', type: 'deposit', amount: 50, date: at(2026, 8, 22, 10).toISOString(), allocation: 'surplus' },
+  ],
 };
-const keptSchedule = upcomingSchedule(
-  { ...scheduleBase, followingReminderAt: new Date(2026, 7, 28, 9).toISOString() },
-  new Date(2026, 7, 1, 10),
-  3,
-).map((row) => row.date);
-assert.deepEqual(keptSchedule, [
-  new Date(2026, 7, 10, 9),
-  new Date(2026, 7, 28, 9),
-  new Date(2026, 8, 28, 9),
-]);
-const fullKeptSchedule = upcomingSchedule(
-  { ...scheduleBase, followingReminderAt: new Date(2026, 7, 28, 9).toISOString() },
-  new Date(2026, 7, 1, 10),
-);
-assert.equal(
-  Math.round(fullKeptSchedule.reduce((sum, row) => sum + row.amount, 0) * 100) / 100,
-  5000,
-);
-assert.ok(fullKeptSchedule[0].amount < 5000);
+assert.equal(surplusForCycle(extrasGoal, cyclesAfterJulyPayment[1]), 120);
 
-const skippedGoal = {
-  ...scheduleBase,
-  nextReminderAt: new Date(2026, 7, 27, 9).toISOString(),
-  skippedRegularReminderAt: new Date(2026, 7, 28, 9).toISOString(),
-};
+// Deux versements le même jour : le second n'est plus rattaché à juillet et reste extra.
+assert.deepEqual(contributionPlan(julyPaidGoal, 'surplus', at(2026, 8, 5, 11)), {
+  allocation: 'surplus',
+  forcedDebt: false,
+});
 assert.deepEqual(
-  upcomingSchedule(skippedGoal, new Date(2026, 7, 1, 10), 3).map((row) => row.date),
-  [new Date(2026, 7, 27, 9), new Date(2026, 8, 28, 9), new Date(2026, 9, 28, 9)],
-);
-assert.deepEqual(
-  upcomingSchedule(skippedGoal, new Date(2026, 7, 29, 10), 1).map((row) => row.date),
-  [new Date(2026, 8, 28, 9)],
+  recentDeposits(julyPaidGoal, at(2026, 8, 5, 11)).map((item) => item.id),
+  ['contribution-july'],
 );
 
-const actionsSource = fs.readFileSync(path.join(process.cwd(), 'src/lib/actions.ts'), 'utf8');
-assert.match(
-  actionsSource,
-  /if \(!canPostponeReminderTo\(goal, date\)\) return \{ ok: false, reason: 'date' \}/,
-  'La borne doit aussi être imposée par la logique métier, pas seulement par la fenêtre.',
-);
-assert.match(actionsSource, /followingReminderAt = options\.keepRegularReminder/);
-assert.match(actionsSource, /export async function ignoreCurrentReminder/);
+// Changement d'ancre : jour encore à venir appliqué au cycle, jour passé au cycle suivant.
+const changedTo20 = cyclesAfterReminderDayChange(baseGoal, 20, july12);
+assert.deepEqual(new Date(changedTo20[0].anchorAt), at(2026, 7, 20));
+const changedTo5 = cyclesAfterReminderDayChange(baseGoal, 5, july12);
+assert.deepEqual(new Date(changedTo5[0].anchorAt), at(2026, 7, 28));
+assert.deepEqual(new Date(changedTo5[1].anchorAt), at(2026, 8, 5));
 
-console.log("Tests report : report futur autorisé jusqu'à la veille, rappel mensuel exclu.");
+// La normalisation maintient plusieurs ancres futures sans fusionner les cycles.
+assert.ok(normalizedReminderCycles(baseGoal, july12).length >= 3);
+
+console.log('Tests cycles : reports, dettes, extras, extinction et changement d’ancre validés.');

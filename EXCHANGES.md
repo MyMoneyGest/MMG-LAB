@@ -9,9 +9,21 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
-## 2026-07-12 — Codex — [DÉCISION] Règle complète des reports de rappel
+## 2026-07-12 — Codex — [DÉCISION] Spécification consolidée des cycles
 
-Décision de Patrick après test Android : le report s'arrête à la veille du rappel mensuel
+La spécification consolidée transmise par Patrick remplace toutes les règles antérieures de
+report et de proximité. Un report ne modifie jamais l'ancre. Les rappels sont éteints uniquement
+par le soldage de leur propre cycle. Un versement solde d'abord la dette la plus ancienne ; sans
+dette, il est un surplus par défaut et seul le choix explicite « versement du mois » peut solder
+le cycle en avance. À trois jours ou moins de l'ancre suivante, MMG informe sans poser de
+question. Le code, les tests et `FEATURES.md` doivent désormais suivre exclusivement cette règle.
+
+---
+
+## 2026-07-12 — Codex — [DÉCISION REMPLACÉE] Ancienne règle des reports
+
+Cette décision est conservée pour l'historique mais remplacée intégralement par la
+spécification consolidée ci-dessus. Ancienne règle : le report s'arrête à la veille du rappel mensuel
 suivant. À plus de 3 jours, ce rappel est conservé automatiquement ; à 3 jours ou moins,
 l'utilisateur choisit. S'il refuse, seule cette occurrence est sautée. S'il la conserve après
 avoir traité le report, il peut l'ignorer à son arrivée sans enregistrer de versement. Le jour

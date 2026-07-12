@@ -1,7 +1,7 @@
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
-import { formatDate, formatEuro } from '@/lib/format';
+import { formatDate, formatEuro, formatMonth } from '@/lib/format';
 import { Button } from './ui';
 
 // Le « moment marquant » : écran sombre réservé à la confirmation d'un
@@ -14,6 +14,7 @@ export function ConfirmationOverlay({
   nextReminderAt,
   nextAmount,
   done,
+  cycleAnchorAt,
   onClose,
 }: {
   visible: boolean;
@@ -23,6 +24,7 @@ export function ConfirmationOverlay({
   nextAmount?: number;
   /** true si l'objectif est atteint avec ce versement */
   done?: boolean;
+  cycleAnchorAt?: string;
   onClose: () => void;
 }) {
   return (
@@ -38,6 +40,9 @@ export function ConfirmationOverlay({
             ? `« ${goalName} » est financé. Objectif atteint 🎉`
             : `mis de côté pour « ${goalName} ». Même moins que prévu, c'est déjà bien : le plan s'ajuste tout seul.`}
         </Text>
+        {cycleAnchorAt ? (
+          <Text style={styles.cycleInfo}>Ce versement compte pour {formatMonth(cycleAnchorAt)}.</Text>
+        ) : null}
         {!done && nextReminderAt && nextAmount !== undefined && nextAmount > 0 ? (
           <View style={styles.nextCard}>
             <Text style={styles.nextLabel}>Prochain rappel</Text>
@@ -85,6 +90,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 25,
     marginBottom: 28,
+  },
+  cycleInfo: {
+    color: colors.textOnDark,
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginTop: -16,
+    marginBottom: 24,
   },
   nextCard: {
     backgroundColor: 'rgba(247, 242, 234, 0.08)',

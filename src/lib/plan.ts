@@ -1,10 +1,17 @@
 // Logique de plan, 100% pure (pas d'accès store/IO) pour rester testable.
 //
-// Principe non-punitif : n'importe quel montant versé marque le mois comme
-// fait ; l'écart avec le montant conseillé est absorbé par le recalcul
-// (remaining / mois restants), jamais par une pénalité ou un blocage.
+// Principe non-punitif : n'importe quel montant rattaché à un cycle le solde ;
+// un surplus reste volontairement hors cycle. Tout écart avec le conseil est
+// absorbé par le recalcul, jamais par une pénalité ou un blocage.
 
-import { Budget, Contribution, Goal, SavingsRhythm } from './types';
+import {
+  Budget,
+  Contribution,
+  ContributionAllocation,
+  Goal,
+  ReminderCycle,
+  SavingsRhythm,
+} from './types';
 
 /** Part du reste à vivre gardée en réserve pour éviter un plan trop serré. */
 export const SAFETY_MARGIN = 0.2;
@@ -102,7 +109,12 @@ export function diagnostic(monthly: number, budget: Budget | undefined): Diagnos
 
 /** Une action est en attente si l'échéance du rappel est passée (due ou en retard). */
 export function hasPendingAction(goal: Goal, now: Date = new Date()): boolean {
-  return remainingAmount(goal) > 0 && new Date(goal.nextReminderAt) <= now;
+  return (
+    remainingAmount(goal) > 0 &&
+    normalizedReminderCycles(goal, now).some(
+      (cycle) => !cycle.settledAt && reminderAtForCycle(cycle) <= now
+    )
+  );
 }
 
 /** Première occurrence du jour de rappel strictement après `from`, à 9h. */
@@ -113,11 +125,177 @@ export function nextReminderAfter(from: Date, reminderDay: number): Date {
   return d;
 }
 
-/** Occurrence mensuelle suivant le rappel courant, selon le jour habituel du plan. */
+function cycleId(anchorAt: Date): string {
+  const year = anchorAt.getFullYear();
+  const month = String(anchorAt.getMonth() + 1).padStart(2, '0');
+  const day = String(anchorAt.getDate()).padStart(2, '0');
+  return `cycle-${year}-${month}-${day}`;
+}
+
+function cycleFromAnchor(anchorAt: Date): ReminderCycle {
+  return { id: cycleId(anchorAt), anchorAt: anchorAt.toISOString() };
+}
+
+function previousAnchorOnOrBefore(date: Date, reminderDay: number): Date {
+  const day = Math.min(28, Math.max(1, Math.round(reminderDay)));
+  const anchor = new Date(date.getFullYear(), date.getMonth(), day, 9, 0, 0, 0);
+  if (anchor > date) anchor.setMonth(anchor.getMonth() - 1);
+  return anchor;
+}
+
+/** Date réellement présentée pour un cycle : report ponctuel ou ancre. */
+export function reminderAtForCycle(cycle: ReminderCycle): Date {
+  return new Date(cycle.postponedTo ?? cycle.anchorAt);
+}
+
+/**
+ * Migration paresseuse des anciens projets puis ajout de trois ancres d'avance.
+ * Les anciens champs ne sont lus qu'ici ; les cycles deviennent ensuite la source de vérité.
+ */
+export function normalizedReminderCycles(
+  goal: Goal,
+  now: Date = new Date(),
+  futureCount: number = 3
+): ReminderCycle[] {
+  let cycles = (goal.reminderCycles ?? []).map((cycle) => ({ ...cycle }));
+  if (!cycles.length) {
+    const primary = new Date(goal.nextReminderAt);
+    const isAnchor = primary.getDate() === goal.reminderDay;
+    const anchor = isAnchor ? primary : previousAnchorOnOrBefore(primary, goal.reminderDay);
+    cycles.push({
+      ...cycleFromAnchor(anchor),
+      ...(isAnchor ? {} : { postponedTo: primary.toISOString() }),
+      anchorNotificationId: goal.notificationId,
+    });
+    if (goal.followingReminderAt) {
+      const following = new Date(goal.followingReminderAt);
+      cycles.push({
+        ...cycleFromAnchor(following),
+        anchorNotificationId: goal.followingNotificationId,
+      });
+    }
+  }
+
+  const byId = new Map(cycles.map((cycle) => [cycle.id, cycle]));
+  cycles = [...byId.values()].sort(
+    (a, b) => new Date(a.anchorAt).getTime() - new Date(b.anchorAt).getTime()
+  );
+
+  const lastKnown = cycles.at(-1);
+  let cursor = lastKnown ? new Date(lastKnown.anchorAt) : nextReminderAfter(now, goal.reminderDay);
+  if (!lastKnown) cycles.push(cycleFromAnchor(cursor));
+  let future = cycles.filter((cycle) => new Date(cycle.anchorAt) > now).length;
+  while (future < futureCount) {
+    cursor = nextReminderAfter(cursor, goal.reminderDay);
+    const next = cycleFromAnchor(cursor);
+    if (!cycles.some((cycle) => cycle.id === next.id)) cycles.push(next);
+    future += 1;
+  }
+  return cycles.sort(
+    (a, b) => new Date(a.anchorAt).getTime() - new Date(b.anchorAt).getTime()
+  );
+}
+
+export function nextReminderFromCycles(cycles: ReminderCycle[]): Date {
+  const open = cycles.filter((cycle) => !cycle.settledAt).sort((a, b) => {
+    const aAt = reminderAtForCycle(a).getTime();
+    const bAt = reminderAtForCycle(b).getTime();
+    return aAt - bAt;
+  });
+  return reminderAtForCycle(open[0]);
+}
+
+/** Dette la plus ancienne : cycle non soldé dont l'ancre est arrivée. */
+export function oldestUnsettledDebt(goal: Goal, now: Date = new Date()): ReminderCycle | null {
+  return (
+    normalizedReminderCycles(goal, now).find(
+      (cycle) => !cycle.settledAt && new Date(cycle.anchorAt) <= now
+    ) ?? null
+  );
+}
+
+/** Cycle courant pouvant être explicitement soldé avant son ancre. */
+export function currentUpcomingCycle(goal: Goal, now: Date = new Date()): ReminderCycle | null {
+  return (
+    normalizedReminderCycles(goal, now).find(
+      (cycle) => !cycle.settledAt && new Date(cycle.anchorAt) > now
+    ) ?? null
+  );
+}
+
+export type ContributionIntent = 'surplus' | 'settle_current';
+
+export interface ContributionPlan {
+  allocation: ContributionAllocation;
+  cycleId?: string;
+  cycleAnchorAt?: string;
+  forcedDebt: boolean;
+}
+
+/** Rattachement déterministe : dette d'abord, sinon extra par défaut. */
+export function contributionPlan(
+  goal: Goal,
+  intent: ContributionIntent = 'surplus',
+  now: Date = new Date()
+): ContributionPlan {
+  const debt = oldestUnsettledDebt(goal, now);
+  if (debt) {
+    return {
+      allocation: 'cycle',
+      cycleId: debt.id,
+      cycleAnchorAt: debt.anchorAt,
+      forcedDebt: true,
+    };
+  }
+  const current = currentUpcomingCycle(goal, now);
+  if (intent === 'settle_current' && current) {
+    return {
+      allocation: 'cycle',
+      cycleId: current.id,
+      cycleAnchorAt: current.anchorAt,
+      forcedDebt: false,
+    };
+  }
+  return { allocation: 'surplus', forcedDebt: false };
+}
+
+export function settleReminderCycle(
+  cycles: ReminderCycle[],
+  cycleIdToSettle: string,
+  contributionId: string,
+  settledAt: Date
+): ReminderCycle[] {
+  return cycles.map((cycle) =>
+    cycle.id === cycleIdToSettle
+      ? {
+          ...cycle,
+          settledAt: settledAt.toISOString(),
+          settledByContributionId: contributionId,
+        }
+      : cycle
+  );
+}
+
+/** Surplus saisis entre l'ancre précédente et l'ancre de ce cycle. */
+export function surplusForCycle(goal: Goal, cycle: ReminderCycle): number {
+  const anchor = new Date(cycle.anchorAt);
+  const previous = new Date(anchor);
+  previous.setMonth(previous.getMonth() - 1);
+  return goal.contributions.reduce((sum, contribution) => {
+    if (contribution.type !== 'deposit' || contribution.allocation !== 'surplus') return sum;
+    const at = new Date(contribution.date);
+    return at > previous && at <= anchor ? sum + contribution.amount : sum;
+  }, 0);
+}
+
+function cycleToPostpone(goal: Goal, now: Date): ReminderCycle {
+  const cycles = normalizedReminderCycles(goal, now);
+  return cycles.find((cycle) => !cycle.settledAt)!;
+}
+
+/** Occurrence mensuelle suivant le cycle reporté, selon l'ancre du plan. */
 export function nextRegularReminderAfterCurrent(goal: Goal, now: Date = new Date()): Date {
-  const currentReminder = new Date(goal.nextReminderAt);
-  const reference = currentReminder > now ? currentReminder : now;
-  return nextReminderAfter(reference, goal.reminderDay);
+  return nextReminderAfter(new Date(cycleToPostpone(goal, now).anchorAt), goal.reminderDay);
 }
 
 /** Dernière date de report : la veille de la prochaine occurrence mensuelle. */
@@ -133,8 +311,8 @@ export function daysBeforeRegularReminder(goal: Goal, date: Date, now: Date = ne
   return calendarDayNumber(regular) - calendarDayNumber(date);
 }
 
-/** À trois jours ou moins, l'utilisateur doit décider s'il garde le rappel mensuel. */
-export function postponeNeedsRegularChoice(
+/** À trois jours ou moins, l'interface affiche une information non bloquante. */
+export function postponeIsNearNextAnchor(
   goal: Goal,
   date: Date,
   now: Date = new Date()
@@ -149,19 +327,22 @@ export function canPostponeReminderTo(goal: Goal, date: Date, now: Date = new Da
   return at > now && at <= postponeDateLimit(goal, now);
 }
 
-/** État du rappel après un versement : priorité au rappel mensuel conservé s'il est futur. */
-export function reminderStateAfterContribution(
+/** Applique un report au seul cycle ciblé, sans jamais toucher à l'ancre suivante. */
+export function cyclesAfterPostpone(
   goal: Goal,
+  date: Date,
   now: Date = new Date()
-): { nextReminderAt: Date; canIgnoreCurrentReminder: boolean } {
-  const following = goal.followingReminderAt ? new Date(goal.followingReminderAt) : null;
-  if (following && following > now) {
-    return { nextReminderAt: following, canIgnoreCurrentReminder: true };
-  }
-  return {
-    nextReminderAt: reminderAfterConfirmation(goal, now),
-    canIgnoreCurrentReminder: false,
-  };
+): ReminderCycle[] {
+  const target = cycleToPostpone(goal, now);
+  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
+  return normalizedReminderCycles(goal, now).map((cycle) =>
+    cycle.id === target.id
+      ? {
+          ...cycle,
+          postponedTo: at.toISOString(),
+        }
+      : cycle
+  );
 }
 
 /** Versements effectués dans les trois derniers jours calendaires, du plus récent au plus ancien. */
@@ -180,15 +361,28 @@ export function recentDeposits(
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
-/**
- * Échéance suivante après confirmation d'un versement : le versement marque
- * le mois en cours comme fait, donc prochain rappel = occurrence du jour de
- * rappel le mois suivant. Payer en avance ne fait pas sauter de mois, payer
- * en retard ne déclenche pas de rappel « de rattrapage » immédiat.
- */
-export function reminderAfterConfirmation(goal: Goal, now: Date = new Date()): Date {
-  const day = Math.min(28, Math.max(1, Math.round(goal.reminderDay)));
-  return new Date(now.getFullYear(), now.getMonth() + 1, day, 9, 0, 0, 0);
+/** Change l'ancre du cycle courant si le nouveau jour est encore à venir. */
+export function cyclesAfterReminderDayChange(
+  goal: Goal,
+  newReminderDay: number,
+  now: Date = new Date()
+): ReminderCycle[] {
+  const day = Math.min(28, Math.max(1, Math.round(newReminderDay)));
+  const cycles = normalizedReminderCycles(goal, now);
+  const pastOrDue = cycles.filter((cycle) => new Date(cycle.anchorAt) <= now);
+  const current = cycles.find((cycle) => new Date(cycle.anchorAt) > now);
+  if (!current) return pastOrDue;
+
+  const oldAnchor = new Date(current.anchorAt);
+  const candidate = new Date(oldAnchor.getFullYear(), oldAnchor.getMonth(), day, 9, 0, 0, 0);
+  const first = candidate > now ? cycleFromAnchor(candidate) : { ...current };
+  const rebuilt = [...pastOrDue, first];
+  let cursor = new Date(first.anchorAt);
+  for (let index = 0; index < 3; index += 1) {
+    cursor = nextReminderAfter(cursor, day);
+    rebuilt.push(cycleFromAnchor(cursor));
+  }
+  return rebuilt;
 }
 
 /** Échéancier prévisionnel : occurrences mensuelles jusqu'à la date cible. */
@@ -201,26 +395,14 @@ export function upcomingSchedule(
   if (remaining <= 0) return [];
   const rows: { date: Date; amount: number }[] = [];
   const target = new Date(goal.targetDate);
-  let cursor = new Date(goal.nextReminderAt);
-  const following = goal.followingReminderAt ? new Date(goal.followingReminderAt) : null;
-  const skipped = goal.skippedRegularReminderAt
-    ? new Date(goal.skippedRegularReminderAt)
-    : null;
-  if (cursor < now) {
-    cursor = following && following > now ? following : nextReminderAfter(now, goal.reminderDay);
-  }
-  const dates: Date[] = [];
+  const cycles = normalizedReminderCycles(goal, now, 3).filter((cycle) => !cycle.settledAt);
+  const dates = cycles.map(reminderAtForCycle).filter((date) => date >= now && date <= target);
+  let cursor = cycles.length
+    ? new Date(cycles.at(-1)!.anchorAt)
+    : nextReminderAfter(now, goal.reminderDay);
   while (cursor <= target && dates.length < 600) {
-    if (skipped && cursor.getTime() === skipped.getTime()) {
-      cursor = nextReminderAfter(cursor, goal.reminderDay);
-      continue;
-    }
-    dates.push(new Date(cursor));
-    if (following && following > cursor) {
-      cursor = new Date(following);
-      continue;
-    }
     cursor = nextReminderAfter(cursor, goal.reminderDay);
+    if (cursor <= target) dates.push(new Date(cursor));
   }
   if (!dates.length) dates.push(new Date(cursor));
   const amounts = plannedAmounts(remaining, dates.length, goal.rhythm ?? 'stable');

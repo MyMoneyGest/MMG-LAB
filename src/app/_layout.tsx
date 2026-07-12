@@ -6,7 +6,6 @@ import { AppState } from 'react-native';
 import { PendingReminderModal } from '@/components/pending-reminder-modal';
 import type { PendingReminderChoice } from '@/components/pending-reminder-modal';
 import { colors } from '@/constants/theme';
-import { activateFollowingReminder, ignoreCurrentReminder } from '@/lib/actions';
 import { track } from '@/lib/analytics';
 import { mergePendingReminders } from '@/lib/notification-model';
 import type { PendingReminder } from '@/lib/notification-model';
@@ -51,10 +50,14 @@ export default function RootLayout() {
   useEffect(
     () =>
       addReminderOpenListener((reminder) => {
-        const { notificationId, goalId, responseKey, action, isTest, reminderKind } = reminder;
+        const { notificationId, goalId, responseKey, action, isTest } = reminder;
         void (async () => {
           await waitForStoreHydration();
-          if (reminderKind === 'following') await activateFollowingReminder(goalId);
+          const goal = useStore.getState().goals.find((candidate) => candidate.id === goalId);
+          const cycle = reminder.cycleId
+            ? goal?.reminderCycles?.find((candidate) => candidate.id === reminder.cycleId)
+            : undefined;
+          if (!goal || cycle?.settledAt) return;
           setPendingReminders((current) =>
             current.filter((reminder) => reminder.notificationId !== notificationId)
           );
@@ -95,23 +98,16 @@ export default function RootLayout() {
       if (!reminders.length) return;
       await waitForStoreHydration();
       if (!active) return;
-      for (const reminder of reminders) {
-        if (reminder.reminderKind === 'following') {
-          await activateFollowingReminder(reminder.goalId);
-        }
-      }
       const goals = useStore.getState().goals;
-      const followingGoalIds = new Set(
-        reminders
-          .filter((reminder) => reminder.reminderKind === 'following')
-          .map((reminder) => reminder.goalId)
-      );
       enqueueReminders(
-        reminders.filter(
-          (reminder) =>
-            goals.some((goal) => goal.id === reminder.goalId) &&
-            (reminder.reminderKind === 'following' || !followingGoalIds.has(reminder.goalId))
-        )
+        reminders.filter((reminder) => {
+          const goal = goals.find((candidate) => candidate.id === reminder.goalId);
+          if (!goal) return false;
+          const cycle = reminder.cycleId
+            ? goal.reminderCycles?.find((candidate) => candidate.id === reminder.cycleId)
+            : undefined;
+          return !cycle?.settledAt;
+        })
       );
     };
 
@@ -140,11 +136,6 @@ export default function RootLayout() {
     if (!reminder) return;
     setPendingReminders((current) => current.slice(1));
     if (choice === 'ignore') return;
-    if (choice === 'skip') {
-      const goal = useStore.getState().goals.find((candidate) => candidate.id === reminder.goalId);
-      if (goal) void ignoreCurrentReminder(goal);
-      return;
-    }
     router.push({
       pathname: '/goal/[id]',
       params: {

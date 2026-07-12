@@ -6,7 +6,7 @@ import { AppHeader } from '@/components/app-header';
 import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, Eyebrow, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { createGoal } from '@/lib/actions';
+import { changeReminderDay, createGoal } from '@/lib/actions';
 import {
   formatDate,
   formatDateInput,
@@ -131,22 +131,17 @@ export default function NewGoalScreen() {
           targetAmount: parsedTarget!,
           alreadyAvailable: parsedAvailable,
           targetDate: parsedDate!.toISOString(),
-          reminderDay,
+          reminderDay: editing.reminderDay,
           rhythm,
-          // Le jour de rappel a-t-il bougé ? Alors on repart de la prochaine occurrence.
-          ...(reminderDay !== editing.reminderDay
-            ? {
-                nextReminderAt: nextReminderAfter(new Date(), reminderDay).toISOString(),
-                followingReminderAt: undefined,
-                canIgnoreCurrentReminder: false,
-                skippedRegularReminderAt: undefined,
-              }
-            : {}),
         };
         updateGoal(editing.id, patch);
         const updated = useStore.getState().goals.find((g) => g.id === editing.id)!;
-        const scheduled = await scheduleGoalReminders(updated, suggestedAmount(updated));
-        updateGoal(editing.id, scheduled);
+        if (reminderDay !== editing.reminderDay) {
+          await changeReminderDay(updated, reminderDay);
+        } else {
+          const scheduled = await scheduleGoalReminders(updated, suggestedAmount(updated));
+          updateGoal(editing.id, scheduled);
+        }
         router.back();
       } else {
         const goal = await createGoal({

@@ -5,7 +5,7 @@ export const REMINDER_ACTION_IDENTIFIERS = {
 } as const;
 
 export type ReminderNotificationAction = 'open' | 'done' | 'edit' | 'postpone';
-export type ReminderKind = 'primary' | 'following';
+export type ReminderKind = 'anchor' | 'postponed';
 
 export interface ReminderNotificationLike {
   request: {
@@ -21,6 +21,7 @@ export interface PendingReminder {
   goalId: string;
   isTest: boolean;
   reminderKind: ReminderKind;
+  cycleId?: string;
 }
 
 export function reminderActionFromIdentifier(identifier: string): ReminderNotificationAction {
@@ -40,7 +41,11 @@ export function pendingReminderFromNotification(
     goalId,
     isTest: notification.request.content.data?.isTest === true,
     reminderKind:
-      notification.request.content.data?.reminderKind === 'following' ? 'following' : 'primary',
+      notification.request.content.data?.reminderKind === 'postponed' ? 'postponed' : 'anchor',
+    cycleId:
+      typeof notification.request.content.data?.cycleId === 'string'
+        ? notification.request.content.data.cycleId
+        : undefined,
   };
 }
 

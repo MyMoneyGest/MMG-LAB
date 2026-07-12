@@ -4,12 +4,32 @@ export type SavingsRhythm = 'stable' | 'progressive' | 'regressive';
 
 export type ContributionType = 'deposit' | 'withdrawal';
 
+export type ContributionAllocation = 'cycle' | 'surplus';
+
+export interface ReminderCycle {
+  /** Identifiant stable : date d'ancre ISO de création du cycle. */
+  id: string;
+  /** Échéance mensuelle de ce cycle, à 9 h. */
+  anchorAt: string;
+  /** Report ponctuel éventuel de ce cycle. */
+  postponedTo?: string;
+  /** Un cycle soldé ne doit plus produire aucune notification. */
+  settledAt?: string;
+  settledByContributionId?: string;
+  /** Identifiants natifs, renouvelés à chaque reprogrammation. */
+  anchorNotificationId?: string;
+  postponedNotificationId?: string;
+}
+
 export interface Contribution {
   id: string;
   type: ContributionType;
   amount: number;
   /** ISO datetime du geste */
   date: string;
+  /** Rattachement explicite : un versement solde un cycle ou reste un surplus. */
+  allocation?: ContributionAllocation;
+  cycleId?: string;
 }
 
 export interface Goal {
@@ -29,13 +49,12 @@ export interface Goal {
   nextReminderAt: string;
   /** Identifiant de la notification locale programmée */
   notificationId?: string;
-  /** Rappel mensuel conservé pendant qu'un rappel plus ancien est reporté. */
+  /** Cycles mensuels et reports ponctuels (source de vérité des rappels). */
+  reminderCycles?: ReminderCycle[];
+  /** Anciens champs conservés uniquement pour migrer les projets locaux existants. */
   followingReminderAt?: string;
-  /** Identifiant natif du rappel mensuel conservé. */
   followingNotificationId?: string;
-  /** Le rappel courant suit un versement reporté et peut être ignoré explicitement. */
   canIgnoreCurrentReminder?: boolean;
-  /** Date exacte du rappel mensuel refusé après un report proche. */
   skippedRegularReminderAt?: string;
   createdAt: string;
   contributions: Contribution[];
