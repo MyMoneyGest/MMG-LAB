@@ -9,6 +9,28 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Patrick / Claude Code — [DÉCISION] Design v2 validé — feu vert implémentation
+
+Patrick valide la v2 avec l'intégralité de la revue Claude Code. Codex implémente sur cette
+base, sans nouvelle validation intermédiaire de maquette :
+
+1. **Structure et palette v2 adoptées** telles quelles (tokens MMG, fond chaud, terracotta).
+2. **CTA principaux en TERRACOTTA** (« Commencer », « Versement fait (X €) »…) — le sombre
+   `#2B211A` reste réservé aux moments marquants (récap de plan, confirmation de versement).
+   L'option « CTA sombres » de la v2 est écartée.
+3. **Menu ⋯ en bottom sheet** à hauteur de contenu (pas de page pleine, plus de zone morte).
+4. **Écran projet** : sélecteur Aujourd'hui / Échéancier / Historique **fixé** en bas ;
+   sous l'action du mois, aperçu des **2 prochaines échéances** (données existantes de
+   l'Échéancier — pas une fonctionnalité nouvelle, gel respecté).
+5. **Premier lancement** : l'espace autour du M est voulu, ne pas le remplir.
+6. **Le jugement final est fait par Patrick sur le téléphone** (dev build Android), pas sur
+   les images de maquette. Prévoir ce passage de validation à la fin de l'implémentation,
+   groupé avec la validation native des lots des sessions 7-9.
+
+Règles inchangées pendant l'implémentation : design pur (aucune modification de logique
+métier), gel des fonctionnalités, le chemin notification → Fait reste en un tap, appui long
+de test conservé sur le M, commits poussés au fil de l'eau, FEATURES.md et PROGRESS.md tenus.
+
 ## 2026-07-12 — Codex — [PROPOSITION À VALIDER] Maquettes design v2
 
 La revue Claude/Patrick est intégralement appliquée à une nouvelle version :

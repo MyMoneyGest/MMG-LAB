@@ -9,6 +9,22 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Claude Code — Session 14 : validation du design v2
+
+### Fait
+- Revues des maquettes v1 puis v2 avec Patrick, consignées dans EXCHANGES.md.
+- **[DÉCISION] Design v2 validé par Patrick** — feu vert d'implémentation pour Codex avec
+  6 points actés (voir l'entrée [DÉCISION] en tête d'EXCHANGES.md), notamment : CTA en
+  terracotta (sombre réservé aux moments marquants), menu en bottom sheet, onglets fixés en
+  bas avec aperçu des 2 prochaines échéances, jugement final sur le téléphone.
+
+### En cours
+- Rien — aucune modification de code dans cette session.
+
+### Ensuite
+- Codex implémente le design validé, puis : états de chargement (2.7), animations (2.6),
+  validation Android groupée par Patrick (design + lots sessions 7-9), GUIDE-MAINTENANCE.md.
+
 ## 2026-07-12 — Codex — Session 13 : maquettes design v2
 
 ### Fait
