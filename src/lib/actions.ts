@@ -156,6 +156,7 @@ export async function reconcileGlobalBalance(
     });
   }
   state.addBalanceSnapshot(snapshot);
+  track('balance_confirmed');
   for (const goal of state.goals) await reschedule(goal.id);
   const updatedGoals = useStore.getState().goals;
   const budget = useStore.getState().budget;
@@ -164,6 +165,7 @@ export async function reconcileGlobalBalance(
 
 export function deferGlobalRebalance(
   reason: RebalanceReason,
+  choice: 'kept' | 'deferred' = 'kept',
   now: Date = new Date()
 ): void {
   useStore.getState().setRebalanceReview({
@@ -171,6 +173,7 @@ export function deferGlobalRebalance(
     deferredAt: now.toISOString(),
     nextReviewAt: nextRebalanceReviewAt(now).toISOString(),
   });
+  track('rebalance_decided', { metadata: { choice } });
 }
 
 export function clearGlobalRebalanceReview(): void {
@@ -187,6 +190,7 @@ export async function applyGlobalRebalance(
   }
   for (const item of proposal.goals) await reschedule(item.goalId);
   clearGlobalRebalanceReview();
+  track('rebalance_decided', { metadata: { choice: 'applied' } });
 }
 
 /** Reporte le rappel. Échoue si la permission de notification manque. */

@@ -9,6 +9,26 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 11 : tracking de la boucle réelle
+
+### Fait
+- Vérifié que `goal_created` contenait déjà `metadata.rhythm` ; aucun doublon ajouté.
+- Ajouté `balance_confirmed` après la persistance locale du snapshot, sans montant ni métadonnée
+  financière.
+- Ajouté `rebalance_decided` avec les choix stricts `applied`, `kept` ou `deferred` selon le
+  geste réel de l'utilisateur.
+- Ajouté `test:analytics` : nomenclature, rythme, trois décisions, absence de montant pour le
+  solde et règle Supabase insert-only (`.select()` interdit).
+- Mis à jour Confidentialité et FEATURES.md pour refléter exactement les événements envoyés.
+- Validation complète réussie : nouvelle suite analytics, cinq suites historiques, TypeScript,
+  `git diff --check` et bundle Android Hermes de 1 366 modules.
+
+### En cours
+- Aucun code partiellement implémenté dans ce lot.
+
+### Ensuite
+- Maquettes des trois écrans clés, à faire valider par Patrick avant tout code de design.
+
 ## 2026-07-12 — Claude Code — Session 10 : audit du lot Codex et cadrage de la suite
 
 ### Fait

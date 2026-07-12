@@ -47,7 +47,8 @@
     "test:format": "node scripts/test-format.mjs",
     "test:inputs": "node scripts/test-input-surfaces.mjs",
     "test:postpone": "node scripts/test-postpone.mjs",
-    "test:balance": "node scripts/test-balance.mjs"
+    "test:balance": "node scripts/test-balance.mjs",
+    "test:analytics": "node scripts/test-analytics.mjs"
   },
   "private": true
 }

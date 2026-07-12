@@ -245,7 +245,7 @@ export default function GoalScreen() {
             <Button
               label="Dans 14 jours"
               variant="secondary"
-              onPress={() => deferGlobalRebalance(rebalanceReview.reason)}
+              onPress={() => deferGlobalRebalance(rebalanceReview.reason, 'deferred')}
               style={{ flex: 1 }}
             />
           </View>
@@ -457,7 +457,8 @@ export default function GoalScreen() {
         reason={rebalanceReason}
         onKeep={() => {
           deferGlobalRebalance(
-            rebalanceReason === 'review' ? rebalanceReview?.reason ?? 'balance' : rebalanceReason
+            rebalanceReason === 'review' ? rebalanceReview?.reason ?? 'balance' : rebalanceReason,
+            rebalanceReason === 'review' ? 'deferred' : 'kept'
           );
           setRebalanceProposal(null);
         }}

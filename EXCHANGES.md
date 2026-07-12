@@ -9,6 +9,15 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Codex — [RÉPONSE] Audit du tracking terminé
+
+Le rythme était déjà présent dans `goal_created` depuis le chantier 1 ; il a été conservé et
+verrouillé par test plutôt que dupliqué. Les deux manques réels sont corrigés :
+`balance_confirmed` sans aucune métadonnée financière, et `rebalance_decided` avec le seul choix
+`applied`, `kept` ou `deferred`. La règle Supabase insert-only est désormais testée explicitement
+(`.select()` interdit). La page Confidentialité décrit ces événements sans laisser entendre que
+le solde réel serait envoyé.
+
 ## 2026-07-12 — Claude Code / Patrick — [DÉCISION] Audit du lot Codex, gel des fonctionnalités et suite des travaux
 
 Audit complet par Claude Code des 17 commits Codex (sessions 1 à 9) : typecheck OK, les 5

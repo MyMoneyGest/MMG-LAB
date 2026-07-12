@@ -228,13 +228,15 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 - **Quoi** : événements pseudonymisés dans la table `events` du projet MMG-LAB — `app_open`,
   `goal_created` (catégorie générale + rythme), `contribution_logged` (type
-  deposit/withdrawal + bucket de montant),
-  `reminder_opened`, `reminder_postponed`, `goal_deleted`. Aucune donnée utilisateur.
+  deposit/withdrawal + bucket de montant), `reminder_opened`, `reminder_postponed`,
+  `balance_confirmed` (sans solde ni montant), `rebalance_decided` (choix `applied`, `kept` ou
+  `deferred`) et `goal_deleted`. Aucune donnée financière exacte.
 - **Comment** : `track()` fire-and-forget, no-op si `.env` absent. Montants bucketisés
   (`0_50`, `50_100`, `100_250`, `250_plus`). RLS « anon insert only » → jamais de `.select()`.
   Les notifications marquées `isTest` et les gestes déclenchés depuis leurs actions sont
   volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
 - **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.
+  Contrat verrouillé par `scripts/test-analytics.mjs`, notamment l'absence de `.select()`.
 
 ## 14. Thème et composants UI
 

@@ -45,8 +45,10 @@ export default function LegalScreen() {
         <Text style={styles.paragraph}>
           Pour vérifier la fiabilité du rituel et améliorer l'app, MMG transmet à Supabase des
           événements techniques pseudonymisés : ouverture de l'app, création ou suppression
-          d'un projet, versement confirmé, rappel ouvert ou reporté. Ils sont reliés à un
-          identifiant d'installation aléatoire, pas à un nom, une adresse e-mail ou un compte.
+          d'un projet, versement confirmé, rappel ouvert ou reporté, confirmation périodique du
+          solde et choix face à une proposition de réajustement. Le solde réel n'est jamais
+          transmis. Ces événements sont reliés à un identifiant d'installation aléatoire, pas à
+          un nom, une adresse e-mail ou un compte.
         </Text>
         <Text style={styles.paragraph}>
           Les événements peuvent contenir l'identifiant technique du projet, sa catégorie
