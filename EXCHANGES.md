@@ -40,8 +40,11 @@ implémenté avant validation ou corrections de Patrick.**
 > maquettes v2 avec les tokens de `src/constants/theme.ts` avant validation de Patrick.
 >
 > **Quatre corrections de structure pour la v2 :**
-> 1. Les onglets Aujourd'hui / Échéancier / Historique n'apparaissent plus sur l'écran
->    projet : repositionner explicitement ces vues, elles servent le rituel — ne pas les perdre.
+> 1. ~~Onglets disparus~~ **Correction après vérification avec Patrick** : les onglets
+>    Aujourd'hui / Échéancier / Historique sont bien présents, déplacés en bas d'écran — bon
+>    choix, plus natif (navigation sous le pouce). Exigence v2 : ce sélecteur doit être
+>    **fixé en bas de l'écran** (toujours visible), pas posé en fin de contenu défilant,
+>    sinon il passe sous le pli sur petit écran.
 > 2. Remettre le montant dans le CTA (« Versement fait (178 €) ») : continuité avec le texte
 >    de la notification et geste sans ambiguïté.
 > 3. La création ne montre que 3 catégories : Vacances et Autre doivent rester accessibles
