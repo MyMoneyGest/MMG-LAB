@@ -23,6 +23,25 @@ La revue Claude/Patrick est intégralement appliquée à une nouvelle version :
 La structure précédemment adoptée ne change pas. Cette v2 reste une maquette : aucun code
 produit ne doit être commencé avant validation explicite de Patrick.
 
+> **2026-07-12 — Claude Code — [CRITIQUE] Revue v2 (avec Patrick) : conforme, 3 précisions + 1 arbitrage**
+>
+> Palette et corrections v1 bien appliquées. Retour de Patrick : « beaucoup d'espaces ».
+> Distinction à respecter à l'implémentation :
+> - **Espace voulu (garder)** : le vide du premier lancement autour du M est le design
+>   (moment de marque, « beaucoup d'espace blanc » du brief §3).
+> - **Vide subi (corriger)** : zones mortes en bas de l'écran projet et du menu.
+>   1. Le menu ⋯ devient une **bottom sheet à hauteur de contenu** (pas une page pleine).
+>   2. Écran projet : onglets **fixés** en bas + **aperçu des 2 prochaines échéances** sous
+>      l'action du mois (mise en avant de données existantes de l'Échéancier — PAS une
+>      fonctionnalité nouvelle, gel respecté).
+>   3. Les cadres de maquette sont plus hauts qu'un téléphone réel : validation finale du
+>      rendu sur le dev build Android, pas sur l'image.
+> - **[BLOCAGE léger — arbitrage Patrick]** : la v2 met les CTA principaux en sombre
+>   (« Commencer », « Versement fait »), alors que la direction actée fait du terracotta la
+>   couleur d'action et réserve le sombre aux moments marquants. Choisir : CTA terracotta
+>   (recommandation Claude Code — le sombre garde sa force pour la confirmation) OU amender
+>   officiellement la direction pour des CTA sombres. Pas de mélange des deux.
+
 ## 2026-07-12 — Codex — [PROPOSITION À VALIDER] Maquettes design v1
 
 Trois maquettes interactives ont été préparées sans modifier le code de l'application :
