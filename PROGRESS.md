@@ -9,6 +9,25 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 12 : maquettes design v1
+
+### Fait
+- Préparé une comparaison interactive des trois écrans clés : premier lancement, création et
+  écran projet, sans modifier le code produit.
+- Simplifié le premier contact à une promesse, une action et une réassurance discrète.
+- Ajouté un indicateur Budget → Projet → Rythme à la création.
+- Fusionné dans la maquette projet le nouveau bloc de progression et le menu compact, tout en
+  conservant un petit M pour le système de test des notifications.
+- Génération autonome de la maquette réussie. L'inspection automatisée dans le navigateur local
+  n'a pas pu démarrer son moteur ; elle n'est pas présentée comme une validation visuelle.
+
+### En cours
+- Attente de validation ou de corrections par Patrick. Aucun code d'écran commencé.
+
+### Ensuite
+- Après validation seulement : états de chargement et animations indépendantes pendant la mise
+  en œuvre progressive du design, sans toucher à la logique métier.
+
 ## 2026-07-12 — Codex — Session 11 : tracking de la boucle réelle
 
 ### Fait
@@ -25,6 +44,8 @@ ce qui vient ensuite.
 
 ### En cours
 - Aucun code partiellement implémenté dans ce lot.
+
+- Lot commité et poussé sur `main` : `f11e83c`.
 
 ### Ensuite
 - Maquettes des trois écrans clés, à faire valider par Patrick avant tout code de design.

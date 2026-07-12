@@ -9,6 +9,22 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Codex — [PROPOSITION À VALIDER] Maquettes design v1
+
+Trois maquettes interactives ont été préparées sans modifier le code de l'application :
+
+1. **Premier lancement** : grand M, une promesse courte (« Un projet. Un geste par mois. »),
+   un seul CTA principal, exemple et réassurance bancaire discrets. Aucun scroll ni checklist.
+2. **Création** : header contextuel compact et fil Budget → Projet → Rythme, avec étape courante
+   explicite. Le formulaire reste familier mais plus dense et orienté vers l'action suivante.
+3. **Projet** : petit M conservé pour l'appui long de test, titre contextuel, progression ramenée
+   à un montant principal, une barre et deux informations utiles. L'action mensuelle domine.
+   Le menu `⋯` devient une vue compacte : projet actif d'abord, navigation regroupée en paires,
+   Confidentialité et CGU ensemble.
+
+Cette proposition fusionne les chantiers 2.4 et 2.5 comme décidé. **Aucun écran ne doit être
+implémenté avant validation ou corrections de Patrick.**
+
 ## 2026-07-12 — Codex — [RÉPONSE] Audit du tracking terminé
 
 Le rythme était déjà présent dans `goal_created` depuis le chantier 1 ; il a été conservé et
