@@ -9,6 +9,84 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Claude Code / Patrick — [DÉCISION] Audit du lot Codex, gel des fonctionnalités et suite des travaux
+
+Audit complet par Claude Code des 17 commits Codex (sessions 1 à 9) : typecheck OK, les 5
+suites de tests passent, parcours vérifié à l'écran (web). **Constat : travail de grande
+qualité** — discipline git/doc exemplaire, tests à dates fixes, migrations paresseuses des
+données locales, conventions respectées. Chantier 1 terminé et conforme.
+
+**Remarques d'audit (Claude Code) et arbitrages (Patrick) :**
+
+1. *Périmètre produit élargi (cycles, solde global, réajustements)* — Patrick assume et
+   ferme le sujet : les personnes qui recevront l'app ne sauront pas qu'elles sont observées,
+   elles doivent se comporter en **utilisateurs réels, pas en testeurs**. Le produit devait
+   donc couvrir les cas basiques de la vraie vie sans incohérence (ex. : le Retrait manuel a
+   été supprimé car personne ne déclare ses retraits dans une app secondaire). **[DÉCISION]
+   GEL DES FONCTIONNALITÉS : plus aucune fonctionnalité nouvelle avant la fin du test de
+   rétention. Uniquement finition, correctifs, design et documentation.**
+2. *Le « un seul tap » a une exception pre-ancre* (modal extra/versement du mois) — acceptée
+   car le chemin critique mesuré (notification → Fait) reste en un tap. À re-vérifier sur
+   Android à chaque évolution : ce chemin ne doit JAMAIS gagner d'étape.
+3. *Tracking en retard sur les nouvelles fonctionnalités* — à corriger (liste ci-dessous).
+4. *Chantier 2 items 4-7 restants* — confirmés au programme.
+5. *[BLOCAGE] RGPD toujours ouvert* (identité juridique, base légale, durée de conservation) —
+   décision Patrick requise avant diffusion élargie.
+
+**Nouveau sujet ouvert par Patrick : design et parcours utilisateur.** Retour reçu sur
+l'accueil : « on dirait un site » — trop d'informations, l'utilisateur ne comprend pas
+immédiatement pourquoi il est là. Référence donnée : TikTok / PayPal — on sait en une seconde
+où on est et quoi faire. La première impression doit être bonne : des gens choisissent une
+app parce qu'elle est belle. Le design est donc un chantier à part entière (voir entrée
+[SUGGESTION] ci-dessous), dans le respect de la direction visuelle actée.
+
+**File de travail pour Codex (ordre validé par Patrick) :**
+1. Chantier 2.4 — bloc de progression du projet (grille propre Atteint / Déjà mis / Restants
+   / Cible ; actuellement empilement inégal).
+2. Chantier 2.5 — sous-menu : regroupements en lignes, tailles réduites.
+3. Chantier 2.7 — états de chargement courts (création de projet, changement date/montant).
+4. Chantier 2.6 — animations événementielles sobres (objectif atteint : barre 0→100).
+5. Tracking manquant (3 ajouts, sans montants en clair) : `metadata.rhythm` dans
+   `goal_created` ; événement `balance_confirmed` (bucket d'écart estimé/réel au besoin) ;
+   événement `rebalance_decided` avec `metadata.choice: applied|kept|deferred`.
+6. Chantier design/parcours (voir [SUGGESTION] ci-dessous) — maquettes à faire valider par
+   Patrick AVANT d'écrire le code des écrans.
+7. En clôture : GUIDE-MAINTENANCE.md (manuel non-technique pour Patrick), puis passe finale
+   de cohérence FEATURES.md.
+
+---
+
+## 2026-07-12 — Claude Code — [SUGGESTION] Chantier design : de « site » à « app »
+
+Diagnostic partagé avec Patrick : l'accueil actuel parle *à propos* de l'app (titre
+marketing, paragraphes, checklist, notes de bas de page) au lieu de *faire* l'app. C'est la
+voix d'une landing page web. Propositions, à maquetter avant de coder :
+
+1. **Premier lancement = un moment, pas une page.** Un seul écran : le M terracotta en
+   grand, UNE phrase (« Un projet. Un geste par mois. »), UN bouton (« Commencer »), un lien
+   discret « Voir un exemple ». La ligne de réassurance (« Pas de compte bancaire connecté »)
+   en une seule petite ligne. Tout doit tenir sans scroll.
+2. **Déplacer la pédagogie là où elle sert.** La checklist « Ce que MMG vérifie d'abord »
+   appartient à l'écran d'estimation du budget (elle explique cette étape) ; le paragraphe
+   « MMG n'est pas une banque » appartient à Confidentialité/Exemple. L'accueil n'explique
+   pas, il oriente.
+3. **Header plus discret.** Le bloc logo + « MMG / MyMoneyGest » sur chaque écran fait
+   navbar de site. Proposition : header fin (retour + titre contextuel + ⋯), le M en grand
+   réservé aux moments de marque (premier lancement, confirmation sombre). Conserver
+   l'appui long de test sur le M là où il reste affiché.
+4. **Densité typographique.** Réduire d'un cran l'échelle des titres d'écran (le hero 33-34px
+   fait web), moins d'eyebrows, paragraphes raccourcis en libellés. L'app doit paraître
+   dense et précise, pas bavarde.
+5. **Un fil conducteur visible.** Pendant la création (budget → projet → rythme), un
+   indicateur d'étape sobre (1/3, 2/3, 3/3) pour que l'utilisateur sache toujours où il est —
+   c'est le « pourquoi je suis là » que Patrick réclame.
+6. **Méthode** : maquettes rapides des 3 écrans clés (premier lancement, création, écran
+   projet) validées par Patrick avant d'écrire le moindre code d'écran. Interdit de toucher à
+   la logique métier pendant ce chantier — design pur, direction visuelle actée inchangée
+   (fond chaud, terracotta unique, sombre réservé aux moments marquants).
+
+---
+
 ## 2026-07-12 — Codex / Patrick — [DÉCISION] Relance douce après refus
 
 Lorsqu'une proposition de réajustement est refusée, MMG ne doit ni l'oublier ni harceler

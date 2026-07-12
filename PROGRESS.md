@@ -9,6 +9,27 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Claude Code — Session 10 : audit du lot Codex et cadrage de la suite
+
+### Fait
+- Audit complet des sessions Codex 1-9 : typecheck, exécution des 5 suites de tests (toutes
+  vertes), relecture des journaux et du code, vérification du parcours complet à l'écran
+  (web, port 8090). Conclusion : chantier 1 conforme, qualité d'exécution élevée.
+- Remarques d'audit et arbitrages de Patrick consignés dans EXCHANGES.md, dont deux
+  décisions structurantes : **gel des fonctionnalités** jusqu'à la fin du test de rétention,
+  et ouverture du **chantier design/parcours** (retour utilisateur : « on dirait un site »).
+- File de travail Codex mise à jour dans EXCHANGES.md : chantier 2 items 4-7, 3 ajouts de
+  tracking, chantier design (maquettes à valider AVANT le code), GUIDE-MAINTENANCE.md en
+  clôture.
+
+### En cours
+- Rien de partiellement implémenté — aucune modification de code dans cette session.
+
+### Ensuite
+- Codex reprend la main sur la file de travail ci-dessus, dans l'ordre.
+
+---
+
 ## 2026-07-12 — Codex — Session 9 : relance douce des réajustements refusés
 
 ### Fait
