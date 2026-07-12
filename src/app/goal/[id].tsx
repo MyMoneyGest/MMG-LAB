@@ -16,7 +16,9 @@ import { colors, radius } from '@/constants/theme';
 import {
   applyGlobalRebalance,
   changeReminderDay,
+  clearGlobalRebalanceReview,
   confirmContribution,
+  deferGlobalRebalance,
   reconcileGlobalBalance,
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
@@ -31,6 +33,7 @@ import {
   estimatedGlobalBalance,
   latestBalanceSnapshot,
   progressPct,
+  rebalanceReviewDue,
   recentDeposits,
   remainingAmount,
   savedTotal,
@@ -42,6 +45,7 @@ import type { GlobalRebalanceProposal } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { CATEGORY_DESCRIPTIONS } from '@/lib/types';
 import type { Contribution } from '@/lib/types';
+import type { RebalanceReason } from '@/lib/types';
 
 type Tab = 'today' | 'schedule' | 'history';
 
@@ -64,6 +68,7 @@ export default function GoalScreen() {
   const goals = useStore((s) => s.goals);
   const budget = useStore((s) => s.budget);
   const balanceSnapshots = useStore((s) => s.balanceSnapshots ?? []);
+  const rebalanceReview = useStore((s) => s.rebalanceReview);
   const setLastViewed = useStore((s) => s.setLastViewed);
   const [hydrated, setHydrated] = useState(useStore.persist.hasHydrated());
 
@@ -72,6 +77,8 @@ export default function GoalScreen() {
   const [balanceOpen, setBalanceOpen] = useState(false);
   const [rebalanceProposal, setRebalanceProposal] =
     useState<GlobalRebalanceProposal | null>(null);
+  const [rebalanceReason, setRebalanceReason] =
+    useState<RebalanceReason | 'review'>('balance');
   const [reportOpen, setReportOpen] = useState(false);
   const [reminderDayOpen, setReminderDayOpen] = useState(false);
   const [modalFromTest, setModalFromTest] = useState(false);
@@ -201,6 +208,11 @@ export default function GoalScreen() {
   const capacityExceeded = Boolean(
     globalPlan && globalPlan.currentEffort > globalPlan.capacity
   );
+  const reviewDue = Boolean(
+    rebalanceReviewDue(rebalanceReview) &&
+      globalPlan &&
+      (globalPlan.goals.length > 0 || !globalPlan.possible)
+  );
 
   return (
     <Screen>
@@ -214,7 +226,31 @@ export default function GoalScreen() {
         </View>
       ) : null}
 
-      {capacityExceeded && globalPlan ? (
+      {reviewDue && globalPlan && rebalanceReview ? (
+        <View style={styles.reviewBanner}>
+          <Text style={styles.reviewTitle}>Ton échéancier mérite une vérification</Text>
+          <Text style={styles.reviewText}>
+            Tu avais conservé tes anciens plans après un changement. Revois la proposition pour
+            éviter qu'ils reposent trop longtemps sur une situation dépassée.
+          </Text>
+          <View style={styles.reviewButtons}>
+            <Button
+              label="Revoir"
+              onPress={() => {
+                setRebalanceReason('review');
+                setRebalanceProposal(globalPlan);
+              }}
+              style={{ flex: 1 }}
+            />
+            <Button
+              label="Dans 14 jours"
+              variant="secondary"
+              onPress={() => deferGlobalRebalance(rebalanceReview.reason)}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </View>
+      ) : capacityExceeded && globalPlan && !rebalanceReview ? (
         <View style={styles.capacityWarning}>
           <Text style={styles.capacityWarningText}>
             Au mois le plus exigeant, tes plans demandent {formatEuro(globalPlan.currentEffort)},
@@ -409,14 +445,22 @@ export default function GoalScreen() {
           const proposal = await reconcileGlobalBalance(amount);
           setBalanceOpen(false);
           if (proposal && (proposal.goals.length || !proposal.possible)) {
+            setRebalanceReason('balance');
             setRebalanceProposal(proposal);
+          } else {
+            clearGlobalRebalanceReview();
           }
         }}
       />
       <RebalanceModal
         proposal={rebalanceProposal}
-        reason="balance"
-        onKeep={() => setRebalanceProposal(null)}
+        reason={rebalanceReason}
+        onKeep={() => {
+          deferGlobalRebalance(
+            rebalanceReason === 'review' ? rebalanceReview?.reason ?? 'balance' : rebalanceReason
+          );
+          setRebalanceProposal(null);
+        }}
         onApply={async () => {
           if (!rebalanceProposal) return;
           await applyGlobalRebalance(rebalanceProposal);
@@ -521,6 +565,18 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   capacityWarningText: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '700' },
+  reviewBanner: {
+    backgroundColor: colors.cardSoft,
+    borderWidth: 1,
+    borderColor: colors.cardSoftBorder,
+    borderRadius: radius.field,
+    padding: 14,
+    gap: 8,
+    marginBottom: 14,
+  },
+  reviewTitle: { color: colors.text, fontSize: 16, fontWeight: '800' },
+  reviewText: { color: colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  reviewButtons: { flexDirection: 'row', gap: 10, marginTop: 2 },
   balanceCheckCard: {
     backgroundColor: colors.cardSoft,
     borderRadius: radius.field,

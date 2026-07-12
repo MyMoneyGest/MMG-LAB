@@ -15,7 +15,9 @@ const {
   balanceCheckDue,
   buildGlobalRebalanceProposal,
   estimatedGlobalBalance,
+  nextRebalanceReviewAt,
   peakScheduledAmount,
+  rebalanceReviewDue,
   savedTotal,
 } = loaded.exports;
 
@@ -74,6 +76,18 @@ assert.equal(overTargets.unallocatedAmount, 500);
 assert.equal(balanceCheckDue([first], [], new Date(2026, 2, 31, 12)), false);
 assert.equal(balanceCheckDue([first], [], new Date(2026, 3, 1, 12)), true);
 
+// Un refus est relancé dans l'app après 14 jours, jamais avant.
+const deferredAt = new Date(2026, 6, 12, 12);
+const nextReviewAt = nextRebalanceReviewAt(deferredAt);
+assert.equal(nextReviewAt.toISOString(), new Date(2026, 6, 26, 12).toISOString());
+const review = {
+  reason: 'budget',
+  deferredAt: deferredAt.toISOString(),
+  nextReviewAt: nextReviewAt.toISOString(),
+};
+assert.equal(rebalanceReviewDue(review, new Date(2026, 6, 26, 11, 59)), false);
+assert.equal(rebalanceReviewDue(review, new Date(2026, 6, 26, 12)), true);
+
 // Un rythme variable est contrôlé sur son mois-pic, pas seulement sur la prochaine échéance.
 const progressive = {
   ...makeGoal('progressive', 0, 600),
@@ -105,5 +119,8 @@ assert.match(actionsSource, /export async function reconcileGlobalBalance/);
 assert.match(actionsSource, /state\.addBalanceSnapshot\(snapshot\)/);
 assert.match(actionsSource, /confirmedBalance: distribution\.allocations/);
 assert.match(actionsSource, /export async function applyGlobalRebalance/);
+assert.match(actionsSource, /export function deferGlobalRebalance/);
+assert.match(actionsSource, /nextRebalanceReviewAt\(now\)/);
+assert.match(actionsSource, /clearGlobalRebalanceReview\(\)/);
 
-console.log('Tests solde : réconciliation, trimestre et capacité globale validés.');
+console.log('Tests solde : réconciliation, trimestre, capacité globale et relance douce validés.');

@@ -10,6 +10,7 @@ import {
   Contribution,
   ContributionAllocation,
   Goal,
+  RebalanceReview,
   ReminderCycle,
   SavingsRhythm,
 } from './types';
@@ -19,6 +20,7 @@ export const SAFETY_MARGIN = 0.2;
 export const CLOSE_REMINDER_DAYS = 3;
 export const CLOSE_CONTRIBUTION_DAYS = 3;
 export const BALANCE_CHECK_DAYS = 90;
+export const REBALANCE_REVIEW_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function calendarDayNumber(date: Date): number {
@@ -483,6 +485,19 @@ export function balanceCheckDue(
     ? new Date(latest.date)
     : new Date(Math.min(...goals.map((goal) => new Date(goal.createdAt).getTime())));
   return calendarDayNumber(now) - calendarDayNumber(reference) >= BALANCE_CHECK_DAYS;
+}
+
+export function nextRebalanceReviewAt(from: Date = new Date()): Date {
+  const next = new Date(from);
+  next.setDate(next.getDate() + REBALANCE_REVIEW_DAYS);
+  return next;
+}
+
+export function rebalanceReviewDue(
+  review: RebalanceReview | undefined,
+  now: Date = new Date()
+): boolean {
+  return Boolean(review && new Date(review.nextReviewAt) <= now);
 }
 
 export interface BalanceAllocation {

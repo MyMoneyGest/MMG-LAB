@@ -6,7 +6,11 @@ import { AppHeader } from '@/components/app-header';
 import { RebalanceModal } from '@/components/rebalance-modal';
 import { Button, Card, Eyebrow, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { applyGlobalRebalance } from '@/lib/actions';
+import {
+  applyGlobalRebalance,
+  clearGlobalRebalanceReview,
+  deferGlobalRebalance,
+} from '@/lib/actions';
 import { formatEuro, parseAmountInput } from '@/lib/format';
 import {
   buildGlobalRebalanceProposal,
@@ -48,11 +52,13 @@ export default function BudgetScreen() {
     }
     setBudget(draft);
     if (goals.length === 0) {
+      clearGlobalRebalanceReview();
       router.push('/onboarding/new-goal');
       return;
     }
     const proposal = buildGlobalRebalanceProposal(goals, draft);
     if (!proposal.goals.length && proposal.possible) {
+      clearGlobalRebalanceReview();
       router.back();
       return;
     }
@@ -121,6 +127,7 @@ export default function BudgetScreen() {
         proposal={rebalanceProposal}
         reason="budget"
         onKeep={() => {
+          deferGlobalRebalance('budget');
           setRebalanceProposal(null);
           router.back();
         }}

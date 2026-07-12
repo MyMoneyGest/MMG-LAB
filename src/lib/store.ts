@@ -9,6 +9,7 @@ import {
   ContributionAllocation,
   ContributionType,
   Goal,
+  RebalanceReview,
 } from './types';
 
 // Le store est la seule source de vérité des données utilisateur, persistée
@@ -22,12 +23,14 @@ interface MMGState {
   installId: string;
   budget?: Budget;
   balanceSnapshots: BalanceSnapshot[];
+  rebalanceReview?: RebalanceReview;
   goals: Goal[];
   lastViewedGoalId?: string;
   notifPermissionAsked: boolean;
 
   setBudget: (budget: Budget) => void;
   addBalanceSnapshot: (snapshot: BalanceSnapshot) => void;
+  setRebalanceReview: (review?: RebalanceReview) => void;
   addGoal: (goal: Goal) => void;
   updateGoal: (id: string, patch: Partial<Goal>) => void;
   deleteGoal: (id: string) => void;
@@ -56,6 +59,8 @@ export const useStore = create<MMGState>()(
         set((state) => ({
           balanceSnapshots: [...(state.balanceSnapshots ?? []), snapshot],
         })),
+
+      setRebalanceReview: (rebalanceReview) => set({ rebalanceReview }),
 
       addGoal: (goal) => set((s) => ({ goals: [...s.goals, goal], lastViewedGoalId: goal.id })),
 

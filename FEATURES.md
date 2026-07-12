@@ -35,6 +35,9 @@ Dernière mise à jour : 2026-07-12 (Codex).
   budget, MMG compare cette capacité à la somme des efforts de tous les plans actifs. Un nouvel
   échéancier global est proposé, jamais appliqué sans accord. Si le reste à vivre est nul ou
   insuffisant, l'impossibilité est signalée et aucun plan irréaliste n'est appliqué.
+- **Refus non oublié** : si l'utilisateur conserve ses anciens plans, MMG mémorise ce choix et
+  attend 14 jours. Une bannière non bloquante propose alors **Revoir** ou **Dans 14 jours**.
+  Aucune notification système n'est envoyée. Appliquer le réajustement efface la relance.
 - **Où** : `src/app/onboarding/budget.tsx`, `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
 
 ## 4. Création / ajustement d'un plan
@@ -215,8 +218,8 @@ Dernière mise à jour : 2026-07-12 (Codex).
 ## 12. Persistance locale
 
 - **Quoi** : budget, projets (dont leur rythme, cycles et enveloppe confirmée), versements,
-  snapshots du solde global et part non affectée, dernier projet consulté, installId — tout
-  survit au redémarrage, uniquement sur le téléphone.
+  snapshots du solde global et part non affectée, éventuelle relance de réajustement différée,
+  dernier projet consulté, installId — tout survit au redémarrage, uniquement sur le téléphone.
 - **Comment** : zustand + middleware `persist` sur AsyncStorage (`mmg-store-v1`).
   `installId` généré une fois (`install-<timestamp>-<aléa>`, format de l'ancienne app).
 - **Où** : `src/lib/store.ts`, types dans `src/lib/types.ts`.

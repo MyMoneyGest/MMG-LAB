@@ -13,7 +13,7 @@ export function RebalanceModal({
   onKeep,
 }: {
   proposal: GlobalRebalanceProposal | null;
-  reason: 'budget' | 'balance';
+  reason: 'budget' | 'balance' | 'review';
   onApply: () => Promise<void> | void;
   onKeep: () => void;
 }) {
@@ -49,7 +49,9 @@ export function RebalanceModal({
             <Text style={styles.body}>
               {reason === 'budget'
                 ? 'Ton nouveau budget est enregistré.'
-                : 'Ton solde réel est enregistré et les enveloppes sont recalées.'}{' '}
+                : reason === 'balance'
+                  ? 'Ton solde réel est enregistré et les enveloppes sont recalées.'
+                  : 'Tu avais choisi de conserver ton ancien échéancier.'}{' '}
               Effort cumulé au mois le plus exigeant : {formatEuro(proposal.currentEffort)}.
               Capacité prudente globale : {formatEuro(proposal.capacity)}.
             </Text>

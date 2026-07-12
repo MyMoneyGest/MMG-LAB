@@ -9,6 +9,20 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Codex / Patrick — [DÉCISION] Relance douce après refus
+
+Lorsqu'une proposition de réajustement est refusée, MMG ne doit ni l'oublier ni harceler
+l'utilisateur. Décision appliquée : relance uniquement dans l'app après 14 jours, sous forme de
+bannière non bloquante avec **Revoir** et **Dans 14 jours**. Il n'y a aucune notification système.
+Une application ultérieure du nouvel échéancier efface la relance persistée.
+
+## 2026-07-12 — Patrick / Codex — [À PLUS TARD] Révision annuelle du budget
+
+À terme, MMG devra demander au moins une révision annuelle du budget afin de tenir compte des
+évolutions de revenus et de charges. Cette fonction est volontairement laissée hors du code
+pendant la période de rétention initiale de trois mois, où elle n'apporterait pas de signal utile
+et alourdirait inutilement le produit.
+
 ## 2026-07-12 — Codex / Patrick — [DÉCISION] Solde global réconcilié
 
 Le constat de Patrick est juste : demander de déclarer chaque retrait dans une application

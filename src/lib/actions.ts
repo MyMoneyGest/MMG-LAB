@@ -8,6 +8,7 @@ import {
   cyclesAfterPostpone,
   cyclesAfterReminderDayChange,
   nextReminderAfter,
+  nextRebalanceReviewAt,
   nextReminderFromCycles,
   normalizedReminderCycles,
   remainingAmount,
@@ -25,6 +26,7 @@ import {
 } from './notifications';
 import { newGoalId, useStore } from './store';
 import { Goal, GoalCategory, SavingsRhythm } from './types';
+import type { RebalanceReason } from './types';
 
 // Orchestration store + notifications + tracking, partagée entre les écrans.
 
@@ -160,6 +162,21 @@ export async function reconcileGlobalBalance(
   return budget ? buildGlobalRebalanceProposal(updatedGoals, budget, now) : null;
 }
 
+export function deferGlobalRebalance(
+  reason: RebalanceReason,
+  now: Date = new Date()
+): void {
+  useStore.getState().setRebalanceReview({
+    reason,
+    deferredAt: now.toISOString(),
+    nextReviewAt: nextRebalanceReviewAt(now).toISOString(),
+  });
+}
+
+export function clearGlobalRebalanceReview(): void {
+  useStore.getState().setRebalanceReview(undefined);
+}
+
 /** Applique uniquement une proposition explicitement acceptée. */
 export async function applyGlobalRebalance(
   proposal: GlobalRebalanceProposal
@@ -169,6 +186,7 @@ export async function applyGlobalRebalance(
     state.updateGoal(item.goalId, { targetDate: item.proposedTargetDate });
   }
   for (const item of proposal.goals) await reschedule(item.goalId);
+  clearGlobalRebalanceReview();
 }
 
 /** Reporte le rappel. Échoue si la permission de notification manque. */

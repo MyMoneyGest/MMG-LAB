@@ -9,6 +9,28 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 9 : relance douce des réajustements refusés
+
+### Fait
+- Persisté le refus d'une proposition issue d'un changement de budget ou de solde, avec son
+  origine et sa prochaine date de révision.
+- Fixé une cadence de 14 jours : aucune relance avant cette date et aucune notification système.
+- Ajouté sur l'écran projet une bannière non bloquante **Revoir / Dans 14 jours**. Repousser
+  redémarre les 14 jours ; appliquer un échéancier efface la relance.
+- Masqué pendant ce délai l'ancienne alerte de capacité redondante pour respecter le choix
+  temporaire de l'utilisateur et éviter une sollicitation à chaque ouverture.
+- Ajouté les tests temporels et structurels correspondants. Validation complète réussie :
+  TypeScript, tests solde, cycles/reports, saisie, notifications et format des dates,
+  `git diff --check`, puis bundle Android Hermes de 1 366 modules.
+- Noté dans `EXCHANGES.md` le contrôle annuel du budget comme évolution future, volontairement
+  non implémentée pendant la période de rétention initiale de trois mois.
+
+### En cours
+- Aucun code partiellement implémenté dans ce lot.
+
+### Ensuite
+- Confirmation visuelle et tactile sur le dev build Android après le push.
+
 ## 2026-07-12 — Codex — Session 8 : solde réel et capacité globale
 
 ### Fait

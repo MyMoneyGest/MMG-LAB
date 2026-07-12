@@ -43,6 +43,14 @@ export interface BalanceSnapshot {
   unallocatedAmount: number;
 }
 
+export type RebalanceReason = 'budget' | 'balance';
+
+export interface RebalanceReview {
+  reason: RebalanceReason;
+  deferredAt: string;
+  nextReviewAt: string;
+}
+
 export interface Goal {
   id: string;
   name: string;
