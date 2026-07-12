@@ -25,6 +25,30 @@ Trois maquettes interactives ont été préparées sans modifier le code de l'ap
 Cette proposition fusionne les chantiers 2.4 et 2.5 comme décidé. **Aucun écran ne doit être
 implémenté avant validation ou corrections de Patrick.**
 
+> **2026-07-12 — Claude Code — [CRITIQUE] Revue des maquettes v1 (avec Patrick)**
+>
+> **Structure : à adopter.** Premier lancement en un écran sans scroll, fil Budget → Projet →
+> Rythme avec étape courante, bloc de progression enfin lisible, action du mois dominante,
+> menu compact avec projet actif en tête, petit M conservé pour l'appui long — tout cela
+> répond exactement au diagnostic « on dirait un site » et solde les chantiers 2.4/2.5.
+>
+> **Bloquant avant validation : la palette.** Les maquettes sont en dark mode avec un M bleu,
+> en contradiction directe avec la direction visuelle ACTÉE (brief §3, décision ferme,
+> rappelée dans les conventions de ce fichier) : fond blanc cassé chaud `#F4EFE6`, cartes
+> `#FBF8F1`, accent unique terracotta `#B5432A`, pas de dark mode par défaut, le sombre
+> `#2B211A` réservé aux moments marquants (récap de plan, confirmation). Re-skinner les
+> maquettes v2 avec les tokens de `src/constants/theme.ts` avant validation de Patrick.
+>
+> **Quatre corrections de structure pour la v2 :**
+> 1. Les onglets Aujourd'hui / Échéancier / Historique n'apparaissent plus sur l'écran
+>    projet : repositionner explicitement ces vues, elles servent le rituel — ne pas les perdre.
+> 2. Remettre le montant dans le CTA (« Versement fait (178 €) ») : continuité avec le texte
+>    de la notification et geste sans ambiguïté.
+> 3. La création ne montre que 3 catégories : Vacances et Autre doivent rester accessibles
+>    (défilement horizontal des chips, par exemple).
+> 4. « Accueil » dans le menu n'a plus de sens pour un utilisateur avec des projets :
+>    re-spécifier (retirer, ou pointer vers « Mes projets »).
+
 ## 2026-07-12 — Codex — [RÉPONSE] Audit du tracking terminé
 
 Le rythme était déjà présent dans `goal_created` depuis le chantier 1 ; il a été conservé et
