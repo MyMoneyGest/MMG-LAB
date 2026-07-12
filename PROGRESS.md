@@ -37,6 +37,7 @@ ce qui vient ensuite.
   `expo lint` reste indisponible car le repo
   n'a pas de configuration ESLint et l'installation automatique est bloquée hors réseau ; aucun
   fichier de dépendances n'a été modifié.
+- Lot fonctionnel commité et poussé sur `main` : `c608843`.
 
 ### En cours
 - Aucun code partiellement implémenté. Le téléphone n'est pas visible via ADB ; la validation
