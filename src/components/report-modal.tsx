@@ -10,7 +10,7 @@ import {
 
 import { colors, radius } from '@/constants/theme';
 import { postponeReminder } from '@/lib/actions';
-import { formatDate, formatDateInput, formatDayMonth, parseDateInput } from '@/lib/format';
+import { formatDate, formatDayMonth, parseDateInput } from '@/lib/format';
 import {
   canPostponeReminderTo,
   nextRegularReminderAfterCurrent,
@@ -18,7 +18,7 @@ import {
   postponeIsNearNextAnchor,
 } from '@/lib/plan';
 import { Goal } from '@/lib/types';
-import { Button, Field, KeyboardSafeScrollView } from './ui';
+import { Button, DateField, KeyboardSafeScrollView } from './ui';
 
 // Report du rappel : « Quand te le rappeler ? » — Demain / 3 jours / 7 jours
 // ou date précise. Échoue proprement si la permission de notification manque.
@@ -43,7 +43,10 @@ export function ReportModal({
   const [error, setError] = useState<string | null>(null);
   const latestDate = postponeDateLimit(goal);
   const nextRegularDate = nextRegularReminderAfterCurrent(goal);
-  const dateLimitError = `Choisis une date au plus tard le ${formatDate(latestDate)}, la veille du rappel mensuel suivant.`;
+  const anchorHasArrived = postponeIsNearNextAnchor(goal, latestDate);
+  const dateLimitError = anchorHasArrived
+    ? `Choisis une date au plus tard le ${formatDate(latestDate)}, la veille du prochain rappel mensuel.`
+    : `Avant le jour du rappel, tu peux reporter au plus tard au ${formatDate(latestDate)}. Tu pourras aller au-delà lorsque ce jour arrivera.`;
 
   useEffect(() => {
     if (visible) {
@@ -120,8 +123,9 @@ export function ReportModal({
               <Text style={styles.eyebrow}>Report</Text>
               <Text style={styles.title}>Quand te le rappeler ?</Text>
               <Text style={styles.subtitle}>
-                Report possible jusqu'au {formatDayMonth(latestDate)}. Le rappel mensuel habituel
-                est le {formatDayMonth(nextRegularDate)}.
+                {anchorHasArrived
+                  ? `Report possible jusqu'au ${formatDayMonth(latestDate)}, la veille du prochain rappel du ${formatDayMonth(nextRegularDate)}.`
+                  : `Ton rappel n'est pas encore arrivé. Pour le moment, tu peux choisir une date jusqu'au ${formatDayMonth(latestDate)} inclus.`}
               </Text>
 
               {quickOptions.map((opt) => (
@@ -132,17 +136,13 @@ export function ReportModal({
               ))}
 
               <Text style={styles.fieldTitle}>Date précise</Text>
-              <Field
+              <DateField
                 value={dateText}
                 onChangeText={(t) => {
-                  const formatted = formatDateInput(t);
-                  setDateText(formatted);
-                  setSelectedDate(parseDateInput(formatted));
+                  setDateText(t);
+                  setSelectedDate(parseDateInput(t));
                   setError(null);
                 }}
-                placeholder="JJ/MM/AAAA"
-                keyboardType="number-pad"
-                maxLength={10}
               />
               {selectedDate && postponeIsNearNextAnchor(goal, selectedDate) ? (
                 <Text style={styles.info}>

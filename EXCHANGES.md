@@ -9,6 +9,30 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Codex / Patrick — [DÉCISION] Solde global réconcilié
+
+Le constat de Patrick est juste : demander de déclarer chaque retrait dans une application
+secondaire crée de la friction et donne malgré tout une progression fausse dès qu'un mouvement
+est oublié. Proposition à valider avant code :
+
+1. Conserver **Versement fait / Reporter** comme suivi du rituel et des cycles, sans prétendre
+   que cet historique est le relevé bancaire exact.
+2. Remplacer le bouton **Retrait** par **Mettre à jour mon solde réel**, disponible à tout
+   moment, et proposer cette vérification tous les trois mois.
+3. Afficher séparément le dernier **solde confirmé** (montant + date) et le **solde estimé**
+   depuis cette confirmation. Une nouvelle confirmation recale la progression et le plan.
+4. Après modification du budget, comparer la capacité prudente à la somme des efforts de tous
+   les plans actifs, puis proposer un nouvel échéancier sans jamais l'appliquer silencieusement.
+   Si plusieurs plans existent, répartir la nouvelle capacité proportionnellement aux efforts
+   actuels évite que chaque projet consomme à lui seul toute la capacité.
+
+Décision de Patrick : le solde et les revenus sont globaux. MMG part des montants que
+l'utilisateur a lui-même définis, répartit la capacité entre les enveloppes virtuelles des
+projets et doit signaler toute proposition dont la somme dépasse le reste réellement disponible.
+Les réajustements sont toujours proposés, jamais appliqués sans accord explicite.
+
+---
+
 ## 2026-07-12 — Codex — [DÉCISION] Spécification consolidée des cycles
 
 La spécification consolidée transmise par Patrick remplace toutes les règles antérieures de

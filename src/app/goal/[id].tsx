@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -8,9 +8,10 @@ import { ConfirmationOverlay } from '@/components/confirmation-overlay';
 import { ContributionChoiceModal } from '@/components/contribution-choice-modal';
 import { ReportModal } from '@/components/report-modal';
 import { RecentContributionModal } from '@/components/recent-contribution-modal';
+import { ReminderDayModal } from '@/components/reminder-day-modal';
 import { Button, Card, Eyebrow, ProgressBar, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { confirmContribution, withdraw } from '@/lib/actions';
+import { changeReminderDay, confirmContribution, withdraw } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
 import { formatDate, formatEuro } from '@/lib/format';
 import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
@@ -41,7 +42,6 @@ const TABS: { key: Tab; label: string }[] = [
 const handledNotificationActions = new Set<string>();
 
 export default function GoalScreen() {
-  const router = useRouter();
   const { id, notificationAction, notificationIsTest, responseKey } = useLocalSearchParams<{
     id: string;
     notificationAction?: 'done' | 'edit' | 'postpone';
@@ -55,6 +55,7 @@ export default function GoalScreen() {
   const [tab, setTab] = useState<Tab>('today');
   const [amountModal, setAmountModal] = useState<'deposit' | 'withdrawal' | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reminderDayOpen, setReminderDayOpen] = useState(false);
   const [modalFromTest, setModalFromTest] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
   const [confirmation, setConfirmation] = useState<{
@@ -236,9 +237,7 @@ export default function GoalScreen() {
                 </Text>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() =>
-                    router.push({ pathname: '/onboarding/new-goal', params: { editId: goal.id } })
-                  }
+                  onPress={() => setReminderDayOpen(true)}
                   style={styles.reminderDayLink}>
                   <Text style={styles.reminderDayLinkText}>
                     Jour mensuel : le {goal.reminderDay} · Modifier
@@ -361,6 +360,19 @@ export default function GoalScreen() {
           await withdraw(goal, amount);
         }}
         onClose={() => setAmountModal(null)}
+      />
+      <ReminderDayModal
+        visible={reminderDayOpen}
+        currentDay={goal.reminderDay}
+        onClose={() => setReminderDayOpen(false)}
+        onConfirm={async (day) => {
+          const currentGoal = useStore
+            .getState()
+            .goals.find((candidate) => candidate.id === goal.id);
+          if (!currentGoal) return;
+          await changeReminderDay(currentGoal, day);
+          setReminderDayOpen(false);
+        }}
       />
       <ReportModal
         visible={reportOpen}

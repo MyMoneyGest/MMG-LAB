@@ -45,9 +45,9 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Suggestions** : sélectionner une catégorie préremplit le nom correspondant. Changer de
   catégorie actualise un nom suggéré, sans écraser un nom personnalisé ; « Autre » vide le
   champ pour laisser l'utilisateur nommer librement son projet.
-- **Saisie** : le champ de date utilise un clavier numérique et insère automatiquement les
-  séparateurs (`12072027` devient `12/07/2027`). L'écran reste défilable et remonte son contenu
-  lorsque le clavier est affiché afin que le champ actif reste visible.
+- **Saisie** : la date cible est une seule ligne `JJ / MM / AAAA` dont les séparateurs restent
+  toujours visibles. Chaque bloc utilise le clavier numérique et passe automatiquement au
+  suivant. L'écran reste défilable et remonte son contenu lorsque le clavier est affiché.
 - **Comment** : les rythmes progressif et régressif utilisent des poids linéaires bornés de
   0,7 à 1,3, dont la moyenne vaut 1. La répartition conserve le total exact au centime.
   `createGoal()` orchestre : store + première demande de permission notifications (uniquement
@@ -61,7 +61,8 @@ Dernière mise à jour : 2026-07-12 (Codex).
   déjà mis / restants / cible) + 3 onglets :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (X €)** (1 tap), Montant différent, Reporter, Retrait.
-    Le jour mensuel est affiché avec un accès direct à sa modification (1 à 28).
+    Le jour mensuel ouvre une petite fenêtre dédiée avec un seul champ « Jour du mois
+    (1 à 28) » et les boutons Annuler / Valider. L'édition complète du plan ne s'ouvre plus.
   - **Échéancier** : occurrences mensuelles futures jusqu'à la cible avec montants reflétant
     le rythme stable, progressif ou régressif choisi.
   - **Historique** : versements (+vert) et retraits (−terracotta) datés.
@@ -69,8 +70,8 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Comment** : le reste à financer est redistribué sur les échéances selon le rythme choisi,
   puis recalculé après chaque geste : les écarts sont absorbés sans pénalité. Les projets créés
   avant l'ajout de ce réglage restent automatiquement en rythme stable (`rhythm ?? 'stable'`).
-  Un versement (peu importe le montant) marque le mois comme fait :
-  `reminderAfterConfirmation` = jour de rappel du mois suivant.
+  Le rattachement aux cycles suit les règles détaillées en section 8 : une dette est soldée en
+  priorité, tandis qu'un surplus ne supprime pas le rappel mensuel.
 - **Où** : `src/app/goal/[id].tsx`, `src/lib/plan.ts` (`suggestedAmount`, `upcomingSchedule`,
   `savedTotal`…), `src/lib/actions.ts` (`confirmContribution`, `withdraw`).
 
@@ -89,12 +90,15 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Quoi** : modal « Quand te le rappeler ? » — Demain / Dans 3 jours / Dans 7 jours (dates
   affichées) ou date précise JJ/MM/AAAA. Message d'erreur si permission de notification
   manquante (« Report impossible pour le moment… »).
-- **Saisie** : les `/` de la date précise sont ajoutés automatiquement. La fenêtre compacte
-  reste défilable au-dessus du clavier et peut toujours être fermée par son bouton Annuler,
+- **Saisie** : la fenêtre compacte affiche une seule ligne `JJ / MM / AAAA` dont les deux
+  séparateurs restent visibles avant et pendant la saisie. Elle reste défilable au-dessus du
+  clavier et peut être fermée par son bouton Annuler,
   le bouton retour Android ou un appui sur l'arrière-plan.
-- **Limite** : un report doit être futur et s'arrête à la veille de l'occurrence mensuelle
-  suivante (jour mensuel 28 → report possible jusqu'au 27 inclus). La fenêtre affiche cette
-  limite, masque les raccourcis hors limite et la logique métier refuse tout dépassement.
+- **Limite avant l'ancre** : tant que le jour du rappel n'est pas arrivé, le report ne peut pas
+  le dépasser (rappel le 28 juillet → le 29 juillet est refusé avant le 28).
+- **Limite à partir de l'ancre** : le jour du rappel arrivé, le report peut aller jusqu'à la
+  veille de l'ancre suivante (le 28 juillet → jusqu'au 27 août inclus). La fenêtre affiche la
+  limite active, masque les raccourcis hors limite et la logique métier refuse tout dépassement.
 - **Ancre immuable** : le report crée un unique rappel ponctuel pour le cycle ciblé ; il ne
   change jamais le jour mensuel. L'ancre suivante reste donc programmée et ouvre son propre
   cycle, sans fusion ni mois sauté.

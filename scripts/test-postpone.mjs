@@ -44,16 +44,24 @@ const baseGoal = {
   contributions: [],
 };
 
-// Report ponctuel : juillet va au 5 août, l'ancre d'août reste indépendante.
+// Avant l'ancre, impossible de la dépasser : le 29 juillet doit être refusé.
 assert.deepEqual(nextRegularReminderAfterCurrent(baseGoal, july12), at(2026, 8, 28));
-assert.deepEqual(postponeDateLimit(baseGoal, july12), at(2026, 8, 27));
-assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 27), july12), true);
-assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 28), july12), false);
-assert.equal(daysBeforeRegularReminder(baseGoal, at(2026, 8, 25), july12), 3);
-assert.equal(postponeIsNearNextAnchor(baseGoal, at(2026, 8, 25), july12), true);
-assert.equal(postponeIsNearNextAnchor(baseGoal, at(2026, 8, 24), july12), false);
+assert.deepEqual(postponeDateLimit(baseGoal, july12), at(2026, 7, 28));
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 28), july12), true);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 29), july12), false);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 27), july12), false);
 
-const reportedCycles = cyclesAfterPostpone(baseGoal, at(2026, 8, 5), july12);
+// Le jour de l'ancre, le report peut aller jusqu'à la veille de l'ancre suivante.
+const july28 = at(2026, 7, 28, 10);
+assert.deepEqual(postponeDateLimit(baseGoal, july28), at(2026, 8, 27));
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 29), july28), true);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 27), july28), true);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 28), july28), false);
+assert.equal(daysBeforeRegularReminder(baseGoal, at(2026, 8, 25), july28), 3);
+assert.equal(postponeIsNearNextAnchor(baseGoal, at(2026, 8, 25), july28), true);
+assert.equal(postponeIsNearNextAnchor(baseGoal, at(2026, 8, 24), july28), false);
+
+const reportedCycles = cyclesAfterPostpone(baseGoal, at(2026, 8, 5), july28);
 assert.deepEqual(reminderAtForCycle(reportedCycles[0]), at(2026, 8, 5));
 assert.deepEqual(new Date(reportedCycles[1].anchorAt), at(2026, 8, 28));
 

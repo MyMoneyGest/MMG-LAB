@@ -4,12 +4,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
 import { PlanSummaryDark } from '@/components/plan-summary';
-import { Button, Card, Eyebrow, Field, Screen } from '@/components/ui';
+import { Button, Card, DateField, Eyebrow, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { changeReminderDay, createGoal } from '@/lib/actions';
 import {
   formatDate,
-  formatDateInput,
   formatEuro,
   parseAmountInput,
   parseDateInput,
@@ -235,16 +234,13 @@ export default function NewGoalScreen() {
 
       <Card>
         <Text style={styles.title}>Ton rythme</Text>
-        <Field
+        <DateField
           label="Date cible"
           value={dateText}
           onChangeText={(t) => {
-            setDateText(formatDateInput(t));
+            setDateText(t);
             setError(null);
           }}
-          placeholder="JJ/MM/AAAA"
-          keyboardType="number-pad"
-          maxLength={10}
         />
         <Field
           label="Jour du rappel dans le mois (1 à 28)"

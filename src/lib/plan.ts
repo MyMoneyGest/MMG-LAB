@@ -298,8 +298,13 @@ export function nextRegularReminderAfterCurrent(goal: Goal, now: Date = new Date
   return nextReminderAfter(new Date(cycleToPostpone(goal, now).anchorAt), goal.reminderDay);
 }
 
-/** Dernière date de report : la veille de la prochaine occurrence mensuelle. */
+/**
+ * Avant le jour de l'ancre, le report reste borné à cette ancre. À partir de
+ * ce jour seulement, il peut aller jusqu'à la veille de l'ancre suivante.
+ */
 export function postponeDateLimit(goal: Goal, now: Date = new Date()): Date {
+  const currentAnchor = new Date(cycleToPostpone(goal, now).anchorAt);
+  if (calendarDayNumber(now) < calendarDayNumber(currentAnchor)) return currentAnchor;
   const limit = nextRegularReminderAfterCurrent(goal, now);
   limit.setDate(limit.getDate() - 1);
   return limit;
@@ -321,7 +326,7 @@ export function postponeIsNearNextAnchor(
   return gap >= 1 && gap <= CLOSE_REMINDER_DAYS;
 }
 
-/** Un report doit être futur et précéder le prochain rappel mensuel. */
+/** Un report doit être futur et respecter la borne dépendant de l'arrivée de l'ancre. */
 export function canPostponeReminderTo(goal: Goal, date: Date, now: Date = new Date()): boolean {
   const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
   return at > now && at <= postponeDateLimit(goal, now);

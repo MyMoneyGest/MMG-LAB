@@ -9,6 +9,29 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 7 : borne de report et saisies compactes
+
+### Fait
+- Corrigé la borne contextuelle du report : avant l'ancre du 28 juillet, le 29 juillet est
+  refusé ; à partir du 28 juillet, le report peut aller jusqu'au 27 août.
+- Remplacé le lien « Jour mensuel · Modifier » vers l'édition complète par une petite fenêtre
+  dédiée contenant un seul champ numérique 1 à 28.
+- Remplacé les champs de date ambigus par une ligne visuelle `JJ / MM / AAAA` : les slashs sont
+  permanents et le focus avance automatiquement du jour vers le mois puis l'année.
+- Renforcé les tests de logique à dates fixes et les tests de structure des surfaces de saisie.
+- Contrôles intermédiaires réussis : tests cycles, saisie, format et notifications, TypeScript
+  et `git diff --check`. La vérification visuelle web intégrée n'a pas pu démarrer son moteur
+  local ; elle ne sera pas présentée comme validée.
+
+### En cours
+- Aucun code partiellement implémenté dans ce lot. Bundle Android Hermes réussi : 1 364 modules.
+
+### Ensuite
+- Implémentation de la décision validée : solde global et capacité globale répartis entre les
+  enveloppes virtuelles des projets.
+
+---
+
 ## 2026-07-12 — Codex — Session 6 : spécification consolidée cycles et versements
 
 ### Fait
