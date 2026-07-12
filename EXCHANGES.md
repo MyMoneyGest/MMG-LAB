@@ -9,6 +9,20 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-12 — Codex — [PROPOSITION À VALIDER] Maquettes design v2
+
+La revue Claude/Patrick est intégralement appliquée à une nouvelle version :
+
+- palette forcée sur les tokens MMG (`#F4EFE6`, `#FBF8F1`, terracotta `#B5432A`) ; aucun
+  dark mode par défaut ;
+- sélecteur Aujourd'hui / Échéancier / Historique maintenu au bas de la vue projet ;
+- CTA restauré en **Versement fait (178 €)** ;
+- cinq catégories visibles à la création : Urgence, Voiture, Déménagement, Vacances, Autre ;
+- entrée Accueil supprimée du menu ; **Mes projets** reste le point de retour principal.
+
+La structure précédemment adoptée ne change pas. Cette v2 reste une maquette : aucun code
+produit ne doit être commencé avant validation explicite de Patrick.
+
 ## 2026-07-12 — Codex — [PROPOSITION À VALIDER] Maquettes design v1
 
 Trois maquettes interactives ont été préparées sans modifier le code de l'application :

@@ -9,6 +9,23 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 13 : maquettes design v2
+
+### Fait
+- Appliqué les remarques formulées par Patrick avec Claude sans modifier l'application.
+- Remis la maquette dans la palette claire MMG exacte, avec terracotta comme accent unique.
+- Ancré visuellement la navigation Aujourd'hui / Échéancier / Historique au bas du projet.
+- Restauré le montant dans le CTA, rendu les cinq catégories accessibles et retiré Accueil du
+  menu au profit de Mes projets.
+- Génération autonome de la v2 réussie ; structure et interactions contrôlées statiquement.
+
+### En cours
+- Attente de validation ou de nouvelles corrections par Patrick. Aucun écran produit commencé.
+
+### Ensuite
+- Une fois la maquette validée : états de chargement et animations indépendantes, puis
+  implémentation du design sans modification de logique métier.
+
 ## 2026-07-12 — Codex — Session 12 : maquettes design v1
 
 ### Fait
