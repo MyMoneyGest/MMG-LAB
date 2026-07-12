@@ -6,6 +6,7 @@
 
 import {
   Budget,
+  BalanceSnapshot,
   Contribution,
   ContributionAllocation,
   Goal,
@@ -17,6 +18,7 @@ import {
 export const SAFETY_MARGIN = 0.2;
 export const CLOSE_REMINDER_DAYS = 3;
 export const CLOSE_CONTRIBUTION_DAYS = 3;
+export const BALANCE_CHECK_DAYS = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function calendarDayNumber(date: Date): number {
@@ -33,11 +35,17 @@ export function prudentCapacity(b: Budget): number {
 
 /** Total mis de côté : déjà disponible + versements − retraits. */
 export function savedTotal(goal: Goal): number {
+  const confirmedAt = goal.balanceConfirmedAt
+    ? new Date(goal.balanceConfirmedAt).getTime()
+    : null;
   const moves = goal.contributions.reduce(
-    (sum, c) => sum + (c.type === 'deposit' ? c.amount : -c.amount),
+    (sum, c) => {
+      if (confirmedAt !== null && new Date(c.date).getTime() <= confirmedAt) return sum;
+      return sum + (c.type === 'deposit' ? c.amount : -c.amount);
+    },
     0
   );
-  return Math.max(0, goal.alreadyAvailable + moves);
+  return Math.max(0, (goal.confirmedBalance ?? goal.alreadyAvailable) + moves);
 }
 
 export function remainingAmount(goal: Goal): number {
@@ -420,6 +428,217 @@ export function upcomingSchedule(
 /** Montant conseillé à la prochaine échéance, selon le rythme choisi. */
 export function suggestedAmount(goal: Goal, now: Date = new Date()): number {
   return upcomingSchedule(goal, now, 1)[0]?.amount ?? 0;
+}
+
+/** Effort mensuel le plus élevé encore prévu pour un plan. */
+export function peakScheduledAmount(goal: Goal, now: Date = new Date()): number {
+  const schedule = upcomingSchedule(goal, now, 600);
+  return schedule.length ? Math.max(...schedule.map((row) => row.amount)) : 0;
+}
+
+export function latestBalanceSnapshot(
+  snapshots: BalanceSnapshot[] | undefined
+): BalanceSnapshot | null {
+  return (
+    [...(snapshots ?? [])].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )[0] ?? null
+  );
+}
+
+/**
+ * Avant une première confirmation, le total est la somme des enveloppes estimées.
+ * Ensuite, il repart toujours du dernier solde réel et n'ajoute que les mouvements
+ * plus récents. Une création/suppression de projet ne fabrique donc pas d'argent.
+ */
+export function estimatedGlobalBalance(
+  goals: Goal[],
+  snapshots: BalanceSnapshot[] | undefined
+): number {
+  const latest = latestBalanceSnapshot(snapshots);
+  if (!latest) {
+    return Math.round(goals.reduce((sum, goal) => sum + savedTotal(goal), 0) * 100) / 100;
+  }
+  const confirmedAt = new Date(latest.date).getTime();
+  const movesSinceConfirmation = goals.reduce(
+    (total, goal) =>
+      total +
+      goal.contributions.reduce((sum, contribution) => {
+        if (new Date(contribution.date).getTime() <= confirmedAt) return sum;
+        return sum + (contribution.type === 'deposit' ? contribution.amount : -contribution.amount);
+      }, 0),
+    0
+  );
+  return Math.max(0, Math.round((latest.amount + movesSinceConfirmation) * 100) / 100);
+}
+
+export function balanceCheckDue(
+  goals: Goal[],
+  snapshots: BalanceSnapshot[] | undefined,
+  now: Date = new Date()
+): boolean {
+  if (!goals.length) return false;
+  const latest = latestBalanceSnapshot(snapshots);
+  const reference = latest
+    ? new Date(latest.date)
+    : new Date(Math.min(...goals.map((goal) => new Date(goal.createdAt).getTime())));
+  return calendarDayNumber(now) - calendarDayNumber(reference) >= BALANCE_CHECK_DAYS;
+}
+
+export interface BalanceAllocation {
+  allocations: Record<string, number>;
+  unallocatedAmount: number;
+}
+
+/**
+ * Répartit le solde réel selon les enveloppes estimées existantes, sans jamais
+ * dépasser la cible d'un projet. Le surplus global reste non affecté.
+ */
+export function allocateGlobalBalance(goals: Goal[], amount: number): BalanceAllocation {
+  const totalCents = Math.max(0, Math.round(amount * 100));
+  const caps = new Map(goals.map((goal) => [goal.id, Math.max(0, Math.round(goal.targetAmount * 100))]));
+  const allocatable = Math.min(
+    totalCents,
+    [...caps.values()].reduce((sum, cents) => sum + cents, 0)
+  );
+  const allocations = new Map(goals.map((goal) => [goal.id, 0]));
+  let eligible = goals.map((goal) => goal.id);
+  let remaining = allocatable;
+
+  while (eligible.length && remaining > 0) {
+    const rawWeights = eligible.map((id) => {
+      const goal = goals.find((candidate) => candidate.id === id)!;
+      return Math.max(0, Math.min(savedTotal(goal), goal.targetAmount));
+    });
+    const rawSum = rawWeights.reduce((sum, weight) => sum + weight, 0);
+    const weights = rawSum > 0
+      ? rawWeights
+      : eligible.map((id) => caps.get(id) ?? 0);
+    const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
+    if (weightSum <= 0) break;
+
+    const cappedIds: string[] = [];
+    eligible.forEach((id, index) => {
+      const capLeft = (caps.get(id) ?? 0) - (allocations.get(id) ?? 0);
+      const fairShare = (remaining * weights[index]) / weightSum;
+      if (fairShare >= capLeft) cappedIds.push(id);
+    });
+
+    if (!cappedIds.length) {
+      const raw = eligible.map((id, index) => ({
+        id,
+        cents: (remaining * weights[index]) / weightSum,
+      }));
+      const floors = raw.map((item) => ({ ...item, floor: Math.floor(item.cents) }));
+      let leftover = remaining - floors.reduce((sum, item) => sum + item.floor, 0);
+      floors
+        .sort((a, b) => b.cents - b.floor - (a.cents - a.floor))
+        .forEach((item) => {
+          const extra = leftover > 0 ? 1 : 0;
+          allocations.set(item.id, (allocations.get(item.id) ?? 0) + item.floor + extra);
+          leftover -= extra;
+        });
+      remaining = 0;
+      break;
+    }
+
+    for (const id of cappedIds) {
+      const capLeft = (caps.get(id) ?? 0) - (allocations.get(id) ?? 0);
+      allocations.set(id, (allocations.get(id) ?? 0) + capLeft);
+      remaining -= capLeft;
+    }
+    eligible = eligible.filter((id) => !cappedIds.includes(id));
+  }
+
+  return {
+    allocations: Object.fromEntries(
+      [...allocations.entries()].map(([id, cents]) => [id, cents / 100])
+    ),
+    unallocatedAmount: (totalCents - allocatable) / 100,
+  };
+}
+
+export interface GoalRebalanceProposal {
+  goalId: string;
+  goalName: string;
+  currentTargetDate: string;
+  proposedTargetDate: string;
+  currentMonthly: number;
+  proposedMonthly: number;
+}
+
+export interface GlobalRebalanceProposal {
+  capacity: number;
+  currentEffort: number;
+  direction: 'accelerate' | 'relax';
+  possible: boolean;
+  goals: GoalRebalanceProposal[];
+}
+
+function targetDateForCapacity(
+  goal: Goal,
+  monthlyCapacity: number,
+  now: Date
+): { date: Date; monthly: number } | null {
+  const remaining = remainingAmount(goal);
+  if (remaining <= 0) return { date: new Date(goal.targetDate), monthly: 0 };
+  if (monthlyCapacity <= 0) return null;
+  for (let months = 1; months <= 600; months += 1) {
+    const amounts = plannedAmounts(remaining, months, goal.rhythm ?? 'stable');
+    const peak = Math.max(...amounts);
+    if (peak <= monthlyCapacity + 0.01) {
+      let date = nextReminderAfter(now, goal.reminderDay);
+      for (let index = 1; index < months; index += 1) {
+        date = nextReminderAfter(date, goal.reminderDay);
+      }
+      return { date, monthly: amounts[0] };
+    }
+  }
+  return null;
+}
+
+/** Proposition globale : la somme des parts n'excède jamais la capacité prudente. */
+export function buildGlobalRebalanceProposal(
+  goals: Goal[],
+  budget: Budget,
+  now: Date = new Date()
+): GlobalRebalanceProposal {
+  const active = goals.filter((goal) => remainingAmount(goal) > 0);
+  const currentAmounts = active.map((goal) => peakScheduledAmount(goal, now));
+  const currentEffort = currentAmounts.reduce((sum, amount) => sum + amount, 0);
+  const capacity = prudentCapacity(budget);
+  const fallbackWeights = active.map((goal) => remainingAmount(goal));
+  const weightSum = currentEffort > 0
+    ? currentEffort
+    : fallbackWeights.reduce((sum, amount) => sum + amount, 0);
+  const goalsProposal: GoalRebalanceProposal[] = [];
+  let possible = active.length === 0 || (capacity > 0 && weightSum > 0);
+
+  active.forEach((goal, index) => {
+    const weight = currentEffort > 0 ? currentAmounts[index] : fallbackWeights[index];
+    const share = weightSum > 0 ? (capacity * weight) / weightSum : 0;
+    const target = targetDateForCapacity(goal, share, now);
+    if (!target) {
+      possible = false;
+      return;
+    }
+    goalsProposal.push({
+      goalId: goal.id,
+      goalName: goal.name,
+      currentTargetDate: goal.targetDate,
+      proposedTargetDate: target.date.toISOString(),
+      currentMonthly: currentAmounts[index],
+      proposedMonthly: target.monthly,
+    });
+  });
+
+  return {
+    capacity,
+    currentEffort: Math.round(currentEffort * 100) / 100,
+    direction: capacity >= currentEffort ? 'accelerate' : 'relax',
+    possible,
+    goals: goalsProposal,
+  };
 }
 
 /** Bucket anonymisé pour le tracking (mêmes valeurs que l'ancienne app). */

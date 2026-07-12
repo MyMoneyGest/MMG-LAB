@@ -31,6 +31,12 @@ l'utilisateur a lui-même définis, répartit la capacité entre les enveloppes 
 projets et doit signaler toute proposition dont la somme dépasse le reste réellement disponible.
 Les réajustements sont toujours proposés, jamais appliqués sans accord explicite.
 
+Implémentation Codex : le bouton Retrait actif est remplacé par la confirmation du solde réel,
+avec rappel trimestriel. La dernière confirmation devient la base exacte du total global ; les
+mouvements ultérieurs restent estimés jusqu'au prochain contrôle. Les anciens retraits restent
+lisibles pour compatibilité. Le budget et la création d'un projet comparent désormais l'effort
+cumulé de tous les plans à la capacité prudente globale.
+
 ---
 
 ## 2026-07-12 — Codex — [DÉCISION] Spécification consolidée des cycles

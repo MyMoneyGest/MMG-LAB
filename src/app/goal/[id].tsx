@@ -4,21 +4,32 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AmountModal } from '@/components/amount-modal';
 import { AppHeader } from '@/components/app-header';
+import { BalanceModal } from '@/components/balance-modal';
 import { ConfirmationOverlay } from '@/components/confirmation-overlay';
 import { ContributionChoiceModal } from '@/components/contribution-choice-modal';
 import { ReportModal } from '@/components/report-modal';
 import { RecentContributionModal } from '@/components/recent-contribution-modal';
+import { RebalanceModal } from '@/components/rebalance-modal';
 import { ReminderDayModal } from '@/components/reminder-day-modal';
 import { Button, Card, Eyebrow, ProgressBar, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { changeReminderDay, confirmContribution, withdraw } from '@/lib/actions';
+import {
+  applyGlobalRebalance,
+  changeReminderDay,
+  confirmContribution,
+  reconcileGlobalBalance,
+} from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
 import { formatDate, formatEuro } from '@/lib/format';
 import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
 import {
   hasPendingAction,
+  balanceCheckDue,
+  buildGlobalRebalanceProposal,
   contributionPlan,
   currentUpcomingCycle,
+  estimatedGlobalBalance,
+  latestBalanceSnapshot,
   progressPct,
   recentDeposits,
   remainingAmount,
@@ -27,6 +38,7 @@ import {
   upcomingSchedule,
 } from '@/lib/plan';
 import type { ContributionIntent } from '@/lib/plan';
+import type { GlobalRebalanceProposal } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { CATEGORY_DESCRIPTIONS } from '@/lib/types';
 import type { Contribution } from '@/lib/types';
@@ -49,11 +61,17 @@ export default function GoalScreen() {
     responseKey?: string;
   }>();
   const goal = useStore((s) => s.goals.find((g) => g.id === id));
+  const goals = useStore((s) => s.goals);
+  const budget = useStore((s) => s.budget);
+  const balanceSnapshots = useStore((s) => s.balanceSnapshots ?? []);
   const setLastViewed = useStore((s) => s.setLastViewed);
   const [hydrated, setHydrated] = useState(useStore.persist.hasHydrated());
 
   const [tab, setTab] = useState<Tab>('today');
-  const [amountModal, setAmountModal] = useState<'deposit' | 'withdrawal' | null>(null);
+  const [amountModal, setAmountModal] = useState<'deposit' | null>(null);
+  const [balanceOpen, setBalanceOpen] = useState(false);
+  const [rebalanceProposal, setRebalanceProposal] =
+    useState<GlobalRebalanceProposal | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [reminderDayOpen, setReminderDayOpen] = useState(false);
   const [modalFromTest, setModalFromTest] = useState(false);
@@ -176,6 +194,13 @@ export default function GoalScreen() {
   const suggested = suggestedAmount(goal);
   const reached = remaining <= 0;
   const pending = hasPendingAction(goal);
+  const latestSnapshot = latestBalanceSnapshot(balanceSnapshots);
+  const globalBalance = estimatedGlobalBalance(goals, balanceSnapshots);
+  const checkBalance = balanceCheckDue(goals, balanceSnapshots);
+  const globalPlan = budget ? buildGlobalRebalanceProposal(goals, budget) : null;
+  const capacityExceeded = Boolean(
+    globalPlan && globalPlan.currentEffort > globalPlan.capacity
+  );
 
   return (
     <Screen>
@@ -189,6 +214,16 @@ export default function GoalScreen() {
         </View>
       ) : null}
 
+      {capacityExceeded && globalPlan ? (
+        <View style={styles.capacityWarning}>
+          <Text style={styles.capacityWarningText}>
+            Au mois le plus exigeant, tes plans demandent {formatEuro(globalPlan.currentEffort)},
+            mais ta capacité prudente globale est de {formatEuro(globalPlan.capacity)}. Un
+            réajustement est recommandé.
+          </Text>
+        </View>
+      ) : null}
+
       <Card>
         <Eyebrow>Ton plan actuel</Eyebrow>
         <Text style={styles.goalName}>{goal.name}</Text>
@@ -196,10 +231,15 @@ export default function GoalScreen() {
         <ProgressBar pct={pct} />
         <View style={styles.statsRow}>
           <Text style={styles.statAccent}>{pct} % atteint</Text>
-          <Text style={styles.stat}>{formatEuro(saved)} déjà mis</Text>
+          <Text style={styles.stat}>{formatEuro(saved)} estimés</Text>
           <Text style={styles.stat}>{formatEuro(remaining)} restants</Text>
         </View>
         <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
+        <Text style={styles.balanceStatus}>
+          {latestSnapshot
+            ? `Solde global confirmé le ${formatDate(latestSnapshot.date)}`
+            : 'Solde global pas encore confirmé'}
+        </Text>
       </Card>
 
       <View style={styles.tabs}>
@@ -270,16 +310,27 @@ export default function GoalScreen() {
                   />
                 </View>
               </View>
+              {checkBalance ? (
+                <View style={styles.balanceCheckCard}>
+                  <Text style={styles.balanceCheckTitle}>Vérification trimestrielle</Text>
+                  <Text style={styles.balanceCheckText}>
+                    Confirme ton solde réel pour éviter qu’un mouvement oublié décale tes plans.
+                  </Text>
+                  <Button
+                    label="Confirmer mon solde"
+                    variant="secondary"
+                    onPress={() => setBalanceOpen(true)}
+                  />
+                </View>
+              ) : null}
             </>
           )}
-          {saved > 0 ? (
-            <Button
-              label="Retrait"
-              variant="secondary"
-              onPress={() => setAmountModal('withdrawal')}
-              style={{ marginTop: 12 }}
-            />
-          ) : null}
+          <Button
+            label="Mettre à jour le solde réel"
+            variant="secondary"
+            onPress={() => setBalanceOpen(true)}
+            style={{ marginTop: 12 }}
+          />
         </Card>
       ) : null}
 
@@ -349,17 +400,28 @@ export default function GoalScreen() {
           setAmountModal(null);
         }}
       />
-      <AmountModal
-        visible={amountModal === 'withdrawal'}
-        title="Retrait"
-        subtitle="À noter si tu as dû repiocher dedans — sans jugement, le plan se recale."
-        confirmLabel="Valider le retrait"
-        maxAmount={saved}
+      <BalanceModal
+        visible={balanceOpen}
+        estimatedBalance={globalBalance}
+        lastConfirmedAt={latestSnapshot?.date}
+        onClose={() => setBalanceOpen(false)}
         onConfirm={async (amount) => {
-          setAmountModal(null);
-          await withdraw(goal, amount);
+          const proposal = await reconcileGlobalBalance(amount);
+          setBalanceOpen(false);
+          if (proposal && (proposal.goals.length || !proposal.possible)) {
+            setRebalanceProposal(proposal);
+          }
         }}
-        onClose={() => setAmountModal(null)}
+      />
+      <RebalanceModal
+        proposal={rebalanceProposal}
+        reason="balance"
+        onKeep={() => setRebalanceProposal(null)}
+        onApply={async () => {
+          if (!rebalanceProposal) return;
+          await applyGlobalRebalance(rebalanceProposal);
+          setRebalanceProposal(null);
+        }}
       />
       <ReminderDayModal
         visible={reminderDayOpen}
@@ -451,6 +513,23 @@ const styles = StyleSheet.create({
   statAccent: { fontSize: 15, fontWeight: '800', color: colors.accent },
   stat: { fontSize: 15, fontWeight: '700', color: colors.text },
   targetDate: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 10 },
+  balanceStatus: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginTop: 4 },
+  capacityWarning: {
+    backgroundColor: colors.banner,
+    borderRadius: radius.field,
+    padding: 14,
+    marginBottom: 14,
+  },
+  capacityWarningText: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '700' },
+  balanceCheckCard: {
+    backgroundColor: colors.cardSoft,
+    borderRadius: radius.field,
+    padding: 14,
+    gap: 8,
+    marginTop: 14,
+  },
+  balanceCheckTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  balanceCheckText: { color: colors.textSecondary, fontSize: 14, lineHeight: 20 },
   tabs: {
     flexDirection: 'row',
     backgroundColor: colors.card,

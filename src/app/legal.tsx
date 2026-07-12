@@ -34,9 +34,11 @@ export default function LegalScreen() {
         <Eyebrow>Confidentialité</Eyebrow>
         <Text style={styles.title}>Données conservées sur ton téléphone</Text>
         <Text style={styles.paragraph}>
-          Ton budget, les noms et montants de tes projets, ainsi que l'historique de tes
-          versements et retraits, sont stockés localement sur ton téléphone. Ces informations
-          financières ne sont pas envoyées à Supabase et MMG ne collecte aucune donnée bancaire.
+          Ton budget global, les noms et montants de tes projets, le solde réel que tu confirmes,
+          sa répartition en enveloppes virtuelles et l'historique de tes versements sont stockés
+          localement sur ton téléphone. Les anciens retraits éventuellement enregistrés restent
+          lisibles dans leur historique. Ces informations financières ne sont pas envoyées à
+          Supabase et MMG ne collecte aucune donnée bancaire.
         </Text>
 
         <Text style={styles.section}>Mesure d'usage pendant le test</Text>

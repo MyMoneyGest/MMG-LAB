@@ -4,6 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import {
   Budget,
+  BalanceSnapshot,
   Contribution,
   ContributionAllocation,
   ContributionType,
@@ -20,11 +21,13 @@ function makeInstallId(): string {
 interface MMGState {
   installId: string;
   budget?: Budget;
+  balanceSnapshots: BalanceSnapshot[];
   goals: Goal[];
   lastViewedGoalId?: string;
   notifPermissionAsked: boolean;
 
   setBudget: (budget: Budget) => void;
+  addBalanceSnapshot: (snapshot: BalanceSnapshot) => void;
   addGoal: (goal: Goal) => void;
   updateGoal: (id: string, patch: Partial<Goal>) => void;
   deleteGoal: (id: string) => void;
@@ -44,9 +47,15 @@ export const useStore = create<MMGState>()(
     (set, get) => ({
       installId: makeInstallId(),
       goals: [],
+      balanceSnapshots: [],
       notifPermissionAsked: false,
 
       setBudget: (budget) => set({ budget }),
+
+      addBalanceSnapshot: (snapshot) =>
+        set((state) => ({
+          balanceSnapshots: [...(state.balanceSnapshots ?? []), snapshot],
+        })),
 
       addGoal: (goal) => set((s) => ({ goals: [...s.goals, goal], lastViewedGoalId: goal.id })),
 

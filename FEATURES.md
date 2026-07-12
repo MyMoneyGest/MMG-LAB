@@ -27,10 +27,14 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 ## 3. Budget et capacité d'épargne
 
-- **Quoi** : 3 saisies (revenus nets, charges fixes, dépenses variables) → « Capacité
-  prudente : X €/mois » en direct.
+- **Quoi** : 3 saisies globales (revenus nets, charges fixes, dépenses variables) → « Capacité
+  prudente : X €/mois » en direct. Les revenus représentent le total mensuel que l'utilisateur
+  considère comme disponible, pas les entrées d'un compte bancaire particulier.
 - **Comment** : reste à vivre = revenus − charges − variables ; capacité prudente =
-  reste à vivre × (1 − marge de sécurité 20 %) (`SAFETY_MARGIN`).
+  reste à vivre × (1 − marge de sécurité 20 %) (`SAFETY_MARGIN`). Après une modification du
+  budget, MMG compare cette capacité à la somme des efforts de tous les plans actifs. Un nouvel
+  échéancier global est proposé, jamais appliqué sans accord. Si le reste à vivre est nul ou
+  insuffisant, l'impossibilité est signalée et aucun plan irréaliste n'est appliqué.
 - **Où** : `src/app/onboarding/budget.tsx`, `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
 
 ## 4. Création / ajustement d'un plan
@@ -41,7 +45,9 @@ Dernière mise à jour : 2026-07-12 (Codex).
   et **régressif** (effort décroissant). Chaque carte affiche la moyenne et le mois-pic.
   L'aperçu sombre indique le rythme et, si le montant varie, la première et la dernière
   échéance. Le diagnostic de compatibilité est calculé sur le mois le plus élevé, pas sur la
-  moyenne. Mode édition via `?editId=` (menu « Ajuster ce plan »).
+  moyenne, et additionne l'effort des autres projets actifs. Un nouveau plan ne peut donc pas
+  consommer à lui seul une capacité déjà utilisée ailleurs. Mode édition via `?editId=` (menu
+  « Ajuster ce plan »).
 - **Suggestions** : sélectionner une catégorie préremplit le nom correspondant. Changer de
   catégorie actualise un nom suggéré, sans écraser un nom personnalisé ; « Autre » vide le
   champ pour laisser l'utilisateur nommer librement son projet.
@@ -60,12 +66,14 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Quoi** : carte plan (nom, description par catégorie, barre de progression, % atteint /
   déjà mis / restants / cible) + 3 onglets :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
-    **Versement fait (X €)** (1 tap), Montant différent, Reporter, Retrait.
+    **Versement fait (X €)** (1 tap), Montant différent, Reporter, puis
+    **Mettre à jour le solde réel**.
     Le jour mensuel ouvre une petite fenêtre dédiée avec un seul champ « Jour du mois
     (1 à 28) » et les boutons Annuler / Valider. L'édition complète du plan ne s'ouvre plus.
   - **Échéancier** : occurrences mensuelles futures jusqu'à la cible avec montants reflétant
     le rythme stable, progressif ou régressif choisi.
-  - **Historique** : versements (+vert) et retraits (−terracotta) datés.
+  - **Historique** : versements datés ; les retraits saisis dans les anciennes versions restent
+    visibles pour préserver les données existantes.
   Bannière si permission de notification manquante (fidèle à l'ancienne app).
 - **Comment** : le reste à financer est redistribué sur les échéances selon le rythme choisi,
   puis recalculé après chaque geste : les écarts sont absorbés sans pénalité. Les projets créés
@@ -73,7 +81,7 @@ Dernière mise à jour : 2026-07-12 (Codex).
   Le rattachement aux cycles suit les règles détaillées en section 8 : une dette est soldée en
   priorité, tandis qu'un surplus ne supprime pas le rappel mensuel.
 - **Où** : `src/app/goal/[id].tsx`, `src/lib/plan.ts` (`suggestedAmount`, `upcomingSchedule`,
-  `savedTotal`…), `src/lib/actions.ts` (`confirmContribution`, `withdraw`).
+  `savedTotal`…), `src/lib/actions.ts` (`confirmContribution`, `reconcileGlobalBalance`).
 
 ## 6. Confirmation de versement (« moment marquant »)
 
@@ -113,11 +121,10 @@ Dernière mise à jour : 2026-07-12 (Codex).
   (`postponeDateLimit`, `postponeIsNearNextAnchor`, `cyclesAfterPostpone`),
   `src/lib/actions.ts`, `src/lib/notifications.ts`.
 
-## 8. Montant différent / Retrait
+## 8. Versements, solde global et réconciliation
 
-- **Quoi** : modals de saisie libre. Montant différent suit le même parcours que le 1 tap
-  (dette, extra ou choix du mois). Retrait = sortie d'argent assumée sans jugement, plafonnée à ce qui est de côté.
-  Les fenêtres sont compactes, défilables et protégées contre le recouvrement par le clavier.
+- **Montant différent** : la saisie libre suit le même parcours que le 1 tap (dette, extra ou
+  choix du mois). Les fenêtres sont compactes, défilables et protégées contre le clavier.
 - **Cycles et dettes** : chaque ancre correspond à un cycle. Un versement solde toujours le
   cycle non soldé le plus ancien ; dans ce cas, le rattachement est automatique et visible.
   Le montant peut être inférieur au conseil : le cycle est tout de même soldé.
@@ -129,9 +136,22 @@ Dernière mise à jour : 2026-07-12 (Codex).
   jours. S'il en trouve, une confirmation affiche chaque montant et chaque date ; l'utilisateur
   peut annuler ou confirmer explicitement le nouveau versement. Cette vérification précède le
   choix surplus/mois lorsque les deux sont nécessaires.
-- **Où** : `src/components/amount-modal.tsx`, `src/components/recent-contribution-modal.tsx`,
+- **Solde réel global** : le bouton dédié demande combien l'utilisateur possède réellement de
+  côté pour l'ensemble de ses projets. Cette confirmation remplace le suivi manuel de chaque
+  retrait. Elle devient aussi proposée après 90 jours sans vérification.
+- **Enveloppes virtuelles** : le solde confirmé est réparti proportionnellement entre les
+  projets, sans dépasser leur cible ; l'excédent reste non affecté. Chaque projet distingue sa
+  part confirmée de l'estimation produite par les versements plus récents. Un snapshot devient
+  la nouvelle base : l'ancien historique n'est pas recompté. La création ou suppression d'une
+  enveloppe après ce snapshot ne modifie pas artificiellement le total global.
+- **Réajustement volontaire** : après un nouveau solde, MMG recalcule les restes à financer et
+  propose des dates cibles compatibles avec la capacité globale. L'utilisateur choisit
+  explicitement **Garder mes plans** ou **Appliquer**.
+- **Où** : `src/components/amount-modal.tsx`, `src/components/balance-modal.tsx`,
+  `src/components/rebalance-modal.tsx`, `src/components/recent-contribution-modal.tsx`,
   `src/components/contribution-choice-modal.tsx`, `src/lib/plan.ts` (`recentDeposits`,
-  `contributionPlan`, `settleReminderCycle`), `src/lib/actions.ts`.
+  `contributionPlan`, `settleReminderCycle`, `estimatedGlobalBalance`,
+  `allocateGlobalBalance`, `buildGlobalRebalanceProposal`), `src/lib/actions.ts`.
 
 ## 9. Notifications locales + deep link (boucle de rétention)
 
@@ -194,9 +214,9 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 ## 12. Persistance locale
 
-- **Quoi** : budget, projets (dont leur rythme et leurs éventuelles échéances reportée/mensuelle),
-  versements, dernier projet consulté,
-  installId — tout survit au redémarrage, uniquement sur le téléphone.
+- **Quoi** : budget, projets (dont leur rythme, cycles et enveloppe confirmée), versements,
+  snapshots du solde global et part non affectée, dernier projet consulté, installId — tout
+  survit au redémarrage, uniquement sur le téléphone.
 - **Comment** : zustand + middleware `persist` sur AsyncStorage (`mmg-store-v1`).
   `installId` généré une fois (`install-<timestamp>-<aléa>`, format de l'ancienne app).
 - **Où** : `src/lib/store.ts`, types dans `src/lib/types.ts`.

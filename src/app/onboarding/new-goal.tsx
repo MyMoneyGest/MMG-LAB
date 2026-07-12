@@ -16,8 +16,10 @@ import {
 import {
   diagnostic,
   nextReminderAfter,
+  peakScheduledAmount,
   plannedAmounts,
   prudentCapacity,
+  remainingAmount,
   scheduledMonths,
   suggestedAmount,
 } from '@/lib/plan';
@@ -104,7 +106,11 @@ export default function NewGoalScreen() {
     };
   }
   const previewRemaining = previewValid ? Math.max(0, parsedTarget! - parsedAvailable) : 0;
-  const previewDiagnostic = preview ? diagnostic(preview.peak, budget) : null;
+  const existingEffort = goals
+    .filter((goal) => goal.id !== editing?.id && remainingAmount(goal) > 0)
+    .reduce((sum, goal) => sum + peakScheduledAmount(goal), 0);
+  const globalPeak = preview ? existingEffort + preview.peak : existingEffort;
+  const previewDiagnostic = preview ? diagnostic(globalPeak, budget) : null;
 
   const validate = (): string | null => {
     if (!name.trim()) return 'Donne un nom à ton projet.';
@@ -222,9 +228,16 @@ export default function NewGoalScreen() {
           suffix="EUR"
         />
         {budget ? (
-          <Text style={styles.capacityChip}>
-            Capacité prudente : {formatEuro(prudentCapacity(budget))} / mois
-          </Text>
+          <View style={styles.capacityChip}>
+            <Text style={styles.capacityChipMain}>
+              Capacité prudente globale : {formatEuro(prudentCapacity(budget))} / mois
+            </Text>
+            {preview ? (
+              <Text style={styles.capacityChipDetail}>
+                Effort total avec tes autres projets : {formatEuro(globalPeak)} au mois le plus élevé
+              </Text>
+            ) : null}
+          </View>
         ) : (
           <Text style={styles.capacityHint}>
             Astuce : estime d'abord ta capacité (menu → Ajuster mon budget) pour obtenir un diagnostic.
@@ -310,8 +323,8 @@ export default function NewGoalScreen() {
             <View style={styles.compatCard}>
               <Text style={styles.compatTitle}>Plan compatible avec ton budget</Text>
               <Text style={styles.compatBody}>
-                Le mois le plus haut reste à {formatEuro(preview.peak)}, pour une capacité prudente de{' '}
-                {formatEuro(prudentCapacity(budget))}.
+                Avec tes autres projets, le mois le plus haut reste à {formatEuro(globalPeak)},
+                pour une capacité prudente globale de {formatEuro(prudentCapacity(budget))}.
               </Text>
             </View>
           ) : null}
@@ -319,8 +332,8 @@ export default function NewGoalScreen() {
             <View style={styles.compatCard}>
               <Text style={styles.compatTitle}>Plan au-dessus de ta capacité</Text>
               <Text style={styles.compatBody}>
-                Tu peux quand même le créer : éloigne la date cible ou réduis le montant pour retrouver un
-                rythme confortable.
+                L'effort cumulé de tes projets dépasse ton reste disponible. Tu peux quand même
+                créer ce plan, mais MMG te signalera qu'un réajustement est nécessaire.
               </Text>
             </View>
           ) : null}
@@ -356,9 +369,6 @@ const styles = StyleSheet.create({
   chipDot: { width: 12, height: 12, borderRadius: 6 },
   chipLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
   capacityChip: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.accent,
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.cardSoftBorder,
@@ -367,6 +377,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     overflow: 'hidden',
   },
+  capacityChipMain: { fontSize: 16, fontWeight: '800', color: colors.accent },
+  capacityChipDetail: { fontSize: 13, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
   capacityHint: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   rhythmChoices: { gap: 10, marginTop: 4 },
   rhythmCard: {

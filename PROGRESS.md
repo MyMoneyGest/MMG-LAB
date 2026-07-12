@@ -9,6 +9,37 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 8 : solde réel et capacité globale
+
+### Fait
+- Remplacé le retrait manuel dans l'écran projet par **Mettre à jour le solde réel**, portant
+  sur l'argent disponible pour tous les projets, sans connexion à un compte bancaire.
+- Ajouté les snapshots locaux de solde, leur date, la répartition proportionnelle en enveloppes
+  virtuelles et la part non affectée au-delà des cibles.
+- Recalé chaque projet sur sa part confirmée sans recomptage de l'ancien historique ; seuls les
+  mouvements postérieurs restent estimés. Le total global repart du snapshot réel et ne varie
+  pas artificiellement lors de la création ou suppression d'une enveloppe.
+- Ajouté la proposition de vérification après 90 jours sans confirmation.
+- Après changement du budget ou du solde, ajouté une proposition volontaire de réajustement des
+  dates cibles. La capacité est répartie entre tous les plans actifs ; **Garder mes plans** reste
+  possible et **Appliquer** est toujours explicite.
+- Signalé sur l'écran projet tout effort cumulé supérieur à la capacité prudente. Lors de la
+  création d'un plan, le diagnostic inclut désormais les autres projets.
+- Clarifié dans l'écran Budget que les revenus sont le total global défini par l'utilisateur,
+  pas les entrées d'un compte bancaire particulier.
+- Mis à jour la page Confidentialité : solde confirmé et enveloppes restent exclusivement en
+  local ; les anciens retraits restent consultables.
+- Ajouté `test:balance` et renforcé les tests de surfaces : réconciliation, centimes, excédent,
+  contrôle trimestriel, capacité globale, capacité nulle et non-double-comptage validés.
+- Validation complète réussie : TypeScript, tests solde, cycles/reports, saisie, notifications
+  et format des dates, `git diff --check`, puis bundle Android Hermes de 1 366 modules.
+
+### En cours
+- Aucun code partiellement implémenté dans ce lot.
+
+### Ensuite
+- Confirmation tactile sur le dev build Android par Patrick après le push.
+
 ## 2026-07-12 — Codex — Session 7 : borne de report et saisies compactes
 
 ### Fait

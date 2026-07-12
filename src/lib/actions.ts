@@ -1,6 +1,8 @@
 import { track } from './analytics';
 import {
   bucketAmount,
+  allocateGlobalBalance,
+  buildGlobalRebalanceProposal,
   canPostponeReminderTo,
   contributionPlan,
   cyclesAfterPostpone,
@@ -13,6 +15,7 @@ import {
   suggestedAmount,
 } from './plan';
 import type { ContributionIntent, ContributionPlan } from './plan';
+import type { GlobalRebalanceProposal } from './plan';
 import {
   cancelGoalReminder,
   dismissPresentedCycle,
@@ -128,6 +131,44 @@ export async function withdraw(goal: Goal, amount: number): Promise<void> {
     goalId: goal.id,
     metadata: { type: 'withdrawal', goalId: goal.id, amountBucket: bucketAmount(amount) },
   });
+}
+
+/** Confirme le solde réel global et recale les enveloppes virtuelles. */
+export async function reconcileGlobalBalance(
+  amount: number
+): Promise<GlobalRebalanceProposal | null> {
+  const state = useStore.getState();
+  const now = new Date();
+  const distribution = allocateGlobalBalance(state.goals, amount);
+  const snapshot = {
+    id: `balance-${Date.now()}`,
+    amount,
+    date: now.toISOString(),
+    allocations: distribution.allocations,
+    unallocatedAmount: distribution.unallocatedAmount,
+  };
+  for (const goal of state.goals) {
+    state.updateGoal(goal.id, {
+      confirmedBalance: distribution.allocations[goal.id] ?? 0,
+      balanceConfirmedAt: snapshot.date,
+    });
+  }
+  state.addBalanceSnapshot(snapshot);
+  for (const goal of state.goals) await reschedule(goal.id);
+  const updatedGoals = useStore.getState().goals;
+  const budget = useStore.getState().budget;
+  return budget ? buildGlobalRebalanceProposal(updatedGoals, budget, now) : null;
+}
+
+/** Applique uniquement une proposition explicitement acceptée. */
+export async function applyGlobalRebalance(
+  proposal: GlobalRebalanceProposal
+): Promise<void> {
+  const state = useStore.getState();
+  for (const item of proposal.goals) {
+    state.updateGoal(item.goalId, { targetDate: item.proposedTargetDate });
+  }
+  for (const item of proposal.goals) await reschedule(item.goalId);
 }
 
 /** Reporte le rappel. Échoue si la permission de notification manque. */

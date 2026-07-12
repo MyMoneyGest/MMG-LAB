@@ -3,10 +3,18 @@ import { useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
+import { RebalanceModal } from '@/components/rebalance-modal';
 import { Button, Card, Eyebrow, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
+import { applyGlobalRebalance } from '@/lib/actions';
 import { formatEuro, parseAmountInput } from '@/lib/format';
-import { prudentCapacity, resteAVivre, SAFETY_MARGIN } from '@/lib/plan';
+import {
+  buildGlobalRebalanceProposal,
+  prudentCapacity,
+  resteAVivre,
+  SAFETY_MARGIN,
+} from '@/lib/plan';
+import type { GlobalRebalanceProposal } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 
 export default function BudgetScreen() {
@@ -19,6 +27,8 @@ export default function BudgetScreen() {
   const [fixed, setFixed] = useState(budget ? String(budget.fixedCharges) : '');
   const [variable, setVariable] = useState(budget ? String(budget.variableExpenses) : '');
   const [error, setError] = useState<string | null>(null);
+  const [rebalanceProposal, setRebalanceProposal] =
+    useState<GlobalRebalanceProposal | null>(null);
 
   const parsed = {
     income: parseAmountInput(income),
@@ -37,8 +47,16 @@ export default function BudgetScreen() {
       return;
     }
     setBudget(draft);
-    if (goals.length === 0) router.push('/onboarding/new-goal');
-    else router.back();
+    if (goals.length === 0) {
+      router.push('/onboarding/new-goal');
+      return;
+    }
+    const proposal = buildGlobalRebalanceProposal(goals, draft);
+    if (!proposal.goals.length && proposal.possible) {
+      router.back();
+      return;
+    }
+    setRebalanceProposal(proposal);
   };
 
   return (
@@ -48,7 +66,8 @@ export default function BudgetScreen() {
         <Eyebrow>Ton budget</Eyebrow>
         <Text style={styles.title}>Combien peux-tu mettre de côté sans te serrer ?</Text>
         <Text style={styles.body}>
-          Trois ordres de grandeur suffisent. Pas besoin d'être exact, tu pourras ajuster.
+          Trois ordres de grandeur suffisent. Les revenus correspondent au total mensuel que
+          tu considères comme disponible, pas aux entrées d'un compte bancaire particulier.
         </Text>
 
         <Field
@@ -98,6 +117,20 @@ export default function BudgetScreen() {
 
         <Button label="Continuer" onPress={save} style={{ marginTop: 16 }} />
       </Card>
+      <RebalanceModal
+        proposal={rebalanceProposal}
+        reason="budget"
+        onKeep={() => {
+          setRebalanceProposal(null);
+          router.back();
+        }}
+        onApply={async () => {
+          if (!rebalanceProposal) return;
+          await applyGlobalRebalance(rebalanceProposal);
+          setRebalanceProposal(null);
+          router.back();
+        }}
+      />
     </Screen>
   );
 }

@@ -32,6 +32,17 @@ export interface Contribution {
   cycleId?: string;
 }
 
+export interface BalanceSnapshot {
+  id: string;
+  /** Solde réel global déclaré par l'utilisateur. */
+  amount: number;
+  date: string;
+  /** Répartition virtuelle appliquée aux projets au moment de la confirmation. */
+  allocations: Record<string, number>;
+  /** Part du solde dépassant les cibles de tous les projets. */
+  unallocatedAmount: number;
+}
+
 export interface Goal {
   id: string;
   name: string;
@@ -39,6 +50,9 @@ export interface Goal {
   targetAmount: number;
   /** Somme déjà de côté au moment de la création du plan */
   alreadyAvailable: number;
+  /** Part du dernier solde global confirmé attribuée à ce projet. */
+  confirmedBalance?: number;
+  balanceConfirmedAt?: string;
   /** ISO date de la cible */
   targetDate: string;
   /** Jour du mois du rappel (1..28) */
