@@ -1,20 +1,22 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AmountModal } from '@/components/amount-modal';
 import { AppHeader } from '@/components/app-header';
 import { ConfirmationOverlay } from '@/components/confirmation-overlay';
 import { ReportModal } from '@/components/report-modal';
+import { RecentContributionModal } from '@/components/recent-contribution-modal';
 import { Button, Card, Eyebrow, ProgressBar, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { confirmContribution, withdraw } from '@/lib/actions';
+import { confirmContribution, ignoreCurrentReminder, withdraw } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
 import { formatDate, formatEuro } from '@/lib/format';
 import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
 import {
   hasPendingAction,
   progressPct,
+  recentDeposits,
   remainingAmount,
   savedTotal,
   suggestedAmount,
@@ -22,6 +24,7 @@ import {
 } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { CATEGORY_DESCRIPTIONS } from '@/lib/types';
+import type { Contribution } from '@/lib/types';
 
 type Tab = 'today' | 'schedule' | 'history';
 
@@ -34,6 +37,7 @@ const TABS: { key: Tab; label: string }[] = [
 const handledNotificationActions = new Set<string>();
 
 export default function GoalScreen() {
+  const router = useRouter();
   const { id, notificationAction, notificationIsTest, responseKey } = useLocalSearchParams<{
     id: string;
     notificationAction?: 'done' | 'edit' | 'postpone';
@@ -55,6 +59,11 @@ export default function GoalScreen() {
     nextAmount?: number;
     done: boolean;
   } | null>(null);
+  const [pendingContribution, setPendingContribution] = useState<{
+    amount: number;
+    source: ContributionSource;
+    recent: Contribution[];
+  } | null>(null);
 
   useEffect(() => {
     if (hydrated) return;
@@ -74,10 +83,12 @@ export default function GoalScreen() {
     hasNotificationPermission().then((granted) => setNotifBlocked(!granted));
   }, []);
 
-  const confirm = async (amount: number, source: ContributionSource) => {
+  const performConfirm = async (amount: number, source: ContributionSource) => {
     if (!goal) return;
+    const currentGoal = useStore.getState().goals.find((candidate) => candidate.id === goal.id);
+    if (!currentGoal) return;
     setAmountModal(null);
-    await confirmContribution(goal, amount, source);
+    await confirmContribution(currentGoal, amount, source);
     const updated = useStore.getState().goals.find((g) => g.id === goal.id);
     setConfirmation({
       amount,
@@ -85,6 +96,34 @@ export default function GoalScreen() {
       nextAmount: updated ? suggestedAmount(updated) : undefined,
       done: updated ? remainingAmount(updated) <= 0 : false,
     });
+  };
+
+  const confirm = (amount: number, source: ContributionSource) => {
+    if (!goal) return;
+    const currentGoal = useStore.getState().goals.find((candidate) => candidate.id === goal.id);
+    if (!currentGoal) return;
+    const recent = recentDeposits(currentGoal);
+    if (recent.length) {
+      setAmountModal(null);
+      setPendingContribution({ amount, source, recent });
+      return;
+    }
+    void performConfirm(amount, source);
+  };
+
+  const askToIgnoreReminder = () => {
+    if (!goal) return;
+    Alert.alert(
+      'Ignorer ce rappel ?',
+      `Aucun versement ne sera ajouté. Le prochain rappel restera fixé au jour ${goal.reminderDay} du mois suivant.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Ignorer',
+          onPress: () => void ignoreCurrentReminder(goal),
+        },
+      ]
+    );
   };
 
   useEffect(() => {
@@ -103,7 +142,7 @@ export default function GoalScreen() {
     } else {
       const amount = suggestedAmount(goal);
       if (amount > 0) {
-        void confirm(amount, notificationIsTest === '1' ? 'test_notification' : 'one_tap');
+        confirm(amount, notificationIsTest === '1' ? 'test_notification' : 'one_tap');
       }
     }
   }, [goal?.id, notificationAction, notificationIsTest, responseKey]);
@@ -176,7 +215,26 @@ export default function GoalScreen() {
                   {pending ? 'Rappel en cours : ' : 'Rappel prévu : '}
                   {formatDate(goal.nextReminderAt)}
                 </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() =>
+                    router.push({ pathname: '/onboarding/new-goal', params: { editId: goal.id } })
+                  }
+                  style={styles.reminderDayLink}>
+                  <Text style={styles.reminderDayLinkText}>
+                    Jour mensuel : le {goal.reminderDay} · Modifier
+                  </Text>
+                </Pressable>
               </View>
+              {pending && goal.canIgnoreCurrentReminder ? (
+                <View style={styles.ignoreReminderCard}>
+                  <Text style={styles.ignoreReminderText}>
+                    Tu as déjà traité le rappel reporté. Tu peux ignorer celui-ci et reprendre le
+                    mois prochain.
+                  </Text>
+                  <Button label="Ignorer ce rappel" variant="secondary" onPress={askToIgnoreReminder} />
+                </View>
+              ) : null}
               <View style={{ gap: 12 }}>
                 <Button
                   label={`Versement fait (${formatEuro(suggested)})`}
@@ -316,6 +374,17 @@ export default function GoalScreen() {
         done={confirmation?.done}
         onClose={() => setConfirmation(null)}
       />
+      <RecentContributionModal
+        visible={pendingContribution !== null}
+        amount={pendingContribution?.amount ?? 0}
+        contributions={pendingContribution?.recent ?? []}
+        onClose={() => setPendingContribution(null)}
+        onConfirm={() => {
+          const pendingDeposit = pendingContribution;
+          setPendingContribution(null);
+          if (pendingDeposit) void performConfirm(pendingDeposit.amount, pendingDeposit.source);
+        }}
+      />
     </Screen>
   );
 }
@@ -362,6 +431,16 @@ const styles = StyleSheet.create({
   },
   adviceAmount: { fontSize: 42, fontWeight: '800', color: colors.text, marginVertical: 4 },
   adviceReminder: { fontSize: 15, fontWeight: '600', color: colors.text },
+  reminderDayLink: { alignSelf: 'flex-start', paddingTop: 10, paddingVertical: 4 },
+  reminderDayLinkText: { color: colors.accent, fontSize: 14, fontWeight: '800' },
+  ignoreReminderCard: {
+    backgroundColor: colors.banner,
+    borderRadius: radius.field,
+    padding: 14,
+    gap: 10,
+    marginBottom: 14,
+  },
+  ignoreReminderText: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   reachedTitle: { fontSize: 26, fontWeight: '800', color: colors.text, marginBottom: 8 },
   reachedBody: { fontSize: 16, color: colors.textSecondary, lineHeight: 23 },
   scheduleRow: {

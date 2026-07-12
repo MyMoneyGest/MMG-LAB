@@ -61,6 +61,7 @@ Dernière mise à jour : 2026-07-12 (Codex).
   déjà mis / restants / cible) + 3 onglets :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (X €)** (1 tap), Montant différent, Reporter, Retrait.
+    Le jour mensuel est affiché avec un accès direct à sa modification (1 à 28).
   - **Échéancier** : occurrences mensuelles futures jusqu'à la cible avec montants reflétant
     le rythme stable, progressif ou régressif choisi.
   - **Historique** : versements (+vert) et retraits (−terracotta) datés.
@@ -89,25 +90,37 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Saisie** : les `/` de la date précise sont ajoutés automatiquement. La fenêtre compacte
   reste défilable au-dessus du clavier et peut toujours être fermée par son bouton Annuler,
   le bouton retour Android ou un appui sur l'arrière-plan.
-- **Limite** : un report doit être futur et ne peut jamais dépasser l'occurrence mensuelle
-  suivant le rappel courant. La fenêtre affiche cette date maximale, masque les raccourcis qui
-  la dépasseraient et refuse une date précise hors limite. La même règle est imposée dans
-  `postponeReminder()` afin qu'un autre écran ne puisse pas la contourner.
-- **Comment** : après validation de la date, `postponeReminder()` revérifie la permission,
-  replanifie la notification et trace `reminder_postponed`.
+- **Limite** : un report doit être futur et s'arrête à la veille de l'occurrence mensuelle
+  suivante (jour mensuel 28 → report possible jusqu'au 27 inclus). La fenêtre affiche cette
+  limite, masque les raccourcis hors limite et la logique métier refuse tout dépassement.
+- **Rappel mensuel conservé** : si le report est à plus de 3 jours du rappel mensuel, celui-ci
+  est conservé automatiquement. À 3 jours ou moins, MMG demande s'il faut le garder. Un refus
+  mémorise et saute uniquement cette date ; les mois suivants restent sur le jour habituel.
+- **Deux notifications temporaires** : quand le rappel mensuel est conservé, MMG programme le
+  report et l'occurrence mensuelle. Après le versement reporté, cette occurrence devient le
+  rappel courant et propose **Ignorer ce rappel** à son arrivée. Ignorer n'ajoute aucun
+  versement et reprend le cycle le mois suivant.
+- **Comment** : `postponeReminder()` revérifie la permission, persiste les deux échéances si
+  nécessaire, reprogramme les notifications et trace `reminder_postponed`.
 - **Où** : `src/components/report-modal.tsx`, `src/lib/plan.ts`
-  (`postponeDateLimit`, `canPostponeReminderTo`), `src/lib/actions.ts`.
+  (`postponeDateLimit`, `postponeNeedsRegularChoice`, `upcomingSchedule`),
+  `src/lib/actions.ts`, `src/lib/notifications.ts`.
 
 ## 8. Montant différent / Retrait
 
 - **Quoi** : modals de saisie libre. Montant différent = versement du mois (même effet que le
   1 tap). Retrait = sortie d'argent assumée sans jugement, plafonnée à ce qui est de côté.
   Les fenêtres sont compactes, défilables et protégées contre le recouvrement par le clavier.
-- **Où** : `src/components/amount-modal.tsx`, `src/lib/actions.ts` (`withdraw`).
+- **Versements rapprochés** : avant un nouveau versement, MMG recherche ceux des trois derniers
+  jours. S'il en trouve, une confirmation affiche chaque montant et chaque date ; l'utilisateur
+  peut annuler ou confirmer explicitement le nouveau versement.
+- **Où** : `src/components/amount-modal.tsx`, `src/components/recent-contribution-modal.tsx`,
+  `src/lib/plan.ts` (`recentDeposits`), `src/lib/actions.ts` (`withdraw`).
 
 ## 9. Notifications locales + deep link (boucle de rétention)
 
-- **Quoi** : un rappel local par objectif actif, à sa date d'échéance à 9h, avec le montant de
+- **Quoi** : un rappel local par objectif actif, temporairement deux lors d'un report conservant
+  l'occurrence mensuelle, à 9h, avec le montant de
   la prochaine échéance calculé selon le rythme choisi (« Mets X € de côté pour “Nom”. Même
   moins, c'est déjà bien. »). Le tap ouvre l'app directement sur le bon projet. La notification
   propose aussi trois actions : **Fait**, **Modifier**, **Reporter**.
@@ -120,11 +133,12 @@ Dernière mise à jour : 2026-07-12 (Codex).
   trois actions. Une seule notification de test reste programmée à la fois.
 - **Ouverture normale de l'app** : si un rappel est encore dans le tiroir Android, MMG le retire
   puis affiche une fenêtre compacte au-dessus de l'écran courant avec **Fait**, **Modifier**,
-  **Reporter** et **Ignorer pour le moment**. Plusieurs rappels sont mis en file sans doublon.
+  **Reporter** et **Fermer pour le moment**. Si le rappel mensuel conservé suit un versement
+  reporté, la fenêtre propose aussi **Ignorer ce rappel**. Plusieurs rappels sont mis en file sans doublon.
   Un rappel reçu pendant que l'app est déjà ouverte utilise la même fenêtre.
 - **Nettoyage système** : un tap simple ou une action effectuée directement depuis la
   notification retire explicitement celle-ci du tiroir avant le routage vers le projet.
-- **Comment** : `scheduleGoalReminder()` (trigger DATE, channel Android `reminders`) et
+- **Comment** : `scheduleGoalReminders()` (triggers DATE, channel Android `reminders`) et
   `scheduleTestReminder()` (trigger TIME_INTERVAL, channel `reminder_tests_v2`) utilisent la
   catégorie `mmg_reminder_actions`. `addReminderOpenListener()` déduplique les réponses,
   retire la notification, efface la dernière réponse native après traitement et route vers
@@ -157,7 +171,8 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 ## 12. Persistance locale
 
-- **Quoi** : budget, projets (dont leur rythme), versements, dernier projet consulté,
+- **Quoi** : budget, projets (dont leur rythme et leurs éventuelles échéances reportée/mensuelle),
+  versements, dernier projet consulté,
   installId — tout survit au redémarrage, uniquement sur le téléphone.
 - **Comment** : zustand + middleware `persist` sur AsyncStorage (`mmg-store-v1`).
   `installId` généré une fois (`install-<timestamp>-<aléa>`, format de l'ancienne app).
@@ -181,6 +196,6 @@ Dernière mise à jour : 2026-07-12 (Codex).
   sombre `#2B211A`, radius généreux) et primitives (Screen, Card, Button 4 variantes, Field,
   ProgressBar, Eyebrow). Les champs sont compacts, bordés, signalent clairement le focus et
   les erreurs ; `Screen` centralise l'évitement du clavier et le défilement des formulaires.
-  `KeyboardSafeScrollView` révèle le champ dès le focus puis recalcule sa position après
-  l'animation du clavier Android, sans attendre la première frappe.
+  `KeyboardSafeScrollView` révèle le champ dès le focus, conserve 64 px d'espace avec le clavier,
+  puis recalcule sa position après l'animation Android, sans attendre la première frappe.
 - **Où** : `src/constants/theme.ts`, `src/components/ui.tsx`.

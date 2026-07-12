@@ -8,10 +8,13 @@ const ui = read('src/components/ui.tsx');
 const amountModal = read('src/components/amount-modal.tsx');
 const reportModal = read('src/components/report-modal.tsx');
 const newGoal = read('src/app/onboarding/new-goal.tsx');
+const goalScreen = read('src/app/goal/[id].tsx');
+const recentContributionModal = read('src/components/recent-contribution-modal.tsx');
 
 assert.match(ui, /<KeyboardAvoidingView/);
 assert.match(ui, /keyboardDismissMode=/);
 assert.match(ui, /scrollResponderScrollNativeHandleToKeyboard/);
+assert.match(ui, /KEYBOARD_FIELD_GAP = 64/);
 assert.match(ui, /revealFocusedField\(event\.nativeEvent\.target\)/);
 assert.match(ui, /fieldWrapFocused/);
 assert.match(ui, /Boolean\(error\) && styles\.fieldWrapError/);
@@ -31,6 +34,14 @@ for (const [name, source] of [
 
 assert.match(reportModal, /canPostponeReminderTo\(goal, date\)/);
 assert.match(reportModal, /\.filter\(\(option\) => canPostponeReminderTo\(goal, option\.date\)\)/);
+assert.match(reportModal, /postponeNeedsRegularChoice\(goal, date\)/);
+assert.match(reportModal, /Garder le rappel du/);
+assert.match(goalScreen, /Jour mensuel : le \{goal\.reminderDay\} · Modifier/);
+assert.match(goalScreen, /recentDeposits\(currentGoal\)/);
+assert.match(goalScreen, /Ignorer ce rappel/);
+assert.match(recentContributionModal, /contributions\.map/);
+assert.match(recentContributionModal, /formatEuro\(contribution\.amount\)/);
+assert.match(recentContributionModal, /formatDate\(contribution\.date\)/);
 
 for (const [name, source] of [
   ['new-goal', newGoal],

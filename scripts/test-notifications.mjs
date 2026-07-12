@@ -34,7 +34,14 @@ assert.deepEqual(pendingReminderFromNotification(notification('notif-1')), {
   notificationId: 'notif-1',
   goalId: 'goal-1',
   isTest: false,
+  reminderKind: 'primary',
 });
+assert.equal(
+  pendingReminderFromNotification(
+    notification('notif-following', { goalId: 'goal-1', reminderKind: 'following' }),
+  ).reminderKind,
+  'following',
+);
 assert.equal(pendingReminderFromNotification(notification('invalid', {})), null);
 
 const dismissed = [];
@@ -50,8 +57,11 @@ await inbox.dismissResponse(notification('notif-3'), async (id) => dismissed.pus
 assert.deepEqual(dismissed, ['notif-2', 'notif-3']);
 
 assert.deepEqual(
-  mergePendingReminders([first], [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false }]),
-  [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false }]
+  mergePendingReminders(
+    [first],
+    [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false, reminderKind: 'primary' }],
+  ),
+  [first, { notificationId: 'notif-4', goalId: 'goal-4', isTest: false, reminderKind: 'primary' }]
 );
 
 const notificationsSource = fs.readFileSync(path.join(root, 'src/lib/notifications.ts'), 'utf8');
@@ -60,5 +70,7 @@ assert.doesNotMatch(
   /sound\s*:\s*['"]default['"]/,
   "'default' ne doit pas être déclaré comme un fichier audio personnalisé"
 );
+assert.match(notificationsSource, /followingNotificationId/);
+assert.match(notificationsSource, /reminderKind: 'primary' \| 'following'/);
 
 console.log('Tests notifications : routage, déduplication, retrait et configuration sonore validés.');

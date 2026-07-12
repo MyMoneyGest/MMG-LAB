@@ -5,6 +5,7 @@ export const REMINDER_ACTION_IDENTIFIERS = {
 } as const;
 
 export type ReminderNotificationAction = 'open' | 'done' | 'edit' | 'postpone';
+export type ReminderKind = 'primary' | 'following';
 
 export interface ReminderNotificationLike {
   request: {
@@ -19,6 +20,7 @@ export interface PendingReminder {
   notificationId: string;
   goalId: string;
   isTest: boolean;
+  reminderKind: ReminderKind;
 }
 
 export function reminderActionFromIdentifier(identifier: string): ReminderNotificationAction {
@@ -37,6 +39,8 @@ export function pendingReminderFromNotification(
     notificationId: notification.request.identifier,
     goalId,
     isTest: notification.request.content.data?.isTest === true,
+    reminderKind:
+      notification.request.content.data?.reminderKind === 'following' ? 'following' : 'primary',
   };
 }
 

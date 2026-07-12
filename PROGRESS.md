@@ -9,6 +9,37 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-12 — Codex — Session 5 : reports mensuels et versements rapprochés
+
+### Fait
+- Augmenté à 64 px l'espace de sécurité entre le champ actif et le clavier.
+- Corrigé la limite : jour mensuel 28 → report au 27 inclus au plus tard.
+- Implémenté la règle des 3 jours : conservation automatique avant le 25, choix utilisateur du
+  25 au 27, et saut exact du 28 si l'utilisateur refuse de le conserver.
+- Ajouté la programmation temporaire de deux notifications (report + rappel mensuel), leur
+  promotion sans doublon et l'action **Ignorer ce rappel** après traitement du report.
+- Rendu le jour mensuel directement modifiable depuis l'écran projet ; l'édition existante
+  reprogramme les notifications et annule proprement toute ancienne échéance conservée.
+- Ajouté l'alerte de versements rapprochés : les versements des trois derniers jours sont listés
+  avec montant et date avant confirmation.
+- Renforcé les tests à dates fixes : borne du 27, choix des 3 jours, échéancier conservé/refusé,
+  versements récents, nature des notifications, interface et prévention du double clic.
+- Tests format, saisie, report et notifications, TypeScript et `git diff --check` réussis.
+- Export Android final réussi : 1 362 modules, bundle Hermes généré sans erreur. Le téléphone
+  n'est pas visible via ADB, la confirmation native reste donc explicitement en attente.
+- `expo lint` n'était pas configuré et a tenté une installation automatique avant de signaler
+  des erreurs historiques hors chantier ; cette installation automatique a été entièrement
+  retirée de `package.json`, `package-lock.json` et du repo.
+
+### En cours
+- Aucun code partiellement implémenté. Commit/push puis confirmation native Android.
+
+### Ensuite
+- Confirmation native par Patrick des scénarios de report et de proximité.
+- Puis chantier 2 : bloc de progression du projet.
+
+---
+
 ## 2026-07-12 — Codex — Session 4 : correctifs après confirmation du lot saisie
 
 ### Fait

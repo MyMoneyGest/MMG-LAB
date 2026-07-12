@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '@/constants/theme';
 
 const KeyboardScrollContext = createContext<(target: number) => void>(() => {});
+const KEYBOARD_FIELD_GAP = 64;
 
 /**
  * ScrollView qui révèle le champ dès le focus, puis une seconde fois à la fin
@@ -27,7 +28,11 @@ export function KeyboardSafeScrollView(props: ScrollViewProps) {
   const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const revealFocusedField = useCallback((target: number) => {
     const reveal = () =>
-      scrollRef.current?.scrollResponderScrollNativeHandleToKeyboard(target, 28, true);
+      scrollRef.current?.scrollResponderScrollNativeHandleToKeyboard(
+        target,
+        KEYBOARD_FIELD_GAP,
+        true
+      );
     requestAnimationFrame(reveal);
     if (focusTimer.current) clearTimeout(focusTimer.current);
     focusTimer.current = setTimeout(reveal, 320);

@@ -7,10 +7,15 @@ import {
   REMINDER_ACTION_IDENTIFIERS,
   reminderActionFromIdentifier,
 } from './notification-model';
-import type { PendingReminder, ReminderNotificationAction } from './notification-model';
+import type {
+  PendingReminder,
+  ReminderKind,
+  ReminderNotificationAction,
+} from './notification-model';
 import { Goal } from './types';
 
-// Un rappel local par objectif actif, programmé à sa date d'échéance (9h),
+// Un rappel local par objectif actif, ou deux pendant un report conservant
+// l'occurrence mensuelle suivante, programmés à 9h,
 // avec le montant conseillé dans le message. Le tap ouvre l'app en deep link
 // sur le bon projet (data.goalId, géré dans app/_layout.tsx).
 //
@@ -54,11 +59,17 @@ export interface ReminderNotificationResponse {
   responseKey: string;
   action: ReminderNotificationAction;
   isTest: boolean;
+  reminderKind: ReminderKind;
 }
 
 export type TestReminderResult =
   | { ok: true }
   | { ok: false; reason: 'unsupported' | 'permission' | 'completed' | 'error' };
+
+export interface ScheduledGoalReminders {
+  notificationId: string | undefined;
+  followingNotificationId: string | undefined;
+}
 
 let lastTestNotificationId: string | null = null;
 const deliveredResponseKeys = new Set<string>();
@@ -135,36 +146,48 @@ export async function hasNotificationPermission(): Promise<boolean> {
 }
 
 /**
- * (Re)programme le rappel d'un objectif à son échéance courante.
- * Retourne l'identifiant de notification, ou null si rien n'a été programmé.
+ * (Re)programme l'échéance courante et, si nécessaire, le rappel mensuel conservé.
+ * Retourne leurs identifiants natifs éventuels.
  */
-export async function scheduleGoalReminder(
+export async function scheduleGoalReminders(
   goal: Goal,
   suggestedAmount: number
-): Promise<string | null> {
+): Promise<ScheduledGoalReminders> {
   const N = getNotifications();
-  if (!N) return null;
+  if (!N) return { notificationId: undefined, followingNotificationId: undefined };
   try {
     await cancelGoalReminder(goal);
-    const when = new Date(goal.nextReminderAt);
-    if (when <= new Date() || suggestedAmount <= 0) return null;
+    if (suggestedAmount <= 0) {
+      return { notificationId: undefined, followingNotificationId: undefined };
+    }
     await ensureAndroidChannel(N);
     await ensureReminderActions(N);
-    return await N.scheduleNotificationAsync({
-      content: {
-        title: 'MMG — ton rituel du mois',
-        body: `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`,
-        data: { goalId: goal.id, url: `mmg://goal/${goal.id}` },
-        categoryIdentifier: ACTION_CATEGORY_ID,
-      },
-      trigger: {
-        type: N.SchedulableTriggerInputTypes.DATE,
-        date: when,
-        channelId: CHANNEL_ID,
-      },
-    });
+    const now = new Date();
+    const scheduleAt = async (when: Date, reminderKind: 'primary' | 'following') => {
+      if (when <= now) return undefined;
+      return N.scheduleNotificationAsync({
+        content: {
+          title: 'MMG — ton rituel du mois',
+          body: `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`,
+          data: { goalId: goal.id, url: `mmg://goal/${goal.id}`, reminderKind },
+          categoryIdentifier: ACTION_CATEGORY_ID,
+        },
+        trigger: {
+          type: N.SchedulableTriggerInputTypes.DATE,
+          date: when,
+          channelId: CHANNEL_ID,
+        },
+      });
+    };
+    const notificationId = await scheduleAt(new Date(goal.nextReminderAt), 'primary').catch(
+      () => undefined
+    );
+    const followingNotificationId = goal.followingReminderAt
+      ? await scheduleAt(new Date(goal.followingReminderAt), 'following').catch(() => undefined)
+      : undefined;
+    return { notificationId, followingNotificationId };
   } catch {
-    return null;
+    return { notificationId: undefined, followingNotificationId: undefined };
   }
 }
 
@@ -249,8 +272,11 @@ export function addReminderReceivedListener(
 
 export async function cancelGoalReminder(goal: Goal): Promise<void> {
   const N = getNotifications();
-  if (!N || !goal.notificationId) return;
-  await N.cancelScheduledNotificationAsync(goal.notificationId).catch(() => {});
+  if (!N) return;
+  const ids = [goal.notificationId, goal.followingNotificationId].filter(
+    (id): id is string => Boolean(id)
+  );
+  await Promise.all(ids.map((id) => N.cancelScheduledNotificationAsync(id).catch(() => {})));
 }
 
 /**

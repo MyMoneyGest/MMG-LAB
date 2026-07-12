@@ -3,14 +3,17 @@ import {
   bucketAmount,
   canPostponeReminderTo,
   nextReminderAfter,
+  nextRegularReminderAfterCurrent,
+  reminderStateAfterContribution,
   reminderAfterConfirmation,
+  remainingAmount,
   suggestedAmount,
 } from './plan';
 import {
   cancelGoalReminder,
   hasNotificationPermission,
   requestNotificationPermission,
-  scheduleGoalReminder,
+  scheduleGoalReminders,
 } from './notifications';
 import { newGoalId, useStore } from './store';
 import { Goal, GoalCategory, SavingsRhythm } from './types';
@@ -54,8 +57,8 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
   }
 
   state.addGoal(goal);
-  const notificationId = await scheduleGoalReminder(goal, suggestedAmount(goal, now));
-  if (notificationId) state.updateGoal(goal.id, { notificationId });
+  const scheduled = await scheduleGoalReminders(goal, suggestedAmount(goal, now));
+  state.updateGoal(goal.id, scheduled);
 
   track('goal_created', {
     goalId: goal.id,
@@ -67,8 +70,8 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
 async function reschedule(goalId: string): Promise<void> {
   const goal = useStore.getState().goals.find((g) => g.id === goalId);
   if (!goal) return;
-  const notificationId = await scheduleGoalReminder(goal, suggestedAmount(goal));
-  useStore.getState().updateGoal(goalId, { notificationId: notificationId ?? undefined });
+  const scheduled = await scheduleGoalReminders(goal, suggestedAmount(goal));
+  useStore.getState().updateGoal(goalId, scheduled);
 }
 
 /**
@@ -81,9 +84,17 @@ export async function confirmContribution(
   source: ContributionSource
 ): Promise<void> {
   const state = useStore.getState();
+  const now = new Date();
   state.logContribution(goal.id, 'deposit', amount);
+  const reminderState = reminderStateAfterContribution(goal, now);
+  const afterDeposit = useStore.getState().goals.find((candidate) => candidate.id === goal.id);
   state.updateGoal(goal.id, {
-    nextReminderAt: reminderAfterConfirmation(goal).toISOString(),
+    nextReminderAt: reminderState.nextReminderAt.toISOString(),
+    followingReminderAt: undefined,
+    skippedRegularReminderAt: undefined,
+    canIgnoreCurrentReminder:
+      Boolean(afterDeposit && remainingAmount(afterDeposit) > 0) &&
+      reminderState.canIgnoreCurrentReminder,
   });
   await reschedule(goal.id);
   // Le test modifie bien le plan, mais n'alimente pas la mesure de rétention.
@@ -108,7 +119,7 @@ export async function withdraw(goal: Goal, amount: number): Promise<void> {
 export async function postponeReminder(
   goal: Goal,
   date: Date,
-  source: 'app' | 'test_notification' = 'app'
+  options: { keepRegularReminder: boolean; source?: 'app' | 'test_notification' }
 ): Promise<{ ok: true } | { ok: false; reason: 'permission' | 'date' }> {
   if (!canPostponeReminderTo(goal, date)) return { ok: false, reason: 'date' };
   if (!(await hasNotificationPermission())) {
@@ -116,12 +127,50 @@ export async function postponeReminder(
     if (!granted) return { ok: false, reason: 'permission' };
   }
   const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
-  useStore.getState().updateGoal(goal.id, { nextReminderAt: at.toISOString() });
+  const followingReminderAt = options.keepRegularReminder
+    ? nextRegularReminderAfterCurrent(goal).toISOString()
+    : undefined;
+  const skippedRegularReminderAt = options.keepRegularReminder
+    ? undefined
+    : nextRegularReminderAfterCurrent(goal).toISOString();
+  useStore.getState().updateGoal(goal.id, {
+    nextReminderAt: at.toISOString(),
+    followingReminderAt,
+    canIgnoreCurrentReminder: false,
+    skippedRegularReminderAt,
+  });
   await reschedule(goal.id);
-  if (source !== 'test_notification') {
+  if (options.source !== 'test_notification') {
     track('reminder_postponed', { goalId: goal.id, metadata: { goalId: goal.id } });
   }
   return { ok: true };
+}
+
+/** Le rappel mensuel conservé devient le rappel courant lorsqu'il arrive. */
+export async function activateFollowingReminder(goalId: string): Promise<void> {
+  const state = useStore.getState();
+  const goal = state.goals.find((candidate) => candidate.id === goalId);
+  if (!goal?.followingReminderAt) return;
+  state.updateGoal(goal.id, {
+    nextReminderAt: goal.followingReminderAt,
+    followingReminderAt: undefined,
+    canIgnoreCurrentReminder: false,
+    skippedRegularReminderAt: undefined,
+  });
+  await reschedule(goal.id);
+}
+
+/** Ignore explicitement un rappel mensuel conservé, sans enregistrer de versement. */
+export async function ignoreCurrentReminder(goal: Goal, now: Date = new Date()): Promise<boolean> {
+  if (!goal.canIgnoreCurrentReminder || new Date(goal.nextReminderAt) > now) return false;
+  useStore.getState().updateGoal(goal.id, {
+    nextReminderAt: reminderAfterConfirmation(goal, now).toISOString(),
+    followingReminderAt: undefined,
+    canIgnoreCurrentReminder: false,
+    skippedRegularReminderAt: undefined,
+  });
+  await reschedule(goal.id);
+  return true;
 }
 
 export async function removeGoal(goal: Goal): Promise<void> {

@@ -7,7 +7,7 @@ import { useStore } from '@/lib/store';
 import { formatEuro } from '@/lib/format';
 import { Button } from './ui';
 
-export type PendingReminderChoice = Exclude<ReminderNotificationAction, 'open'> | 'ignore';
+export type PendingReminderChoice = Exclude<ReminderNotificationAction, 'open'> | 'ignore' | 'skip';
 
 export function PendingReminderModal({
   reminder,
@@ -22,6 +22,8 @@ export function PendingReminderModal({
 
   if (!reminder || !goal) return null;
   const amount = suggestedAmount(goal);
+  const canSkip =
+    goal.canIgnoreCurrentReminder === true && new Date(goal.nextReminderAt) <= new Date();
 
   return (
     <Modal
@@ -53,11 +55,18 @@ export function PendingReminderModal({
               style={styles.secondaryButton}
             />
           </View>
+          {canSkip ? (
+            <Button
+              label="Ignorer ce rappel"
+              variant="secondary"
+              onPress={() => onChoice('skip')}
+            />
+          ) : null}
           <Pressable
             accessibilityRole="button"
             onPress={() => onChoice('ignore')}
             style={({ pressed }) => [styles.ignore, pressed && styles.ignorePressed]}>
-            <Text style={styles.ignoreLabel}>Ignorer pour le moment</Text>
+            <Text style={styles.ignoreLabel}>Fermer pour le moment</Text>
           </Pressable>
         </View>
       </View>

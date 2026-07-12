@@ -4,10 +4,17 @@
 // fait ; l'écart avec le montant conseillé est absorbé par le recalcul
 // (remaining / mois restants), jamais par une pénalité ou un blocage.
 
-import { Budget, Goal, SavingsRhythm } from './types';
+import { Budget, Contribution, Goal, SavingsRhythm } from './types';
 
 /** Part du reste à vivre gardée en réserve pour éviter un plan trop serré. */
 export const SAFETY_MARGIN = 0.2;
+export const CLOSE_REMINDER_DAYS = 3;
+export const CLOSE_CONTRIBUTION_DAYS = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function calendarDayNumber(date: Date): number {
+  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS;
+}
 
 export function resteAVivre(b: Budget): number {
   return Math.max(0, b.income - b.fixedCharges - b.variableExpenses);
@@ -106,17 +113,71 @@ export function nextReminderAfter(from: Date, reminderDay: number): Date {
   return d;
 }
 
-/** Dernière date de report autorisée : l'occurrence mensuelle suivant le rappel courant. */
-export function postponeDateLimit(goal: Goal, now: Date = new Date()): Date {
+/** Occurrence mensuelle suivant le rappel courant, selon le jour habituel du plan. */
+export function nextRegularReminderAfterCurrent(goal: Goal, now: Date = new Date()): Date {
   const currentReminder = new Date(goal.nextReminderAt);
   const reference = currentReminder > now ? currentReminder : now;
   return nextReminderAfter(reference, goal.reminderDay);
 }
 
-/** Un report doit être futur et ne jamais dépasser le prochain rappel mensuel. */
+/** Dernière date de report : la veille de la prochaine occurrence mensuelle. */
+export function postponeDateLimit(goal: Goal, now: Date = new Date()): Date {
+  const limit = nextRegularReminderAfterCurrent(goal, now);
+  limit.setDate(limit.getDate() - 1);
+  return limit;
+}
+
+/** Nombre de jours calendaires entre le report choisi et le rappel mensuel conservable. */
+export function daysBeforeRegularReminder(goal: Goal, date: Date, now: Date = new Date()): number {
+  const regular = nextRegularReminderAfterCurrent(goal, now);
+  return calendarDayNumber(regular) - calendarDayNumber(date);
+}
+
+/** À trois jours ou moins, l'utilisateur doit décider s'il garde le rappel mensuel. */
+export function postponeNeedsRegularChoice(
+  goal: Goal,
+  date: Date,
+  now: Date = new Date()
+): boolean {
+  const gap = daysBeforeRegularReminder(goal, date, now);
+  return gap >= 1 && gap <= CLOSE_REMINDER_DAYS;
+}
+
+/** Un report doit être futur et précéder le prochain rappel mensuel. */
 export function canPostponeReminderTo(goal: Goal, date: Date, now: Date = new Date()): boolean {
   const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
   return at > now && at <= postponeDateLimit(goal, now);
+}
+
+/** État du rappel après un versement : priorité au rappel mensuel conservé s'il est futur. */
+export function reminderStateAfterContribution(
+  goal: Goal,
+  now: Date = new Date()
+): { nextReminderAt: Date; canIgnoreCurrentReminder: boolean } {
+  const following = goal.followingReminderAt ? new Date(goal.followingReminderAt) : null;
+  if (following && following > now) {
+    return { nextReminderAt: following, canIgnoreCurrentReminder: true };
+  }
+  return {
+    nextReminderAt: reminderAfterConfirmation(goal, now),
+    canIgnoreCurrentReminder: false,
+  };
+}
+
+/** Versements effectués dans les trois derniers jours calendaires, du plus récent au plus ancien. */
+export function recentDeposits(
+  goal: Goal,
+  at: Date = new Date(),
+  withinDays: number = CLOSE_CONTRIBUTION_DAYS
+): Contribution[] {
+  const currentDay = calendarDayNumber(at);
+  return goal.contributions
+    .filter((contribution) => {
+      if (contribution.type !== 'deposit') return false;
+      const difference = currentDay - calendarDayNumber(new Date(contribution.date));
+      return difference >= 0 && difference <= withinDays;
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 /**
@@ -141,12 +202,30 @@ export function upcomingSchedule(
   const rows: { date: Date; amount: number }[] = [];
   const target = new Date(goal.targetDate);
   let cursor = new Date(goal.nextReminderAt);
-  if (cursor < now) cursor = nextReminderAfter(now, goal.reminderDay);
-  const months = scheduledMonths(cursor, target);
-  const amounts = plannedAmounts(remaining, months, goal.rhythm ?? 'stable');
-  for (let i = 0; i < months && i < maxRows; i++) {
-    rows.push({ date: new Date(cursor), amount: amounts[i] });
+  const following = goal.followingReminderAt ? new Date(goal.followingReminderAt) : null;
+  const skipped = goal.skippedRegularReminderAt
+    ? new Date(goal.skippedRegularReminderAt)
+    : null;
+  if (cursor < now) {
+    cursor = following && following > now ? following : nextReminderAfter(now, goal.reminderDay);
+  }
+  const dates: Date[] = [];
+  while (cursor <= target && dates.length < 600) {
+    if (skipped && cursor.getTime() === skipped.getTime()) {
+      cursor = nextReminderAfter(cursor, goal.reminderDay);
+      continue;
+    }
+    dates.push(new Date(cursor));
+    if (following && following > cursor) {
+      cursor = new Date(following);
+      continue;
+    }
     cursor = nextReminderAfter(cursor, goal.reminderDay);
+  }
+  if (!dates.length) dates.push(new Date(cursor));
+  const amounts = plannedAmounts(remaining, dates.length, goal.rhythm ?? 'stable');
+  for (let i = 0; i < dates.length && i < maxRows; i++) {
+    rows.push({ date: dates[i], amount: amounts[i] });
   }
   return rows;
 }

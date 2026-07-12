@@ -22,7 +22,7 @@ import {
   scheduledMonths,
   suggestedAmount,
 } from '@/lib/plan';
-import { scheduleGoalReminder } from '@/lib/notifications';
+import { scheduleGoalReminders } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
 import {
   CATEGORY_DESCRIPTIONS,
@@ -135,13 +135,18 @@ export default function NewGoalScreen() {
           rhythm,
           // Le jour de rappel a-t-il bougé ? Alors on repart de la prochaine occurrence.
           ...(reminderDay !== editing.reminderDay
-            ? { nextReminderAt: nextReminderAfter(new Date(), reminderDay).toISOString() }
+            ? {
+                nextReminderAt: nextReminderAfter(new Date(), reminderDay).toISOString(),
+                followingReminderAt: undefined,
+                canIgnoreCurrentReminder: false,
+                skippedRegularReminderAt: undefined,
+              }
             : {}),
         };
         updateGoal(editing.id, patch);
         const updated = useStore.getState().goals.find((g) => g.id === editing.id)!;
-        const notificationId = await scheduleGoalReminder(updated, suggestedAmount(updated));
-        updateGoal(editing.id, { notificationId: notificationId ?? undefined });
+        const scheduled = await scheduleGoalReminders(updated, suggestedAmount(updated));
+        updateGoal(editing.id, scheduled);
         router.back();
       } else {
         const goal = await createGoal({

@@ -29,6 +29,14 @@ export interface Goal {
   nextReminderAt: string;
   /** Identifiant de la notification locale programmée */
   notificationId?: string;
+  /** Rappel mensuel conservé pendant qu'un rappel plus ancien est reporté. */
+  followingReminderAt?: string;
+  /** Identifiant natif du rappel mensuel conservé. */
+  followingNotificationId?: string;
+  /** Le rappel courant suit un versement reporté et peut être ignoré explicitement. */
+  canIgnoreCurrentReminder?: boolean;
+  /** Date exacte du rappel mensuel refusé après un report proche. */
+  skippedRegularReminderAt?: string;
   createdAt: string;
   contributions: Contribution[];
 }

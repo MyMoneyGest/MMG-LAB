@@ -9,13 +9,17 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
-## 2026-07-12 — Codex — [DÉCISION] Borne des reports de rappel
+## 2026-07-12 — Codex — [DÉCISION] Règle complète des reports de rappel
 
-Décision de Patrick après test Android : un rappel peut être reporté à une date future, mais
-jamais après l'occurrence mensuelle suivante du plan. Cette règle appartient à la logique
-métier (`src/lib/plan.ts` et `src/lib/actions.ts`), pas seulement à la fenêtre de report. Une
-future interface doit donc réutiliser `canPostponeReminderTo()` au lieu de refaire son propre
-calcul de date.
+Décision de Patrick après test Android : le report s'arrête à la veille du rappel mensuel
+suivant. À plus de 3 jours, ce rappel est conservé automatiquement ; à 3 jours ou moins,
+l'utilisateur choisit. S'il refuse, seule cette occurrence est sautée. S'il la conserve après
+avoir traité le report, il peut l'ignorer à son arrivée sans enregistrer de versement. Le jour
+mensuel reste modifiable à tout moment. Toute future interface doit réutiliser les fonctions de
+`src/lib/plan.ts` et les actions de `src/lib/actions.ts`, jamais refaire cette logique localement.
+
+Deuxième décision liée : avant un versement situé dans les trois jours d'un versement récent,
+MMG doit afficher les montants et dates concernés et demander une confirmation explicite.
 
 ---
 

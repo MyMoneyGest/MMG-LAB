@@ -6,6 +6,7 @@ import { AppState } from 'react-native';
 import { PendingReminderModal } from '@/components/pending-reminder-modal';
 import type { PendingReminderChoice } from '@/components/pending-reminder-modal';
 import { colors } from '@/constants/theme';
+import { activateFollowingReminder, ignoreCurrentReminder } from '@/lib/actions';
 import { track } from '@/lib/analytics';
 import { mergePendingReminders } from '@/lib/notification-model';
 import type { PendingReminder } from '@/lib/notification-model';
@@ -49,34 +50,39 @@ export default function RootLayout() {
   // Boucle de rétention : notification → deep link vers le bon projet.
   useEffect(
     () =>
-      addReminderOpenListener(({ notificationId, goalId, responseKey, action, isTest }) => {
-        setPendingReminders((current) =>
-          current.filter((reminder) => reminder.notificationId !== notificationId)
-        );
-        if (!isTest) {
-          if (useStore.persist.hasHydrated()) {
-            track('reminder_opened', { goalId, metadata: { goalId } });
-          } else {
-            const unsubscribe = useStore.persist.onFinishHydration(() => {
-              unsubscribe();
+      addReminderOpenListener((reminder) => {
+        const { notificationId, goalId, responseKey, action, isTest, reminderKind } = reminder;
+        void (async () => {
+          await waitForStoreHydration();
+          if (reminderKind === 'following') await activateFollowingReminder(goalId);
+          setPendingReminders((current) =>
+            current.filter((reminder) => reminder.notificationId !== notificationId)
+          );
+          if (!isTest) {
+            if (useStore.persist.hasHydrated()) {
               track('reminder_opened', { goalId, metadata: { goalId } });
-            });
+            } else {
+              const unsubscribe = useStore.persist.onFinishHydration(() => {
+                unsubscribe();
+                track('reminder_opened', { goalId, metadata: { goalId } });
+              });
+            }
           }
-        }
-        router.push({
-          pathname: '/goal/[id]',
-          params: {
-            id: goalId,
-            from: isTest ? 'test-reminder' : 'reminder',
-            ...(action === 'open'
-              ? {}
-              : {
-                  notificationAction: action,
-                  notificationIsTest: isTest ? '1' : '0',
-                  responseKey,
-                }),
-          },
-        });
+          router.push({
+            pathname: '/goal/[id]',
+            params: {
+              id: goalId,
+              from: isTest ? 'test-reminder' : 'reminder',
+              ...(action === 'open'
+                ? {}
+                : {
+                    notificationAction: action,
+                    notificationIsTest: isTest ? '1' : '0',
+                    responseKey,
+                  }),
+            },
+          });
+        })();
       }),
     [router]
   );
@@ -89,8 +95,24 @@ export default function RootLayout() {
       if (!reminders.length) return;
       await waitForStoreHydration();
       if (!active) return;
+      for (const reminder of reminders) {
+        if (reminder.reminderKind === 'following') {
+          await activateFollowingReminder(reminder.goalId);
+        }
+      }
       const goals = useStore.getState().goals;
-      enqueueReminders(reminders.filter((reminder) => goals.some((goal) => goal.id === reminder.goalId)));
+      const followingGoalIds = new Set(
+        reminders
+          .filter((reminder) => reminder.reminderKind === 'following')
+          .map((reminder) => reminder.goalId)
+      );
+      enqueueReminders(
+        reminders.filter(
+          (reminder) =>
+            goals.some((goal) => goal.id === reminder.goalId) &&
+            (reminder.reminderKind === 'following' || !followingGoalIds.has(reminder.goalId))
+        )
+      );
     };
 
     const inspectPresented = async () => {
@@ -118,6 +140,11 @@ export default function RootLayout() {
     if (!reminder) return;
     setPendingReminders((current) => current.slice(1));
     if (choice === 'ignore') return;
+    if (choice === 'skip') {
+      const goal = useStore.getState().goals.find((candidate) => candidate.id === reminder.goalId);
+      if (goal) void ignoreCurrentReminder(goal);
+      return;
+    }
     router.push({
       pathname: '/goal/[id]',
       params: {

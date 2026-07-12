@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Pressable,
@@ -11,7 +12,12 @@ import {
 import { colors, radius } from '@/constants/theme';
 import { postponeReminder } from '@/lib/actions';
 import { formatDate, formatDateInput, formatDayMonth, parseDateInput } from '@/lib/format';
-import { canPostponeReminderTo, postponeDateLimit } from '@/lib/plan';
+import {
+  canPostponeReminderTo,
+  nextRegularReminderAfterCurrent,
+  postponeDateLimit,
+  postponeNeedsRegularChoice,
+} from '@/lib/plan';
 import { Goal } from '@/lib/types';
 import { Button, Field, KeyboardSafeScrollView } from './ui';
 
@@ -36,7 +42,8 @@ export function ReportModal({
   const [dateText, setDateText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const latestDate = postponeDateLimit(goal);
-  const dateLimitError = `Choisis une date au plus tard le ${formatDate(latestDate)}, sans dépasser le rappel mensuel suivant.`;
+  const nextRegularDate = nextRegularReminderAfterCurrent(goal);
+  const dateLimitError = `Choisis une date au plus tard le ${formatDate(latestDate)}, la veille du rappel mensuel suivant.`;
 
   useEffect(() => {
     if (visible) {
@@ -45,17 +52,40 @@ export function ReportModal({
     }
   }, [visible]);
 
-  const apply = async (date: Date) => {
+  const apply = async (date: Date, keepRegularReminder: boolean) => {
     if (!canPostponeReminderTo(goal, date)) {
       setError(dateLimitError);
       return;
     }
-    const result = await postponeReminder(goal, date, isTestAction ? 'test_notification' : 'app');
+    const result = await postponeReminder(goal, date, {
+      keepRegularReminder,
+      source: isTestAction ? 'test_notification' : 'app',
+    });
     if (!result.ok) {
       setError(result.reason === 'permission' ? PERMISSION_ERROR : dateLimitError);
       return;
     }
     onDone();
+  };
+
+  const chooseDate = (date: Date) => {
+    if (!canPostponeReminderTo(goal, date)) {
+      setError(dateLimitError);
+      return;
+    }
+    if (!postponeNeedsRegularChoice(goal, date)) {
+      void apply(date, true);
+      return;
+    }
+    Alert.alert(
+      `Garder le rappel du ${formatDayMonth(nextRegularDate)} ?`,
+      `Le report au ${formatDate(date)} est proche du rappel mensuel. Si tu ne le gardes pas, le prochain rappel sera programmé le mois suivant.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Non', onPress: () => void apply(date, false) },
+        { text: 'Oui, garder', onPress: () => void apply(date, true) },
+      ]
+    );
   };
 
   const applyPrecise = () => {
@@ -70,7 +100,7 @@ export function ReportModal({
       setError('Choisis une date à venir.');
       return;
     }
-    apply(parsed);
+    chooseDate(parsed);
   };
 
   const inDays = (n: number) => {
@@ -99,12 +129,12 @@ export function ReportModal({
               <Text style={styles.eyebrow}>Report</Text>
               <Text style={styles.title}>Quand te le rappeler ?</Text>
               <Text style={styles.subtitle}>
-                Choisis une date sans dépasser le prochain rappel mensuel du{' '}
-                {formatDayMonth(latestDate)}.
+                Report possible jusqu'au {formatDayMonth(latestDate)}. Le rappel mensuel habituel
+                est le {formatDayMonth(nextRegularDate)}.
               </Text>
 
               {quickOptions.map((opt) => (
-                <Pressable key={opt.label} style={styles.option} onPress={() => apply(opt.date)}>
+                <Pressable key={opt.label} style={styles.option} onPress={() => chooseDate(opt.date)}>
                   <Text style={styles.optionLabel}>{opt.label}</Text>
                   <Text style={styles.optionDate}>{formatDayMonth(opt.date)}</Text>
                 </Pressable>
