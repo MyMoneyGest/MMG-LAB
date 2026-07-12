@@ -40,19 +40,29 @@ où on est et quoi faire. La première impression doit être bonne : des gens ch
 app parce qu'elle est belle. Le design est donc un chantier à part entière (voir entrée
 [SUGGESTION] ci-dessous), dans le respect de la direction visuelle actée.
 
-**File de travail pour Codex (ordre validé par Patrick) :**
-1. Chantier 2.4 — bloc de progression du projet (grille propre Atteint / Déjà mis / Restants
-   / Cible ; actuellement empilement inégal).
-2. Chantier 2.5 — sous-menu : regroupements en lignes, tailles réduites.
-3. Chantier 2.7 — états de chargement courts (création de projet, changement date/montant).
-4. Chantier 2.6 — animations événementielles sobres (objectif atteint : barre 0→100).
-5. Tracking manquant (3 ajouts, sans montants en clair) : `metadata.rhythm` dans
-   `goal_created` ; événement `balance_confirmed` (bucket d'écart estimé/réel au besoin) ;
-   événement `rebalance_decided` avec `metadata.choice: applied|kept|deferred`.
-6. Chantier design/parcours (voir [SUGGESTION] ci-dessous) — maquettes à faire valider par
-   Patrick AVANT d'écrire le code des écrans.
-7. En clôture : GUIDE-MAINTENANCE.md (manuel non-technique pour Patrick), puis passe finale
-   de cohérence FEATURES.md.
+**File de travail pour Codex (ordre revu le 2026-07-12 avec Patrick : le design démarre en
+premier, mais RIEN des autres chantiers n'est abandonné — tout figure ici) :**
+1. **Tracking manquant** (petit, sans risque, protège la mesure du test — à faire avant tout) :
+   `metadata.rhythm` dans `goal_created` ; événement `balance_confirmed` ; événement
+   `rebalance_decided` avec `metadata.choice: applied|kept|deferred`. Pas de montants en clair.
+2. **Maquettes design** des 3 écrans clés (premier lancement, création avec indicateur
+   d'étape, écran projet) — voir [SUGGESTION] ci-dessous + idées propres de Codex. Les
+   chantiers 2.4 (bloc de progression) et 2.5 (sous-menu) sont **fusionnés dans ces
+   maquettes** pour ne pas faire la mise en page deux fois. Validation Patrick OBLIGATOIRE
+   avant le code des écrans.
+3. **Pendant l'attente de validation** (indépendants du layout) : chantier 2.7 (états de
+   chargement courts) puis 2.6 (animations événementielles sobres, barre 0→100 à l'objectif
+   atteint).
+4. **Implémentation du design validé** (solde les chantiers 2.4 et 2.5). Design pur : aucune
+   modification de logique métier, gel des fonctionnalités en vigueur.
+5. **Validation native Android par Patrick** : les lots des sessions 7-9 (reports bornés,
+   solde réel, relance 14 jours) n'ont pas encore été confirmés au doigt sur le dev build —
+   à regrouper avec la vérification du nouveau design.
+6. **Clôture documentation** : GUIDE-MAINTENANCE.md (manuel non-technique pour Patrick),
+   puis passe finale de cohérence FEATURES.md.
+7. **Côté Patrick, en parallèle (rappels, rien à coder)** : décisions RGPD du [BLOCAGE]
+   ci-dessous ; puis build TestFlight iOS (compte Apple Developer prêt) une fois le design
+   posé, pour élargir aux premiers utilisateurs iPhone.
 
 ---
 
