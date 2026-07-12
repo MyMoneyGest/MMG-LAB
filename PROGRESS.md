@@ -30,9 +30,10 @@ ce qui vient ensuite.
 - `expo lint` n'était pas configuré et a tenté une installation automatique avant de signaler
   des erreurs historiques hors chantier ; cette installation automatique a été entièrement
   retirée de `package.json`, `package-lock.json` et du repo.
+- Lot commité et poussé sur `main` : `8d93f51`.
 
 ### En cours
-- Aucun code partiellement implémenté. Commit/push puis confirmation native Android.
+- Aucun code partiellement implémenté. Confirmation native Android par Patrick en attente.
 
 ### Ensuite
 - Confirmation native par Patrick des scénarios de report et de proximité.
