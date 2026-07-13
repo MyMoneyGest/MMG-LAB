@@ -9,6 +9,30 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 25 : icône d'application MMG
+
+### Fait
+- Remplacé l'identité Expo/React du modèle par le monogramme MMG : M blanc sur fond terracotta.
+- Préparé les déclinaisons 1024 px pour l'icône principale, le premier plan adaptatif Android
+  et l'icône monochrome Android 13+, ainsi que le splash et le favicon.
+- Retiré l'image de fond adaptative Expo qui prenait le pas sur la couleur MMG dans `app.json`.
+- Aligné l'icône iOS sur le PNG MMG et ajouté un générateur Swift reproductible pour les assets.
+- Renforcé `test:design` sur la configuration Expo, les chemins et les dimensions PNG.
+- Vérifié visuellement les cinq déclinaisons, puis validé la configuration Expo et un prébuild
+  Android isolé : les ressources standard, rondes, adaptatives et monochromes sont bien générées
+  avec la couleur native `#B5432A`.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 689 modules.
+
+### En cours
+- Aucun code partiellement implémenté. Un nouvel APK reste nécessaire pour observer l'icône
+  dans le lanceur Android.
+
+### Ensuite
+- Générer le nouvel APK. Le build cloud demande une autorisation explicite d'envoyer le code à
+  Expo EAS ; le build local attend l'installation d'un runtime Java, absent de ce Mac.
+
 ## 2026-07-14 — Codex — Session 24 : progression chromatique encourageante
 
 ### Fait

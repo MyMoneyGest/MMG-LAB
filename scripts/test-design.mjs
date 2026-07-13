@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+const readBinary = (path) => readFileSync(new URL(`../${path}`, import.meta.url));
+const pngSize = (path) => {
+  const image = readBinary(path);
+  assert.deepEqual([...image.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  return [image.readUInt32BE(16), image.readUInt32BE(20)];
+};
 
+const appConfig = JSON.parse(read('app.json'));
 const ui = read('src/components/ui.tsx');
 const header = read('src/components/app-header.tsx');
 const home = read('src/app/home.tsx');
@@ -22,6 +29,27 @@ const appDialog = read('src/components/app-dialog.tsx');
 const timing = read('src/lib/timing.ts');
 const theme = read('src/constants/theme.ts');
 const planSummary = read('src/components/plan-summary.tsx');
+const iconGenerator = read('scripts/generate-app-icons.swift');
+
+assert.equal(appConfig.expo.icon, './assets/images/icon.png');
+assert.equal(appConfig.expo.ios.icon, './assets/images/icon.png');
+assert.equal(
+  appConfig.expo.android.adaptiveIcon.foregroundImage,
+  './assets/images/android-icon-foreground.png'
+);
+assert.equal(
+  appConfig.expo.android.adaptiveIcon.monochromeImage,
+  './assets/images/android-icon-monochrome.png'
+);
+assert.equal(appConfig.expo.android.adaptiveIcon.backgroundColor, '#B5432A');
+assert.equal(appConfig.expo.android.adaptiveIcon.backgroundImage, undefined);
+assert.deepEqual(pngSize('assets/images/icon.png'), [1024, 1024]);
+assert.deepEqual(pngSize('assets/images/android-icon-foreground.png'), [1024, 1024]);
+assert.deepEqual(pngSize('assets/images/android-icon-monochrome.png'), [1024, 1024]);
+assert.deepEqual(pngSize('assets/images/splash-icon.png'), [512, 512]);
+assert.deepEqual(pngSize('assets/images/favicon.png'), [512, 512]);
+assert.match(iconGenerator, /let brand = NSColor\(hex: "#B5432A"\)/);
+assert.match(iconGenerator, /let monogram = "M"/);
 
 assert.match(home, /Un projet\./);
 assert.match(home, /Un geste par mois\./);

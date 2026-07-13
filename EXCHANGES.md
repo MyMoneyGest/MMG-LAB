@@ -9,6 +9,16 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-14 — Patrick / Codex — [DÉCISION] L'icône reprend le monogramme MMG
+
+L'application installée ne doit conserver aucun symbole Expo ou React provenant du modèle.
+L'icône reprend le M déjà visible dans l'interface : blanc sur terracotta MMG, sans détail fin
+qui disparaîtrait dans le lanceur Android. Les déclinaisons adaptative et monochrome respectent
+les mécanismes natifs de la plateforme plutôt que de figer une forme de tuile.
+
+Le splash et le favicon suivent la même identité afin que le symbole par défaut ne réapparaisse
+à aucun point d'entrée. Une modification d'icône nécessitera toujours un nouveau build natif.
+
 ## 2026-07-14 — Patrick / Codex — [DÉCISION] La progression encourage par la couleur
 
 La barre, son repère et le pourcentage évoluent ensemble selon l'avancement, dans une gamme

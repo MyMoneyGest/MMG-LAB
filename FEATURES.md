@@ -318,7 +318,12 @@ Dernière mise à jour : 2026-07-14 (Codex).
 - **Progression** : quatre tokens dédiés et suffisamment contrastés (`progress.start`,
   `steady`, `advanced`, `complete`) sont interpolés avec Reanimated pendant le remplissage. Ils
   ne modifient ni les CTA terracotta ni les couleurs de catégories.
+- **Identité installée** : l'icône système reprend le monogramme de l'interface, un M blanc sur
+  fond terracotta. Android utilise un premier plan adaptatif séparé, une couleur de fond native
+  et une version monochrome pour les icônes thématiques. iOS, le splash et le favicon utilisent
+  les déclinaisons MMG correspondantes ; aucun asset Expo/React par défaut n'est encore référencé.
 - **Densité mobile** : rayons, espacements de carte, boutons, champs, chips, choix de rythme et
   récapitulatif sombre ont été réduits d'un cran après validation Android. Les libellés de
   bouton restent sur une seule ligne et peuvent se réduire légèrement plutôt que se couper.
-- **Où** : `src/constants/theme.ts`, `src/components/ui.tsx`.
+- **Où** : `src/constants/theme.ts`, `src/components/ui.tsx`, `app.json`,
+  `assets/images/`, `scripts/generate-app-icons.swift`.
