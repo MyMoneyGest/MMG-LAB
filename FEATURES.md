@@ -79,10 +79,11 @@ Dernière mise à jour : 2026-07-14 (Codex).
   0,7 à 1,3, dont la moyenne vaut 1. La répartition conserve le total exact au centime.
   `createGoal()` orchestre : store + première demande de permission notifications (uniquement
   ici, jamais à l'ouverture) + programmation du rappel + événement `goal_created`.
-- **Retour d'action** : la création et l'ajustement affichent, si l'opération dépasse 160 ms,
-  une fenêtre de traitement qui précise ce que MMG calcule. Ce délai évite tout flash sur les
-  opérations instantanées. L'écran projet affiche ensuite une confirmation animée et temporaire
-  (« Ton plan est prêt » ou « Plan mis à jour »).
+- **Retour d'action** : la création et l'ajustement affichent après 40 ms une fenêtre de
+  traitement qui précise ce que MMG calcule. Elle reste perceptible pendant au moins 1,2 seconde
+  au total ; si l'opération technique a déjà duré davantage, aucun délai ne s'ajoute. L'écran
+  projet affiche ensuite une confirmation animée et temporaire (« Ton plan est prêt » ou
+  « Plan mis à jour »).
 - **Où** : `src/app/onboarding/new-goal.tsx`, `src/app/adjust-goal.tsx`,
   `src/lib/actions.ts` (`createGoal`, `changeReminderDay`),
   `src/components/plan-summary.tsx`.
@@ -125,13 +126,15 @@ Dernière mise à jour : 2026-07-14 (Codex).
   cycle concerné, prochain rappel, puis bouton. Lorsque la cible est financée, une capsule
   « Objectif atteint » et un message dédié marquent l'événement sans confettis ni animation
   permanente. La barre de progression anime sa nouvelle valeur et effectue une célébration
-  sobre de 0 à 100 lorsque l'objectif est atteint. Toutes ces entrées respectent le réglage
-  système de réduction des animations.
+  sobre de 0 à 100 lorsque l'objectif est atteint. La séquence complète dure environ une
+  seconde ; la barre progresse en 650 ms, ou 1,4 seconde pour un objectif atteint. Toutes ces
+  entrées respectent le réglage système de réduction des animations.
 - **Traitements et succès** : l'enregistrement d'un versement affiche une fenêtre de traitement
   différée, puis cet écran sombre. Les opérations plus courtes (report, jour de rappel, solde
   réel et rééquilibrage) conservent le bouton visible avec spinner et libellé explicite, puis
-  affichent une bannière de succès animée sur l'écran projet. Les boutons sont désactivés durant
-  l'attente afin d'empêcher les doubles actions.
+  affichent une bannière de succès animée pendant 4,2 secondes sur l'écran projet. Leur
+  chargement reste visible au moins 900 ms. Les boutons sont désactivés durant l'attente afin
+  d'empêcher les doubles actions.
 - **Rattachement visible** : lorsqu'un versement solde une dette, l'écran indique le cycle
   concerné (« Ce versement compte pour juillet. »).
 - **Où** : `src/components/confirmation-overlay.tsx`,

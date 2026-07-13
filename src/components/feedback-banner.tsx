@@ -13,7 +13,7 @@ export interface FeedbackMessage {
 export function FeedbackBanner({
   message,
   onFinished,
-  duration = 2800,
+  duration = 4200,
 }: {
   message: FeedbackMessage;
   onFinished: () => void;
@@ -26,8 +26,8 @@ export function FeedbackBanner({
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(240).reduceMotion(ReduceMotion.System)}
-      exiting={FadeOutUp.duration(180).reduceMotion(ReduceMotion.System)}
+      entering={FadeInDown.duration(360).reduceMotion(ReduceMotion.System)}
+      exiting={FadeOutUp.duration(280).reduceMotion(ReduceMotion.System)}
       style={styles.banner}>
       <View style={styles.badge}>
         <Text style={styles.check}>✓</Text>

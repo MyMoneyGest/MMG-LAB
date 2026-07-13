@@ -32,19 +32,19 @@ export function ConfirmationOverlay({
     <Modal visible={visible} animationType="fade" onRequestClose={onClose}>
       <View style={styles.container}>
         <Animated.View
-          entering={ZoomIn.duration(240).reduceMotion(ReduceMotion.System)}
+          entering={ZoomIn.duration(320).reduceMotion(ReduceMotion.System)}
           style={styles.badge}>
           <Text style={styles.badgeCheck}>✓</Text>
         </Animated.View>
         {done ? (
           <Animated.View
-            entering={ZoomIn.delay(90).duration(260).reduceMotion(ReduceMotion.System)}
+            entering={ZoomIn.delay(200).duration(320).reduceMotion(ReduceMotion.System)}
             style={styles.milestonePill}>
             <Text style={styles.milestoneText}>Objectif atteint</Text>
           </Animated.View>
         ) : null}
         <Animated.View
-          entering={FadeInUp.delay(80).duration(260).reduceMotion(ReduceMotion.System)}
+          entering={FadeInUp.delay(320).duration(320).reduceMotion(ReduceMotion.System)}
           style={styles.copy}>
           <Text style={styles.eyebrow}>{done ? 'Félicitations' : "C'est noté"}</Text>
           <Text style={styles.amount}>{formatEuro(amount)}</Text>
@@ -56,14 +56,14 @@ export function ConfirmationOverlay({
         </Animated.View>
         {cycleAnchorAt ? (
           <Animated.Text
-            entering={FadeInUp.delay(140).duration(240).reduceMotion(ReduceMotion.System)}
+            entering={FadeInUp.delay(500).duration(300).reduceMotion(ReduceMotion.System)}
             style={styles.cycleInfo}>
             Ce versement compte pour {formatMonth(cycleAnchorAt)}.
           </Animated.Text>
         ) : null}
         {!done && nextReminderAt && nextAmount !== undefined && nextAmount > 0 ? (
           <Animated.View
-            entering={FadeInUp.delay(170).duration(240).reduceMotion(ReduceMotion.System)}
+            entering={FadeInUp.delay(620).duration(300).reduceMotion(ReduceMotion.System)}
             style={styles.nextCard}>
             <Text style={styles.nextLabel}>Prochain rappel</Text>
             <Text style={styles.nextValue}>
@@ -72,7 +72,7 @@ export function ConfirmationOverlay({
           </Animated.View>
         ) : null}
         <Animated.View
-          entering={FadeInUp.delay(220).duration(240).reduceMotion(ReduceMotion.System)}
+          entering={FadeInUp.delay(760).duration(300).reduceMotion(ReduceMotion.System)}
           style={styles.cta}>
           <Button label="Continuer" variant="light-on-dark" onPress={onClose} />
         </Animated.View>

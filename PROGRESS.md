@@ -9,6 +9,29 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 22 : tempo des animations et chargements
+
+### Fait
+- Corrigé le retour Android indiquant que les animations et chargements disparaissaient trop
+  vite pour être réellement perçus.
+- Fixé une durée minimale totale de 1,2 seconde pour création, ajustement et versement, et de
+  900 ms pour report, jour de rappel, solde et rééquilibrage. Une opération naturellement plus
+  longue n'est jamais ralentie davantage.
+- Avancé l'apparition de la fenêtre de traitement à 40 ms et ralenti son entrée à 320 ms.
+- Étendu la confirmation de versement sur environ une seconde, la barre de progression à
+  650 ms (1,4 seconde à l'objectif atteint) et les bannières de succès à 4,2 secondes.
+- Conservé `ReduceMotion.System` sur toutes les animations et renforcé les tests structurels sur
+  chaque durée importante.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 688 modules.
+
+### En cours
+- Aucun code partiellement implémenté. Le nouveau tempo est prêt pour confirmation sur Android.
+
+### Ensuite
+- Confirmation tactile par Patrick du rythme réel sur son téléphone Android.
+
 ## 2026-07-14 — Codex — Session 21 : moments marquants et retours d'action
 
 ### Fait

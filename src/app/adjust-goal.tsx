@@ -17,6 +17,7 @@ import {
 } from '@/lib/plan';
 import { scheduleGoalReminders } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
+import { waitForMinimumLoading } from '@/lib/timing';
 import type { Goal, SavingsRhythm } from '@/lib/types';
 
 const RHYTHMS: { key: SavingsRhythm; label: string }[] = [
@@ -127,6 +128,7 @@ export default function AdjustGoalScreen() {
       setError(problem);
       return;
     }
+    const loadingStartedAt = Date.now();
     setSaving(true);
     try {
       updateGoal(goal.id, {
@@ -142,11 +144,13 @@ export default function AdjustGoalScreen() {
         const scheduled = await scheduleGoalReminders(updated, suggestedAmount(updated));
         updateGoal(goal.id, scheduled);
       }
+      await waitForMinimumLoading(loadingStartedAt);
       router.dismissTo({
         pathname: '/goal/[id]',
         params: { id: goal.id, feedback: 'adjusted', feedbackId: String(Date.now()) },
       });
     } finally {
+      await waitForMinimumLoading(loadingStartedAt);
       setSaving(false);
     }
   };

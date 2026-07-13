@@ -348,7 +348,7 @@ export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
   useEffect(() => {
     if (target >= 100) progress.value = 0;
     progress.value = withTiming(target, {
-      duration: target >= 100 ? 700 : 280,
+      duration: target >= 100 ? 1_400 : 650,
       reduceMotion: ReduceMotion.System,
     });
   }, [target]);

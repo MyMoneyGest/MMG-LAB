@@ -46,6 +46,10 @@ import {
 import type { ContributionIntent } from '@/lib/plan';
 import type { GlobalRebalanceProposal } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import {
+  MIN_INLINE_LOADING_MS,
+  waitForMinimumLoading,
+} from '@/lib/timing';
 import type { Contribution } from '@/lib/types';
 import type { RebalanceReason } from '@/lib/types';
 
@@ -162,10 +166,13 @@ export default function GoalScreen() {
     const currentGoal = useStore.getState().goals.find((candidate) => candidate.id === goal.id);
     if (!currentGoal) return;
     setAmountModal(null);
+    const loadingStartedAt = Date.now();
     setActionLoading(true);
     try {
       const plan = await confirmContribution(currentGoal, amount, source, intent);
       const updated = useStore.getState().goals.find((g) => g.id === goal.id);
+      await waitForMinimumLoading(loadingStartedAt);
+      setActionLoading(false);
       setConfirmation({
         amount,
         nextReminderAt: updated?.nextReminderAt,
@@ -174,6 +181,7 @@ export default function GoalScreen() {
         cycleAnchorAt: plan.cycleAnchorAt,
       });
     } finally {
+      await waitForMinimumLoading(loadingStartedAt);
       setActionLoading(false);
     }
   };
@@ -525,7 +533,9 @@ export default function GoalScreen() {
         lastConfirmedAt={latestSnapshot?.date}
         onClose={() => setBalanceOpen(false)}
         onConfirm={async (amount) => {
+          const loadingStartedAt = Date.now();
           const proposal = await reconcileGlobalBalance(amount);
+          await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setBalanceOpen(false);
           if (proposal && (proposal.goals.length || !proposal.possible)) {
             setRebalanceReason('balance');
@@ -551,7 +561,9 @@ export default function GoalScreen() {
         }}
         onApply={async () => {
           if (!rebalanceProposal) return;
+          const loadingStartedAt = Date.now();
           await applyGlobalRebalance(rebalanceProposal);
+          await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setRebalanceProposal(null);
           showFeedback(
             'Échéancier mis à jour',
@@ -564,11 +576,13 @@ export default function GoalScreen() {
         currentDay={goal.reminderDay}
         onClose={() => setReminderDayOpen(false)}
         onConfirm={async (day) => {
+          const loadingStartedAt = Date.now();
           const currentGoal = useStore
             .getState()
             .goals.find((candidate) => candidate.id === goal.id);
           if (!currentGoal) return;
           await changeReminderDay(currentGoal, day);
+          await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setReminderDayOpen(false);
           showFeedback('Jour de rappel modifié', `Le rappel mensuel est maintenant prévu le ${day}.`);
         }}

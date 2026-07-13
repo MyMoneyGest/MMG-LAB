@@ -9,6 +9,18 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-14 — Patrick / Codex — [DÉCISION] Tempo plus lisible sur Android
+
+Le premier tempo était techniquement fluide mais trop rapide sur le téléphone : certaines
+opérations finissaient avant même que leur chargement soit identifiable. MMG garantit désormais
+un minimum visible de 1,2 seconde sur les actions principales et 900 ms sur les petites
+modifications. Ce minimum complète uniquement le temps manquant et ne s'ajoute pas à une
+opération déjà longue.
+
+La confirmation de versement se déroule sur environ une seconde, l'objectif atteint bénéficie
+d'une progression plus posée et les bannières restent lisibles 4,2 secondes. Le réglage système
+de réduction des animations continue de primer.
+
 ## 2026-07-14 — Patrick / Codex — [DÉCISION] Retours visibles aux moments marquants
 
 Les opérations importantes ne doivent plus donner l'impression que l'application est figée.

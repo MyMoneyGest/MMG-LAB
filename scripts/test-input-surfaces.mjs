@@ -49,6 +49,7 @@ assert.match(reportModal, /postponeIsNearNextAnchor\(goal, selectedDate\)/);
 assert.doesNotMatch(reportModal, /Alert\.alert/);
 assert.match(reportModal, /Votre prochain rappel régulier reste prévu/);
 assert.match(reportModal, /loadingLabel="Programmation…"/);
+assert.match(reportModal, /waitForMinimumLoading\(loadingStartedAt, MIN_INLINE_LOADING_MS\)/);
 assert.doesNotMatch(reportModal, /Garder le rappel du/);
 assert.match(goalScreen, /Jour de rappel : le \{goal\.reminderDay\} · Modifier/);
 assert.match(goalScreen, /setReminderDayOpen\(true\)/);

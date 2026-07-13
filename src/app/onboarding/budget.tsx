@@ -20,6 +20,7 @@ import {
 } from '@/lib/plan';
 import type { GlobalRebalanceProposal } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import { MIN_INLINE_LOADING_MS, waitForMinimumLoading } from '@/lib/timing';
 
 export default function BudgetScreen() {
   const router = useRouter();
@@ -142,7 +143,9 @@ export default function BudgetScreen() {
         }}
         onApply={async () => {
           if (!rebalanceProposal) return;
+          const loadingStartedAt = Date.now();
           await applyGlobalRebalance(rebalanceProposal);
+          await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setRebalanceProposal(null);
           router.back();
         }}

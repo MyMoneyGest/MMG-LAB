@@ -18,6 +18,7 @@ import {
   postponeIsNearNextAnchor,
 } from '@/lib/plan';
 import { Goal } from '@/lib/types';
+import { MIN_INLINE_LOADING_MS, waitForMinimumLoading } from '@/lib/timing';
 import { Button, DateField, KeyboardSafeScrollView } from './ui';
 
 // Report du rappel : « Quand te le rappeler ? » — Demain / 3 jours / 7 jours
@@ -63,17 +64,20 @@ export function ReportModal({
       setError(dateLimitError);
       return;
     }
+    const loadingStartedAt = Date.now();
     setSaving(true);
     try {
       const result = await postponeReminder(goal, date, {
         source: isTestAction ? 'test_notification' : 'app',
       });
+      await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
       if (!result.ok) {
         setError(result.reason === 'permission' ? PERMISSION_ERROR : dateLimitError);
         return;
       }
       onDone();
     } finally {
+      await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
       setSaving(false);
     }
   };

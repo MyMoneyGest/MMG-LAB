@@ -8,7 +8,7 @@ export function ActionLoadingOverlay({
   visible,
   title,
   detail,
-  delay = 160,
+  delay = 40,
 }: {
   visible: boolean;
   title: string;
@@ -37,7 +37,7 @@ export function ActionLoadingOverlay({
         <Animated.View
           accessibilityRole="progressbar"
           accessibilityLabel={title}
-          entering={FadeInUp.duration(220).reduceMotion(ReduceMotion.System)}
+          entering={FadeInUp.duration(320).reduceMotion(ReduceMotion.System)}
           style={styles.card}>
           <ActivityIndicator size="large" color={colors.accent} />
           <Text style={styles.title}>{title}</Text>

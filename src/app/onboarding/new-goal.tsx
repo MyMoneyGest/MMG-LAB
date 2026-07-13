@@ -24,6 +24,7 @@ import {
   scheduledMonths,
 } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import { waitForMinimumLoading } from '@/lib/timing';
 import {
   CATEGORY_DESCRIPTIONS,
   CATEGORY_LABELS,
@@ -132,6 +133,7 @@ export default function NewGoalScreen() {
       setError(problem);
       return;
     }
+    const loadingStartedAt = Date.now();
     setSaving(true);
     try {
       const goal = await createGoal({
@@ -143,11 +145,13 @@ export default function NewGoalScreen() {
         reminderDay,
         rhythm,
       });
+      await waitForMinimumLoading(loadingStartedAt);
       router.replace({
         pathname: '/goal/[id]',
         params: { id: goal.id, feedback: 'created', feedbackId: String(Date.now()) },
       });
     } finally {
+      await waitForMinimumLoading(loadingStartedAt);
       setSaving(false);
     }
   };
