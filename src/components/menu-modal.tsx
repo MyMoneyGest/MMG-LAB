@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
 import { removeGoal } from '@/lib/actions';
@@ -20,6 +21,7 @@ export function MenuModal({
   currentGoalId?: string;
 }) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const goals = useStore((s) => s.goals);
   const activeGoal = currentGoalId ? goals.find((goal) => goal.id === currentGoalId) : undefined;
   const orderedGoals = activeGoal
@@ -49,11 +51,28 @@ export function MenuModal({
     ]);
   };
 
+  const action = (label: string, onPress: () => void) => (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => go(onPress)}
+      style={({ pressed }) => [styles.actionItem, pressed && styles.actionItemPressed]}>
+      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} style={styles.actionLabel}>
+        {label}
+      </Text>
+      <Text style={styles.actionChevron}>›</Text>
+    </Pressable>
+  );
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={() => {}}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+        <Pressable
+          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 12) }]}
+          onPress={() => {}}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            contentInsetAdjustmentBehavior="automatic"
+            showsVerticalScrollIndicator={false}>
             <View style={styles.grabber} />
             <Text style={styles.title}>Mes projets</Text>
 
@@ -70,53 +89,39 @@ export function MenuModal({
                       {progressPct(g)} % atteint · {formatEuro(remainingAmount(g))} restants
                     </Text>
                   </View>
-                  {active ? <Text style={styles.goalAction}>Actif</Text> : null}
-                  <Pressable onPress={() => confirmDelete(g.id)} hitSlop={8}>
-                    <Text style={styles.goalAction}>Supprimer</Text>
-                  </Pressable>
+                  <View style={styles.goalActions}>
+                    {active ? <Text style={styles.activeBadge}>Actif</Text> : null}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Supprimer ${g.name}`}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        confirmDelete(g.id);
+                      }}
+                      hitSlop={8}>
+                      <Text style={styles.deleteAction}>Supprimer</Text>
+                    </Pressable>
+                  </View>
                 </Pressable>
               );
             })}
 
-            <View style={{ gap: 10, marginTop: goals.length ? 14 : 4 }}>
+            <View style={[styles.actions, { marginTop: goals.length ? 10 : 2 }]}>
               <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/new-goal'))} />
-              {currentGoalId ? (
-                <View style={styles.actionRow}>
-                  <Button
-                    label="Ajuster le plan"
-                    variant="secondary"
-                    onPress={() =>
-                      go(() => router.push({ pathname: '/onboarding/new-goal', params: { editId: currentGoalId } }))
-                    }
-                    style={{ flex: 1 }}
-                  />
-                  <Button
-                    label="Budget"
-                    variant="secondary"
-                    onPress={() => go(() => router.push('/onboarding/budget'))}
-                    style={{ flex: 1 }}
-                  />
-                </View>
-              ) : (
-                <Button
-                  label="Ajuster mon budget"
-                  variant="secondary"
-                  onPress={() => go(() => router.push('/onboarding/budget'))}
-                />
-              )}
-              <View style={styles.actionRow}>
-                <Button
-                  label="Voir un exemple"
-                  variant="secondary"
-                  onPress={() => go(() => router.push('/example'))}
-                  style={{ flex: 1 }}
-                />
-                <Button
-                  label="Confidentialité · CGU"
-                  variant="secondary"
-                  onPress={() => go(() => router.push('/legal'))}
-                  style={{ flex: 1 }}
-                />
+              <View style={styles.actionList}>
+                {currentGoalId
+                  ? action('Ajuster le plan', () =>
+                      router.push({
+                        pathname: '/onboarding/new-goal',
+                        params: { editId: currentGoalId },
+                      })
+                    )
+                  : null}
+                {action(currentGoalId ? 'Budget' : 'Ajuster mon budget', () =>
+                  router.push('/onboarding/budget')
+                )}
+                {action('Voir un exemple', () => router.push('/example'))}
+                {action('Confidentialité · CGU', () => router.push('/legal'))}
               </View>
             </View>
           </ScrollView>
@@ -137,34 +142,62 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderTopLeftRadius: radius.card,
     borderTopRightRadius: radius.card,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-    paddingBottom: 24,
-    maxHeight: '82%',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    maxHeight: '88%',
   },
+  scrollContent: { paddingBottom: 2 },
   grabber: {
     width: 42,
     height: 5,
     borderRadius: 3,
     backgroundColor: colors.border,
     alignSelf: 'center',
-    marginBottom: 14,
+    marginBottom: 10,
   },
-  title: { fontSize: 23, fontWeight: '800', color: colors.text, marginBottom: 14 },
+  title: { fontSize: 21, fontWeight: '800', color: colors.text, marginBottom: 10 },
   goalRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 18,
-    padding: 13,
-    marginBottom: 8,
+    borderRadius: 15,
+    padding: 10,
+    marginBottom: 6,
   },
   goalRowActive: { backgroundColor: colors.cardSoft, borderColor: colors.cardSoftBorder },
-  goalName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  goalName: { fontSize: 15, fontWeight: '700', color: colors.text },
   goalMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  goalAction: { fontSize: 13, fontWeight: '700', color: colors.accent },
-  actionRow: { flexDirection: 'row', gap: 10 },
+  goalActions: { alignItems: 'flex-end', gap: 5 },
+  activeBadge: {
+    color: colors.accent,
+    backgroundColor: colors.card,
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    fontSize: 11,
+    fontWeight: '800',
+    overflow: 'hidden',
+  },
+  deleteAction: { fontSize: 12, fontWeight: '700', color: colors.accent },
+  actions: { gap: 8 },
+  actionList: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.field,
+    overflow: 'hidden',
+  },
+  actionItem: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 13,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  actionItemPressed: { backgroundColor: colors.cardSoft },
+  actionLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
+  actionChevron: { fontSize: 20, lineHeight: 22, fontWeight: '500', color: colors.textSecondary },
 });

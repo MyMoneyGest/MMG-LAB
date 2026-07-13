@@ -85,6 +85,14 @@ assert.doesNotMatch(menu, /label="Accueil"/);
 assert.doesNotMatch(menu, /variant="dark"/);
 assert.match(menu, /const orderedGoals = activeGoal/);
 assert.match(menu, /\[activeGoal, \.\.\.goals\.filter/);
+assert.match(menu, /useSafeAreaInsets/);
+assert.match(menu, /Math\.max\(insets\.bottom, 12\)/);
+assert.match(menu, /contentInsetAdjustmentBehavior="automatic"/);
+assert.match(menu, /styles\.actionList/);
+assert.match(menu, /minimumFontScale=\{0\.85\}/);
+assert.match(menu, /style=\{styles\.actionChevron\}>›/);
+assert.doesNotMatch(menu, /styles\.actionRow/);
+assert.match(menu, /event\.stopPropagation\(\)/);
 
 assert.match(report, /loading=\{saving\}/);
 assert.match(report, /label="Valider la date"/);

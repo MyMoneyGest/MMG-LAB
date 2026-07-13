@@ -9,6 +9,30 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-13 — Codex — Session 17 : menu ⋯ compact et protégé sur Android
+
+### Fait
+- Corrigé le défaut visible sur la capture Android : la deuxième rangée de gros boutons passait
+  sous la barre de navigation et les libellés se coupaient.
+- Conservé la bottom sheet et **Nouveau projet** comme unique CTA principal ; remplacé les
+  quatre actions secondaires par une liste compacte à chevrons, sur une seule ligne.
+- Ajouté la marge basse native via `useSafeAreaInsets`, le défilement automatique et une hauteur
+  maximale protectrice pour les petits écrans ou les listes de plusieurs projets.
+- Densifié le titre, les lignes projet, le badge Actif et Supprimer. Le tap Supprimer n'ouvre
+  plus le projet situé derrière.
+- Renforcé `test:design` avec la zone sûre, la liste compacte, les libellés et la propagation du
+  bouton Supprimer.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 684 modules.
+
+### En cours
+- Aucun code partiellement implémenté. Seule la confirmation du rendu sur le téléphone reste à
+  effectuer.
+
+### Ensuite
+- Confirmation du rendu de la bottom sheet sur le téléphone de Patrick.
+
 ## 2026-07-13 — Codex — Session 16 : finition issue du jugement Android
 
 ### Fait

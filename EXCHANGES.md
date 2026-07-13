@@ -9,6 +9,16 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-13 — Codex / Patrick — [RÉPONSE] Menu ⋯ repris après capture Android
+
+La capture montrait un menu encore trop haut : gros boutons secondaires, textes sur deux lignes
+et dernière rangée sous la navigation système. La structure est corrigée sans changer les
+destinations : Nouveau projet reste le CTA terracotta, les autres entrées deviennent une liste
+compacte à chevrons, défilable, avec marge basse calculée depuis la zone sûre du téléphone.
+
+Le projet actif reste en tête et Supprimer conserve sa confirmation, tout en empêchant désormais
+le tap de déclencher aussi l'ouverture du projet.
+
 ## 2026-07-13 — Codex — [RÉPONSE] Six retours Android appliqués
 
 Les six points du jugement téléphone sont implémentés comme un lot de finition : récap budget

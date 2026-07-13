@@ -223,9 +223,11 @@ Dernière mise à jour : 2026-07-13 (Codex).
 
 - **Quoi** : bottom sheet compacte ouverte depuis `⋯`, à hauteur de contenu — liste « Mes
   projets » (nom, % atteint, restants, badge Actif, Supprimer avec confirmation), puis Nouveau
-  projet et actions regroupées par deux (Ajuster le plan / Budget, Exemple / Confidentialité ·
-  CGU). L'entrée Accueil a été retirée : « Mes projets » remplit ce rôle. Le projet actuellement
-  consulté est toujours présenté en tête, sans modifier l'ordre stocké.
+  projet comme unique CTA principal. Ajuster le plan, Budget, Exemple et Confidentialité · CGU
+  sont des lignes compactes à chevron, toujours sur une ligne. Le contenu reste défilable et le
+  bas de la feuille respecte la zone sûre Android : aucune action ne passe sous la navigation
+  système. L'entrée Accueil a été retirée : « Mes projets » remplit ce rôle. Le projet
+  actuellement consulté est toujours présenté en tête, sans modifier l'ordre stocké.
 - **Où** : `src/components/menu-modal.tsx`, ouvert par `src/components/app-header.tsx`.
 
 ## 11. Exemple et pages légales
