@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
 import { RebalanceModal } from '@/components/rebalance-modal';
-import { Button, Card, Field, Screen, StepIndicator } from '@/components/ui';
+import { Button, Card, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import {
   applyGlobalRebalance,
@@ -23,7 +23,10 @@ import { useStore } from '@/lib/store';
 
 export default function BudgetScreen() {
   const router = useRouter();
-  const { returnToGoal } = useLocalSearchParams<{ returnToGoal?: string }>();
+  const { returnToGoal, standalone } = useLocalSearchParams<{
+    returnToGoal?: string;
+    standalone?: string;
+  }>();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
   const setBudget = useStore((s) => s.setBudget);
@@ -54,7 +57,7 @@ export default function BudgetScreen() {
     setBudget(draft);
     if (goals.length === 0) {
       clearGlobalRebalanceReview();
-      if (returnToGoal === '1') router.back();
+      if (returnToGoal === '1' || standalone === '1') router.back();
       else router.push('/onboarding/new-goal');
       return;
     }
@@ -69,8 +72,7 @@ export default function BudgetScreen() {
 
   return (
     <Screen>
-      <AppHeader showBack title="Ton budget" subtitle="Étape 1 sur 3" />
-      <StepIndicator current={1} />
+      <AppHeader showBack title="Ton budget" />
       <Card>
         <Text style={styles.title}>Combien peux-tu mettre de côté sans te serrer ?</Text>
         <Text style={styles.body}>

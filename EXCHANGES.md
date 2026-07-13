@@ -9,6 +9,17 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-13 — Patrick / Codex — [DÉCISION] Budget isolé du parcours de création
+
+Budget est désormais un réglage autonome : il ne porte plus le numéro 1/3 et son ouverture
+depuis le menu revient à l'écran précédent après sauvegarde, sans lancer la création d'un
+projet. Le contenu des deux écrans de création reste inchangé ; seule leur numérotation devient
+**Projet 1/2** puis **Rythme 2/2**. Le premier démarrage conserve néanmoins l'enchaînement utile
+Budget puis première création.
+
+La bottom sheet `⋯` est également remontée de 8 px supplémentaires au-dessus de la zone sûre
+Android, conformément au retour visuel de Patrick.
+
 ## 2026-07-13 — Codex / Patrick — [RÉPONSE] Menu ⋯ repris après capture Android
 
 La capture montrait un menu encore trop haut : gros boutons secondaires, textes sur deux lignes

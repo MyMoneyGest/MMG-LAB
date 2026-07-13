@@ -67,7 +67,7 @@ export function MenuModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 12) }]}
+          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + 8, 20) }]}
           onPress={() => {}}>
           <ScrollView
             contentContainerStyle={styles.scrollContent}
@@ -118,7 +118,10 @@ export function MenuModal({
                     )
                   : null}
                 {action(currentGoalId ? 'Budget' : 'Ajuster mon budget', () =>
-                  router.push('/onboarding/budget')
+                  router.push({
+                    pathname: '/onboarding/budget',
+                    params: { standalone: '1' },
+                  })
                 )}
                 {action('Voir un exemple', () => router.push('/example'))}
                 {action('Confidentialité · CGU', () => router.push('/legal'))}

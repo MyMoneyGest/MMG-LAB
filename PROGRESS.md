@@ -9,6 +9,30 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-13 — Codex — Session 18 : budget autonome et création en deux étapes
+
+### Fait
+- Isolé l'écran Budget du parcours de création : il n'affiche plus d'indicateur d'étape.
+- Corrigé l'entrée Budget du menu avec un mode autonome explicite : après sauvegarde, elle
+  revient à l'écran précédent, y compris lorsqu'aucun projet n'existe, au lieu d'ouvrir la
+  création d'un projet.
+- Conservé le comportement du premier démarrage : un budget saisi depuis l'accueil peut encore
+  mener à la première création.
+- Renuméroté les deux écrans de création sans changer leur contenu : Projet 1/2, Rythme 2/2.
+- Remonté légèrement la bottom sheet `⋯` en ajoutant 8 px au-dessus de la zone sûre Android.
+- Adapté `StepIndicator` au nombre réel d'étapes et renforcé `test:design` pour verrouiller le
+  routage Budget autonome et la nouvelle numérotation.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 684 modules.
+
+### En cours
+- Aucun code partiellement implémenté. Le correctif est prêt pour confirmation sur Android.
+
+### Ensuite
+- Confirmation tactile sur le téléphone : hauteur du menu, retour Budget et affichage 1/2 →
+  2/2.
+
 ## 2026-07-13 — Codex — Session 17 : menu ⋯ compact et protégé sur Android
 
 ### Fait

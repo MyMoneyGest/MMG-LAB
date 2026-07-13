@@ -45,11 +45,16 @@ assert.match(header, /delayLongPress=\{700\}/);
 assert.match(header, /title\?: string/);
 assert.match(header, /width: 40/);
 
-assert.match(budget, /<StepIndicator current=\{1\}/);
+assert.doesNotMatch(budget, /<StepIndicator/);
+assert.doesNotMatch(budget, /Étape 1 sur 3/);
 assert.match(budget, /marge de sécurité de 20/);
 
-assert.match(newGoal, /useState<2 \| 3>\(2\)/);
-assert.match(newGoal, /<StepIndicator current=\{step\}/);
+assert.match(ui, /labels = \['Projet', 'Rythme'\]/);
+assert.match(ui, /Étape \$\{current\} sur \$\{total\}/);
+assert.match(newGoal, /useState<1 \| 2>\(1\)/);
+assert.match(newGoal, /subtitle=\{`Étape \$\{step\} sur 2`\}/);
+assert.match(newGoal, /<StepIndicator current=\{step\} labels=\{\['Projet', 'Rythme'\]\} \/>/);
+assert.doesNotMatch(newGoal, /sur 3/);
 assert.match(newGoal, /\['emergency', 'car', 'moving', 'travel', 'other'\]/);
 assert.match(newGoal, /CATEGORY_LABELS\[c\]/);
 assert.match(newGoal, /Continuer vers le rythme/);
@@ -64,6 +69,7 @@ assert.match(newGoal, /Capacité prudente :/);
 assert.match(newGoal, /accessibilityLabel="Ajuster le budget"/);
 assert.match(newGoal, /params: \{ returnToGoal: '1' \}/);
 assert.match(budget, /returnToGoal === '1'/);
+assert.match(budget, /standalone === '1'/);
 
 assert.match(goal, /<Screen footer=\{tabBar\}>/);
 assert.match(goal, /schedule\.slice\(0, 2\)/);
@@ -86,7 +92,8 @@ assert.doesNotMatch(menu, /variant="dark"/);
 assert.match(menu, /const orderedGoals = activeGoal/);
 assert.match(menu, /\[activeGoal, \.\.\.goals\.filter/);
 assert.match(menu, /useSafeAreaInsets/);
-assert.match(menu, /Math\.max\(insets\.bottom, 12\)/);
+assert.match(menu, /Math\.max\(insets\.bottom \+ 8, 20\)/);
+assert.match(menu, /params: \{ standalone: '1' \}/);
 assert.match(menu, /contentInsetAdjustmentBehavior="automatic"/);
 assert.match(menu, /styles\.actionList/);
 assert.match(menu, /minimumFontScale=\{0\.85\}/);

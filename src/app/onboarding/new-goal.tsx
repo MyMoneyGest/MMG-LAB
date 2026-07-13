@@ -64,7 +64,7 @@ export default function NewGoalScreen() {
   const [rhythm, setRhythm] = useState<SavingsRhythm>(editing?.rhythm ?? 'stable');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState<2 | 3>(2);
+  const [step, setStep] = useState<1 | 2>(1);
 
   const parsedTarget = parseAmountInput(target);
   const parsedAvailable = parseAmountInput(available) ?? 0;
@@ -174,7 +174,7 @@ export default function NewGoalScreen() {
       return;
     }
     setError(null);
-    setStep(3);
+    setStep(2);
   };
 
   return (
@@ -183,11 +183,11 @@ export default function NewGoalScreen() {
         showBack
         currentGoalId={editing?.id}
         title={editing ? 'Ajuster le plan' : 'Créer mon plan'}
-        subtitle={`Étape ${step} sur 3`}
+        subtitle={`Étape ${step} sur 2`}
       />
-      <StepIndicator current={step} />
+      <StepIndicator current={step} labels={['Projet', 'Rythme']} />
 
-      {step === 2 ? (
+      {step === 1 ? (
         <Card>
           <Text style={styles.title}>Quel projet veux-tu préparer ?</Text>
           <Text style={styles.body}>Choisis une suggestion ou donne-lui ton propre nom.</Text>
@@ -391,7 +391,7 @@ export default function NewGoalScreen() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.finalActions}>
-            <Button label="Revenir au projet" variant="secondary" onPress={() => setStep(2)} style={{ flex: 1 }} />
+            <Button label="Revenir au projet" variant="secondary" onPress={() => setStep(1)} style={{ flex: 1 }} />
             <Button
               label={editing ? 'Enregistrer' : 'Créer le plan'}
               onPress={save}

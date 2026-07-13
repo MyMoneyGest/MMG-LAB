@@ -40,9 +40,11 @@ Dernière mise à jour : 2026-07-13 (Codex).
 - **Refus non oublié** : si l'utilisateur conserve ses anciens plans, MMG mémorise ce choix et
   attend 14 jours. Une bannière non bloquante propose alors **Revoir** ou **Dans 14 jours**.
   Aucune notification système n'est envoyée. Appliquer le réajustement efface la relance.
-- **Parcours visible** : cet écran constitue l'étape 1 du fil **Budget → Projet → Rythme** et
-  accueille désormais la checklist expliquant le reste à vivre, la marge de sécurité de 20 %
-  et l'effort cumulé des projets.
+- **Parcours visible** : Budget est un écran autonome, sans numérotation d'étape. Il précède la
+  première création lors de l'accueil initial, mais son accès depuis le menu revient à l'écran
+  précédent après enregistrement et ne relance jamais la création d'un projet. Il accueille la
+  checklist expliquant le reste à vivre, la marge de sécurité de 20 % et l'effort cumulé des
+  projets.
 - **Récap à la création** : lorsqu'un budget existe déjà, l'étape Projet affiche sans étape
   supplémentaire les revenus, charges fixes, dépenses, reste à vivre et capacité prudente. Le
   lien **Ajuster** ouvre l'écran Budget puis revient au projet en conservant le formulaire.
@@ -50,9 +52,9 @@ Dernière mise à jour : 2026-07-13 (Codex).
 
 ## 4. Création / ajustement d'un plan
 
-- **Quoi** : parcours en deux écrans compacts après le budget : étape 2 **Projet** avec les cinq
+- **Quoi** : parcours de création en deux écrans compacts : étape 1/2 **Projet** avec les cinq
   catégories (Fonds d'urgence, Voiture, Déménagement, Vacances, Autre), nom, montant cible,
-  déjà disponible et date cible ; puis étape 3 **Rythme** avec le jour de rappel (1-28) et le
+  déjà disponible et date cible ; puis étape 2/2 **Rythme** avec le jour de rappel (1-28) et le
   choix entre trois rythmes : **stable** (même montant), **progressif** (effort croissant)
   et **régressif** (effort décroissant). Chaque carte affiche la moyenne et le mois-pic.
   L'aperçu sombre indique le rythme et, si le montant varie, la première et la dernière
@@ -226,7 +228,10 @@ Dernière mise à jour : 2026-07-13 (Codex).
   projet comme unique CTA principal. Ajuster le plan, Budget, Exemple et Confidentialité · CGU
   sont des lignes compactes à chevron, toujours sur une ligne. Le contenu reste défilable et le
   bas de la feuille respecte la zone sûre Android : aucune action ne passe sous la navigation
-  système. L'entrée Accueil a été retirée : « Mes projets » remplit ce rôle. Le projet
+  système, avec une marge supplémentaire qui remonte légèrement l'ensemble. L'entrée Budget
+  ouvre l'écran Budget en mode autonome puis revient à l'écran précédent après sauvegarde ;
+  elle ne déclenche pas le parcours de création. L'entrée Accueil a été retirée : « Mes
+  projets » remplit ce rôle. Le projet
   actuellement consulté est toujours présenté en tête, sans modifier l'ordre stocké.
 - **Où** : `src/components/menu-modal.tsx`, ouvert par `src/components/app-header.tsx`.
 

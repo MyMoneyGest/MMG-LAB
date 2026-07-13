@@ -151,13 +151,14 @@ export function Button({
 
 export function StepIndicator({
   current,
-  labels = ['Budget', 'Projet', 'Rythme'],
+  labels = ['Projet', 'Rythme'],
 }: {
-  current: 1 | 2 | 3;
-  labels?: [string, string, string];
+  current: number;
+  labels?: string[];
 }) {
+  const total = labels.length;
   return (
-    <View style={styles.steps} accessibilityLabel={`Étape ${current} sur 3`}>
+    <View style={styles.steps} accessibilityLabel={`Étape ${current} sur ${total}`}>
       <View style={styles.stepLabels}>
         {labels.map((label, index) => (
           <Text key={label} style={[styles.stepLabel, index + 1 <= current && styles.stepLabelActive]}>
