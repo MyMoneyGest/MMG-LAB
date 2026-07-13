@@ -1,17 +1,46 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button, Screen } from '@/components/ui';
+import { FeedbackBanner } from '@/components/feedback-banner';
+import type { FeedbackMessage } from '@/components/feedback-banner';
 import { colors } from '@/constants/theme';
 import { useStore } from '@/lib/store';
 
+const handledHomeFeedback = new Set<string>();
+
 export default function Home() {
   const router = useRouter();
+  const { feedback, feedbackId, feedbackName } = useLocalSearchParams<{
+    feedback?: 'deleted';
+    feedbackId?: string;
+    feedbackName?: string;
+  }>();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
+  const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(null);
+  const clearFeedback = useCallback(() => setFeedbackMessage(null), []);
+
+  useEffect(() => {
+    if (feedback !== 'deleted' || !feedbackId || handledHomeFeedback.has(feedbackId)) return;
+    handledHomeFeedback.add(feedbackId);
+    setFeedbackMessage({
+      key: feedbackId,
+      title: 'Projet supprimé',
+      detail: `« ${feedbackName ?? 'Le projet'} » et son historique ont été supprimés.`,
+    });
+  }, [feedback, feedbackId, feedbackName]);
 
   return (
     <Screen contentContainerStyle={styles.screen}>
+      {feedbackMessage ? (
+        <FeedbackBanner
+          key={feedbackMessage.key}
+          message={feedbackMessage}
+          onFinished={clearFeedback}
+        />
+      ) : null}
       <View style={styles.brandMoment}>
         <View style={styles.logo}><Text style={styles.logoLetter}>M</Text></View>
         <View style={styles.copy}>

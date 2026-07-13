@@ -9,6 +9,17 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-14 — Patrick / Codex — [DÉCISION] Les actions sensibles parlent le langage MMG
+
+Les boîtes de dialogue natives Android, perçues comme étrangères au design de l'application,
+sont remplacées par une fenêtre commune MMG. Elle conserve la palette chaude, les rayons, la
+typographie, les boutons et les tempos déjà validés, avec trois tons : information, réussite et
+danger.
+
+La suppression devient un parcours complet : confirmation explicite, chargement d'au moins
+1,2 seconde, puis bannière de réussite sur l'écran de destination. Le test de notification et
+l'explication du solde réel utilisent le même composant afin d'éviter toute rupture visuelle.
+
 ## 2026-07-14 — Patrick / Codex — [DÉCISION] Tempo plus lisible sur Android
 
 Le premier tempo était techniquement fluide mais trop rapide sur le téléphone : certaines

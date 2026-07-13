@@ -1,8 +1,9 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
+import { AppDialog } from '@/components/app-dialog';
 import { AmountModal } from '@/components/amount-modal';
 import { AppHeader } from '@/components/app-header';
 import { BalanceModal } from '@/components/balance-modal';
@@ -72,13 +73,15 @@ export default function GoalScreen() {
     responseKey,
     feedback: routeFeedback,
     feedbackId,
+    feedbackName,
   } = useLocalSearchParams<{
     id: string;
     notificationAction?: 'done' | 'edit' | 'postpone';
     notificationIsTest?: string;
     responseKey?: string;
-    feedback?: 'created' | 'adjusted';
+    feedback?: 'created' | 'adjusted' | 'deleted';
     feedbackId?: string;
+    feedbackName?: string;
   }>();
   const goal = useStore((s) => s.goals.find((g) => g.id === id));
   const goals = useStore((s) => s.goals);
@@ -91,6 +94,7 @@ export default function GoalScreen() {
   const [tab, setTab] = useState<Tab>('today');
   const [amountModal, setAmountModal] = useState<'deposit' | null>(null);
   const [balanceOpen, setBalanceOpen] = useState(false);
+  const [balanceInfoOpen, setBalanceInfoOpen] = useState(false);
   const [rebalanceProposal, setRebalanceProposal] =
     useState<GlobalRebalanceProposal | null>(null);
   const [rebalanceReason, setRebalanceReason] =
@@ -144,13 +148,19 @@ export default function GoalScreen() {
             title: 'Ton plan est prêt',
             detail: 'Le premier rappel et l’échéancier ont été programmés.',
           }
-        : {
+        : routeFeedback === 'adjusted'
+          ? {
             key: feedbackId,
             title: 'Plan mis à jour',
             detail: 'Les montants et les prochains rappels ont été recalculés.',
           }
+          : {
+              key: feedbackId,
+              title: 'Projet supprimé',
+              detail: `« ${feedbackName ?? 'Le projet'} » et son historique ont été supprimés.`,
+            }
     );
-  }, [feedbackId, routeFeedback]);
+  }, [feedbackId, feedbackName, routeFeedback]);
 
   useEffect(() => {
     if (!notificationsSupported) return; // web : pas de rappels, pas de bannière
@@ -263,11 +273,7 @@ export default function GoalScreen() {
       (globalPlan.goals.length > 0 || !globalPlan.possible)
   );
   const schedule = upcomingSchedule(goal);
-  const explainRealBalance = () =>
-    Alert.alert(
-      'À quoi sert le solde réel ?',
-      "C’est ce que tu as réellement sur le compte où tu épargnes, tous projets confondus. MMG l’utilise pour recaler ta progression. Rien n’est connecté à ta banque : c’est toi qui indiques ce montant."
-    );
+  const explainRealBalance = () => setBalanceInfoOpen(true);
   const tabBar = (
     <View style={styles.tabs}>
       {TABS.map((t) => {
@@ -526,6 +532,13 @@ export default function GoalScreen() {
           setModalFromTest(false);
           setAmountModal(null);
         }}
+      />
+      <AppDialog
+        visible={balanceInfoOpen}
+        eyebrow="Solde réel"
+        title="À quoi sert le solde réel ?"
+        message="C’est ce que tu as réellement sur le compte où tu épargnes, tous projets confondus. MMG l’utilise pour recaler ta progression. Rien n’est connecté à ta banque : c’est toi qui indiques ce montant."
+        onClose={() => setBalanceInfoOpen(false)}
       />
       <BalanceModal
         visible={balanceOpen}

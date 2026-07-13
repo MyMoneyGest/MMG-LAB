@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
 import { scheduleTestReminder } from '@/lib/notifications';
 import { remainingAmount, suggestedAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import { AppDialog } from './app-dialog';
+import type { AppDialogTone } from './app-dialog';
 import { MenuModal } from './menu-modal';
 
 export function AppHeader({
@@ -24,6 +26,11 @@ export function AppHeader({
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [testPending, setTestPending] = useState(false);
+  const [dialog, setDialog] = useState<{
+    title: string;
+    message: string;
+    tone: AppDialogTone;
+  } | null>(null);
   const goals = useStore((s) => s.goals);
   const lastViewedGoalId = useStore((s) => s.lastViewedGoalId);
 
@@ -38,28 +45,47 @@ export function AppHeader({
   const testNotification = async () => {
     if (testPending) return;
     if (!testGoal) {
-      Alert.alert('Aucun projet à tester', 'Crée d’abord un projet, puis maintiens le M à nouveau.');
+      setDialog({
+        title: 'Aucun projet à tester',
+        message: 'Crée d’abord un projet, puis maintiens le M à nouveau.',
+        tone: 'info',
+      });
       return;
     }
     setTestPending(true);
     try {
       const result = await scheduleTestReminder(testGoal, suggestedAmount(testGoal));
       if (result.ok) {
-        Alert.alert(
-          'Rappel test programmé',
-          `Il apparaîtra dans 15 secondes pour « ${testGoal.name} ». Déplie la notification pour voir les trois actions.`
-        );
+        setDialog({
+          title: 'Rappel test programmé',
+          message: `Il apparaîtra dans 15 secondes pour « ${testGoal.name} ». Déplie la notification pour voir les trois actions.`,
+          tone: 'success',
+        });
       } else if (result.reason === 'unsupported') {
-        Alert.alert(
-          'Test indisponible ici',
-          'Utilise le dev build Android : les notifications ne sont pas disponibles sur le web ni dans Expo Go Android.'
-        );
+        setDialog({
+          title: 'Test indisponible ici',
+          message:
+            'Utilise le dev build Android : les notifications ne sont pas disponibles sur le web ni dans Expo Go Android.',
+          tone: 'info',
+        });
       } else if (result.reason === 'permission') {
-        Alert.alert('Notifications désactivées', 'Autorise les notifications MMG dans les réglages du téléphone.');
+        setDialog({
+          title: 'Notifications désactivées',
+          message: 'Autorise les notifications MMG dans les réglages du téléphone.',
+          tone: 'danger',
+        });
       } else if (result.reason === 'completed') {
-        Alert.alert('Projet déjà atteint', 'Choisis un projet qui a encore un montant à financer.');
+        setDialog({
+          title: 'Projet déjà atteint',
+          message: 'Choisis un projet qui a encore un montant à financer.',
+          tone: 'info',
+        });
       } else {
-        Alert.alert('Test non programmé', 'Une erreur est survenue. Réessaie dans quelques instants.');
+        setDialog({
+          title: 'Test non programmé',
+          message: 'Une erreur est survenue. Réessaie dans quelques instants.',
+          tone: 'danger',
+        });
       }
     } finally {
       setTestPending(false);
@@ -67,7 +93,8 @@ export function AppHeader({
   };
 
   return (
-    <View style={styles.row}>
+    <>
+      <View style={styles.row}>
       {showBack ? (
         <Pressable
           accessibilityRole="button"
@@ -97,8 +124,17 @@ export function AppHeader({
       <Pressable accessibilityRole="button" accessibilityLabel="Ouvrir le menu" style={styles.iconButton} onPress={() => setMenuOpen(true)}>
         <Text style={[styles.iconLabel, { letterSpacing: 1, fontSize: 20 }]}>⋯</Text>
       </Pressable>
-      <MenuModal visible={menuOpen} onClose={() => setMenuOpen(false)} currentGoalId={currentGoalId} />
-    </View>
+        <MenuModal visible={menuOpen} onClose={() => setMenuOpen(false)} currentGoalId={currentGoalId} />
+      </View>
+      <AppDialog
+        visible={dialog !== null}
+        eyebrow="Rappel test"
+        title={dialog?.title ?? ''}
+        message={dialog?.message ?? ''}
+        tone={dialog?.tone}
+        onClose={() => setDialog(null)}
+      />
+    </>
   );
 }
 

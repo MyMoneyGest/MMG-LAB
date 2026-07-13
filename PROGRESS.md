@@ -9,6 +9,33 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 23 : confirmations sensibles au design MMG
+
+### Fait
+- Remplacé toutes les boîtes de dialogue système Android par un composant commun aux couleurs
+  MMG, avec variantes information, réussite et danger.
+- Repris la suppression d'un projet : confirmation explicite avec le nom et l'historique
+  concernés, Annuler / Supprimer, blocage du double appui et état « Suppression… » visible au
+  moins 1,2 seconde.
+- Ajouté après suppression une bannière « Projet supprimé » sur le projet restant ou sur
+  l'accueil lorsque le dernier projet vient d'être effacé.
+- Appliqué la même fenêtre au résultat du test de notification par appui long sur le M et à
+  l'explication du solde réel.
+- Éliminé tous les appels `Alert.alert` du code d'interface et renforcé `test:design` sur le
+  dialogue, la suppression, son chargement et son message final.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, export Android Hermes de
+  1 689 modules et compilation web de 1 349 modules.
+- Le navigateur visuel intégré n'a pas pu initialiser son moteur local ; la compilation web a
+  bien abouti, mais la validation visuelle et tactile reste donc explicitement à faire sur le
+  téléphone Android.
+
+### En cours
+- Aucun code partiellement implémenté. Le lot est prêt pour confirmation sur Android.
+
+### Ensuite
+- Confirmation visuelle et tactile par Patrick de la suppression et des fenêtres MMG.
+
 ## 2026-07-14 — Codex — Session 22 : tempo des animations et chargements
 
 ### Fait

@@ -18,6 +18,7 @@ const rebalance = read('src/components/rebalance-modal.tsx');
 const confirmation = read('src/components/confirmation-overlay.tsx');
 const loadingOverlay = read('src/components/action-loading-overlay.tsx');
 const feedbackBanner = read('src/components/feedback-banner.tsx');
+const appDialog = read('src/components/app-dialog.tsx');
 const timing = read('src/lib/timing.ts');
 const theme = read('src/constants/theme.ts');
 const planSummary = read('src/components/plan-summary.tsx');
@@ -26,6 +27,8 @@ assert.match(home, /Un projet\./);
 assert.match(home, /Un geste par mois\./);
 assert.doesNotMatch(home, /CHECKLIST/);
 assert.doesNotMatch(home, /<AppHeader/);
+assert.match(home, /<FeedbackBanner/);
+assert.match(home, /feedback !== 'deleted'/);
 
 assert.match(ui, /footer\?: ReactNode/);
 assert.match(ui, /styles\.screenFooter/);
@@ -54,6 +57,8 @@ assert.match(planSummary, /padding: 18/);
 assert.match(header, /delayLongPress=\{700\}/);
 assert.match(header, /title\?: string/);
 assert.match(header, /width: 40/);
+assert.match(header, /<AppDialog/);
+assert.doesNotMatch(header, /Alert\.alert|\bAlert\b/);
 
 assert.doesNotMatch(budget, /<StepIndicator/);
 assert.doesNotMatch(budget, /Étape 1 sur 3/);
@@ -132,6 +137,9 @@ assert.match(goal, /Jour de rappel : le \{goal\.reminderDay\} · Modifier/);
 assert.match(goal, /accessibilityLabel="Expliquer le solde réel"/);
 assert.match(goal, /À quoi sert le solde réel/);
 assert.match(goal, /Rien n’est connecté à ta banque/);
+assert.match(goal, /visible=\{balanceInfoOpen\}/);
+assert.match(goal, /feedback\?: 'created' \| 'adjusted' \| 'deleted'/);
+assert.doesNotMatch(goal, /Alert\.alert|\bAlert\b/);
 
 assert.match(menu, /justifyContent: 'flex-end'/);
 assert.match(menu, /styles\.grabber/);
@@ -150,6 +158,20 @@ assert.match(menu, /minimumFontScale=\{0\.85\}/);
 assert.match(menu, /style=\{styles\.actionChevron\}>›/);
 assert.doesNotMatch(menu, /styles\.actionRow/);
 assert.match(menu, /event\.stopPropagation\(\)/);
+assert.match(menu, /<AppDialog/);
+assert.match(menu, /loadingLabel="Suppression…"/);
+assert.match(menu, /await waitForMinimumLoading\(loadingStartedAt\)/);
+assert.match(menu, /feedback: 'deleted'/);
+assert.match(menu, /setGoalToDelete\(goal\);\s*onClose\(\);/s);
+assert.doesNotMatch(menu, /Alert\.alert|\bAlert\b/);
+
+assert.match(appDialog, /export type AppDialogTone = 'info' \| 'success' \| 'danger'/);
+assert.match(appDialog, /accessibilityViewIsModal/);
+assert.match(appDialog, /FadeInUp\.duration\(360\)/);
+assert.match(appDialog, /ReduceMotion\.System/);
+assert.match(appDialog, /<Text selectable style=\{styles\.message\}>/);
+assert.match(appDialog, /cancelLabel/);
+assert.match(appDialog, /loadingLabel/);
 
 assert.match(report, /loading=\{saving\}/);
 assert.match(report, /loadingLabel="Programmation…"/);

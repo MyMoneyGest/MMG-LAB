@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
@@ -7,6 +8,9 @@ import { removeGoal } from '@/lib/actions';
 import { formatEuro } from '@/lib/format';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import { waitForMinimumLoading } from '@/lib/timing';
+import type { Goal } from '@/lib/types';
+import { AppDialog } from './app-dialog';
 import { Button } from './ui';
 
 // Switcher de projets + navigation générale, accessible depuis tous les écrans.
@@ -22,6 +26,9 @@ export function MenuModal({
 }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
+  const [deletePending, setDeletePending] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const goals = useStore((s) => s.goals);
   const activeGoal = currentGoalId ? goals.find((goal) => goal.id === currentGoalId) : undefined;
   const orderedGoals = activeGoal
@@ -37,18 +44,47 @@ export function MenuModal({
   const confirmDelete = (goalId: string) => {
     const goal = goals.find((g) => g.id === goalId);
     if (!goal) return;
-    Alert.alert('Supprimer ce projet ?', `« ${goal.name} » et son historique seront effacés de ce téléphone.`, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer',
-        style: 'destructive',
-        onPress: () =>
-          go(async () => {
-            await removeGoal(goal);
-            router.replace('/');
-          }),
-      },
-    ]);
+    setDeleteError(null);
+    setGoalToDelete(goal);
+    onClose();
+  };
+
+  const deleteSelectedGoal = async () => {
+    if (!goalToDelete || deletePending) return;
+    const deletedGoal = goalToDelete;
+    const remainingGoals = goals.filter((goal) => goal.id !== deletedGoal.id);
+    const destination =
+      remainingGoals.find((goal) => goal.id === currentGoalId) ?? remainingGoals[0];
+    const loadingStartedAt = Date.now();
+    setDeleteError(null);
+    setDeletePending(true);
+    try {
+      await waitForMinimumLoading(loadingStartedAt);
+      await removeGoal(deletedGoal);
+      const feedbackId = String(Date.now());
+      setGoalToDelete(null);
+      onClose();
+      if (destination) {
+        router.replace({
+          pathname: '/goal/[id]',
+          params: {
+            id: destination.id,
+            feedback: 'deleted',
+            feedbackId,
+            feedbackName: deletedGoal.name,
+          },
+        });
+      } else {
+        router.replace({
+          pathname: '/home',
+          params: { feedback: 'deleted', feedbackId, feedbackName: deletedGoal.name },
+        });
+      }
+    } catch {
+      setDeleteError('La suppression n’a pas abouti. Réessaie dans quelques instants.');
+    } finally {
+      setDeletePending(false);
+    }
   };
 
   const action = (label: string, onPress: () => void) => (
@@ -64,7 +100,8 @@ export function MenuModal({
   );
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <>
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable
           style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + 8, 20) }]}
@@ -130,7 +167,28 @@ export function MenuModal({
           </ScrollView>
         </Pressable>
       </Pressable>
-    </Modal>
+      </Modal>
+      <AppDialog
+        visible={goalToDelete !== null}
+        eyebrow="Action sensible"
+        title={deleteError ? 'Suppression interrompue' : 'Supprimer ce projet ?'}
+        message={
+          deleteError ??
+          `« ${goalToDelete?.name ?? ''} » et tout son historique seront supprimés de ce téléphone. Cette action est définitive.`
+        }
+        tone="danger"
+        cancelLabel="Annuler"
+        confirmLabel={deleteError ? 'Réessayer' : 'Supprimer'}
+        loading={deletePending}
+        loadingLabel="Suppression…"
+        onClose={() => {
+          if (deletePending) return;
+          setDeleteError(null);
+          setGoalToDelete(null);
+        }}
+        onConfirm={() => void deleteSelectedGoal()}
+      />
+    </>
   );
 }
 

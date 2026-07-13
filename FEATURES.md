@@ -98,7 +98,7 @@ Dernière mise à jour : 2026-07-14 (Codex).
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (X €)** (1 tap), Montant différent, Reporter, puis
     **Mettre à jour le solde réel** accompagné d'un bouton d'information. Celui-ci explique
-    dans une petite fenêtre native qu'il s'agit du montant réellement présent sur le compte,
+    dans une petite fenêtre MMG qu'il s'agit du montant réellement présent sur le compte,
     tous projets confondus, déclaré sans connexion bancaire. Les deux prochaines échéances sont reprises
     sous l'action mensuelle afin d'éviter une zone vide et de donner le prochain repère sans
     quitter l'onglet.
@@ -258,7 +258,14 @@ Dernière mise à jour : 2026-07-14 (Codex).
   elle ne déclenche pas le parcours de création. L'entrée Accueil a été retirée : « Mes
   projets » remplit ce rôle. Le projet
   actuellement consulté est toujours présenté en tête, sans modifier l'ordre stocké.
-- **Où** : `src/components/menu-modal.tsx`, ouvert par `src/components/app-header.tsx`.
+- **Actions sensibles** : la suppression n'utilise plus la boîte de dialogue système Android.
+  Une fenêtre aux couleurs MMG rappelle le nom du projet, la suppression définitive de son
+  historique et propose Annuler / Supprimer. Après validation, « Suppression… » reste visible
+  au moins 1,2 seconde, puis une bannière « Projet supprimé » confirme le résultat sur le projet
+  restant ou sur l'accueil. Les retours du test de notification et l'explication du solde réel
+  utilisent la même fenêtre commune ; aucune `Alert` native ne subsiste dans l'interface.
+- **Où** : `src/components/menu-modal.tsx`, `src/components/app-dialog.tsx`,
+  `src/components/app-header.tsx`, `src/app/goal/[id].tsx` et `src/app/home.tsx`.
 
 ## 11. Exemple et pages légales
 
