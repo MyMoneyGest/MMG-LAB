@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
 import { RebalanceModal } from '@/components/rebalance-modal';
-import { Button, Card, Eyebrow, Field, Screen } from '@/components/ui';
+import { Button, Card, Field, Screen, StepIndicator } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import {
   applyGlobalRebalance,
@@ -67,9 +67,9 @@ export default function BudgetScreen() {
 
   return (
     <Screen>
-      <AppHeader showBack />
+      <AppHeader showBack title="Ton budget" subtitle="Étape 1 sur 3" />
+      <StepIndicator current={1} />
       <Card>
-        <Eyebrow>Ton budget</Eyebrow>
         <Text style={styles.title}>Combien peux-tu mettre de côté sans te serrer ?</Text>
         <Text style={styles.body}>
           Trois ordres de grandeur suffisent. Les revenus correspondent au total mensuel que
@@ -119,6 +119,11 @@ export default function BudgetScreen() {
             {Math.round(SAFETY_MARGIN * 100)} % pour éviter un plan trop serré.
           </Text>
         ) : null}
+        <View style={styles.checks}>
+          <Text style={styles.check}>✓ Ton reste après les dépenses du quotidien</Text>
+          <Text style={styles.check}>✓ Une marge de sécurité de 20 %</Text>
+          <Text style={styles.check}>✓ L'effort cumulé de tous tes projets</Text>
+        </View>
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Button label="Continuer" onPress={save} style={{ marginTop: 16 }} />
@@ -143,7 +148,7 @@ export default function BudgetScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 30, fontWeight: '800', color: colors.text, lineHeight: 37, marginBottom: 10 },
+  title: { fontSize: 25, fontWeight: '800', color: colors.text, lineHeight: 31, marginBottom: 8 },
   body: { fontSize: 16, color: colors.textSecondary, lineHeight: 23, marginBottom: 20 },
   capacity: {
     fontSize: 19,
@@ -159,5 +164,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   capacityNote: { fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginTop: 10 },
+  checks: { gap: 7, marginTop: 18, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  check: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   error: { color: colors.accent, fontSize: 15, fontWeight: '600', marginTop: 10 },
 });

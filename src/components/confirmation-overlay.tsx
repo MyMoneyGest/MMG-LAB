@@ -1,4 +1,5 @@
 import { Modal, StyleSheet, Text, View } from 'react-native';
+import Animated, { ReduceMotion, ZoomIn } from 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
 import { formatDate, formatEuro, formatMonth } from '@/lib/format';
@@ -30,9 +31,11 @@ export function ConfirmationOverlay({
   return (
     <Modal visible={visible} animationType="fade" onRequestClose={onClose}>
       <View style={styles.container}>
-        <View style={styles.badge}>
+        <Animated.View
+          entering={ZoomIn.duration(240).reduceMotion(ReduceMotion.System)}
+          style={styles.badge}>
           <Text style={styles.badgeCheck}>✓</Text>
-        </View>
+        </Animated.View>
         <Text style={styles.eyebrow}>C'est noté</Text>
         <Text style={styles.amount}>{formatEuro(amount)}</Text>
         <Text style={styles.message}>

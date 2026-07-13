@@ -88,9 +88,9 @@ export function RebalanceModal({
               />
               {proposal.possible ? (
                 <Button
-                  label={saving ? 'Application…' : 'Appliquer'}
+                  label="Appliquer"
                   onPress={() => void apply()}
-                  disabled={saving}
+                  loading={saving}
                   style={{ flex: 1 }}
                 />
               ) : null}

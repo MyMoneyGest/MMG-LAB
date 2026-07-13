@@ -48,7 +48,8 @@
     "test:inputs": "node scripts/test-input-surfaces.mjs",
     "test:postpone": "node scripts/test-postpone.mjs",
     "test:balance": "node scripts/test-balance.mjs",
-    "test:analytics": "node scripts/test-analytics.mjs"
+    "test:analytics": "node scripts/test-analytics.mjs",
+    "test:design": "node scripts/test-design.mjs"
   },
   "private": true
 }

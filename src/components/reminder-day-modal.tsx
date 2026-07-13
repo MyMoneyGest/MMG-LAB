@@ -73,9 +73,9 @@ export function ReminderDayModal({
                   style={{ flex: 1 }}
                 />
                 <Button
-                  label={saving ? 'Validation…' : 'Valider'}
+                  label="Valider"
                   onPress={() => void submit()}
-                  disabled={saving}
+                  loading={saving}
                   style={{ flex: 1 }}
                 />
               </View>

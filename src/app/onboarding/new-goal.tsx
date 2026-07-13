@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
 import { PlanSummaryDark } from '@/components/plan-summary';
-import { Button, Card, DateField, Eyebrow, Field, Screen } from '@/components/ui';
+import { Button, Card, DateField, Field, Screen, StepIndicator } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { changeReminderDay, createGoal } from '@/lib/actions';
 import {
@@ -63,6 +63,7 @@ export default function NewGoalScreen() {
   const [rhythm, setRhythm] = useState<SavingsRhythm>(editing?.rhythm ?? 'stable');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState<2 | 3>(2);
 
   const parsedTarget = parseAmountInput(target);
   const parsedAvailable = parseAmountInput(available) ?? 0;
@@ -165,96 +166,112 @@ export default function NewGoalScreen() {
     }
   };
 
+  const continueToRhythm = () => {
+    const problem = validate();
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    setStep(3);
+  };
+
   return (
     <Screen>
-      <AppHeader showBack currentGoalId={editing?.id} />
+      <AppHeader
+        showBack
+        currentGoalId={editing?.id}
+        title={editing ? 'Ajuster le plan' : 'Créer mon plan'}
+        subtitle={`Étape ${step} sur 3`}
+      />
+      <StepIndicator current={step} />
 
-      <Card>
-        <Eyebrow>Ton projet</Eyebrow>
-        <Text style={styles.title}>Qu'est-ce que tu veux préparer ?</Text>
-        <Text style={styles.body}>On commence par la motivation. Le montant vient après.</Text>
+      {step === 2 ? (
+        <Card>
+          <Text style={styles.title}>Quel projet veux-tu préparer ?</Text>
+          <Text style={styles.body}>Choisis une suggestion ou donne-lui ton propre nom.</Text>
 
-        <View style={styles.chips}>
-          {CATEGORIES.map((c) => {
-            const selected = c === category;
-            return (
-              <Pressable
-                key={c}
-                onPress={() => selectCategory(c)}
-                style={[styles.chip, selected && styles.chipSelected]}>
-                <View style={[styles.chipDot, { backgroundColor: colors.category[c] }]} />
-                <Text style={styles.chipLabel}>{CATEGORY_LABELS[c]}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Field
-          label="Nom du projet"
-          value={name}
-          onChangeText={(t) => {
-            setName(t);
-            setNameIsSuggested(false);
-            setError(null);
-          }}
-          placeholder={CATEGORY_LABELS[category]}
-        />
-      </Card>
-
-      <Card>
-        <Text style={styles.title}>De combien as-tu besoin ?</Text>
-        <Text style={styles.body}>Pas besoin d'être exact. MMG ajustera le plan plus tard.</Text>
-
-        <Field
-          label="Montant cible"
-          value={target}
-          onChangeText={(t) => {
-            setTarget(t);
-            setError(null);
-          }}
-          keyboardType="decimal-pad"
-          placeholder="3 500"
-          suffix="EUR"
-        />
-        <Field
-          label="Déjà disponible"
-          value={available}
-          onChangeText={(t) => {
-            setAvailable(t);
-            setError(null);
-          }}
-          keyboardType="decimal-pad"
-          placeholder="0"
-          suffix="EUR"
-        />
-        {budget ? (
-          <View style={styles.capacityChip}>
-            <Text style={styles.capacityChipMain}>
-              Capacité prudente globale : {formatEuro(prudentCapacity(budget))} / mois
-            </Text>
-            {preview ? (
-              <Text style={styles.capacityChipDetail}>
-                Effort total avec tes autres projets : {formatEuro(globalPeak)} au mois le plus élevé
-              </Text>
-            ) : null}
+          <View style={styles.chips}>
+            {CATEGORIES.map((c) => {
+              const selected = c === category;
+              return (
+                <Pressable
+                  key={c}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => selectCategory(c)}
+                  style={[styles.chip, selected && styles.chipSelected]}>
+                  <View style={[styles.chipDot, { backgroundColor: colors.category[c] }]} />
+                  <Text style={styles.chipLabel}>{CATEGORY_LABELS[c]}</Text>
+                </Pressable>
+              );
+            })}
           </View>
-        ) : (
-          <Text style={styles.capacityHint}>
-            Astuce : estime d'abord ta capacité (menu → Ajuster mon budget) pour obtenir un diagnostic.
-          </Text>
-        )}
-      </Card>
 
-      <Card>
-        <Text style={styles.title}>Ton rythme</Text>
-        <DateField
-          label="Date cible"
-          value={dateText}
-          onChangeText={(t) => {
-            setDateText(t);
-            setError(null);
-          }}
-        />
+          <Field
+            label="Nom du projet"
+            value={name}
+            onChangeText={(t) => {
+              setName(t);
+              setNameIsSuggested(false);
+              setError(null);
+            }}
+            placeholder={CATEGORY_LABELS[category]}
+          />
+          <Field
+            label="Montant cible"
+            value={target}
+            onChangeText={(t) => {
+              setTarget(t);
+              setError(null);
+            }}
+            keyboardType="decimal-pad"
+            placeholder="3 500"
+            suffix="EUR"
+          />
+          <Field
+            label="Déjà disponible"
+            value={available}
+            onChangeText={(t) => {
+              setAvailable(t);
+              setError(null);
+            }}
+            keyboardType="decimal-pad"
+            placeholder="0"
+            suffix="EUR"
+          />
+          <DateField
+            label="Date cible"
+            value={dateText}
+            onChangeText={(t) => {
+              setDateText(t);
+              setError(null);
+            }}
+          />
+          {budget ? (
+            <View style={styles.capacityChip}>
+              <Text style={styles.capacityChipMain}>
+                Capacité prudente globale : {formatEuro(prudentCapacity(budget))} / mois
+              </Text>
+              {preview ? (
+                <Text style={styles.capacityChipDetail}>
+                  Effort total avec tes autres projets : {formatEuro(globalPeak)} au mois le plus élevé
+                </Text>
+              ) : null}
+            </View>
+          ) : (
+            <Text style={styles.capacityHint}>
+              Estime d'abord ta capacité depuis le menu Budget pour obtenir un diagnostic.
+            </Text>
+          )}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Button label="Continuer vers le rythme" onPress={continueToRhythm} style={styles.primaryAction} />
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <Text style={styles.title}>Choisis ton rythme</Text>
+            <Text style={styles.body}>Le total ne change pas, seulement la façon d'avancer.</Text>
         <Field
           label="Jour du rappel dans le mois (1 à 28)"
           value={reminderDayText}
@@ -301,57 +318,63 @@ export default function NewGoalScreen() {
             );
           })}
         </View>
-      </Card>
+          </Card>
 
-      {preview ? (
-        <>
-          <PlanSummaryDark
-            description={CATEGORY_DESCRIPTIONS[category]}
-            monthly={
-              rhythm === 'stable'
-                ? `${formatEuro(preview.average)} / mois`
-                : `${formatEuro(preview.first)} → ${formatEuro(preview.last)}`
-            }
-            targetDate={formatDate(parsedDate!)}
-            months={`${preview.months} mois`}
-            remaining={formatEuro(previewRemaining)}
-            diagnostic={previewDiagnostic}
-            reminderDay={reminderDay}
-            rhythm={RHYTHMS.find((option) => option.key === rhythm)!.title}
-          />
-          {previewDiagnostic === 'Confortable' && budget ? (
-            <View style={styles.compatCard}>
-              <Text style={styles.compatTitle}>Plan compatible avec ton budget</Text>
-              <Text style={styles.compatBody}>
-                Avec tes autres projets, le mois le plus haut reste à {formatEuro(globalPeak)},
-                pour une capacité prudente globale de {formatEuro(prudentCapacity(budget))}.
-              </Text>
-            </View>
+          {preview ? (
+            <>
+              <PlanSummaryDark
+                description={CATEGORY_DESCRIPTIONS[category]}
+                monthly={
+                  rhythm === 'stable'
+                    ? `${formatEuro(preview.average)} / mois`
+                    : `${formatEuro(preview.first)} → ${formatEuro(preview.last)}`
+                }
+                targetDate={formatDate(parsedDate!)}
+                months={`${preview.months} mois`}
+                remaining={formatEuro(previewRemaining)}
+                diagnostic={previewDiagnostic}
+                reminderDay={reminderDay}
+                rhythm={RHYTHMS.find((option) => option.key === rhythm)!.title}
+              />
+              {previewDiagnostic === 'Confortable' && budget ? (
+                <View style={styles.compatCard}>
+                  <Text style={styles.compatTitle}>Plan compatible avec ton budget</Text>
+                  <Text style={styles.compatBody}>
+                    Avec tes autres projets, le mois le plus haut reste à {formatEuro(globalPeak)},
+                    pour une capacité prudente globale de {formatEuro(prudentCapacity(budget))}.
+                  </Text>
+                </View>
+              ) : null}
+              {previewDiagnostic === 'Trop serré' ? (
+                <View style={styles.compatCard}>
+                  <Text style={styles.compatTitle}>Plan au-dessus de ta capacité</Text>
+                  <Text style={styles.compatBody}>
+                    L'effort cumulé de tes projets dépasse ton reste disponible. Tu peux quand même
+                    créer ce plan, mais MMG te signalera qu'un réajustement est nécessaire.
+                  </Text>
+                </View>
+              ) : null}
+            </>
           ) : null}
-          {previewDiagnostic === 'Trop serré' ? (
-            <View style={styles.compatCard}>
-              <Text style={styles.compatTitle}>Plan au-dessus de ta capacité</Text>
-              <Text style={styles.compatBody}>
-                L'effort cumulé de tes projets dépasse ton reste disponible. Tu peux quand même
-                créer ce plan, mais MMG te signalera qu'un réajustement est nécessaire.
-              </Text>
-            </View>
-          ) : null}
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <View style={styles.finalActions}>
+            <Button label="Revenir au projet" variant="secondary" onPress={() => setStep(2)} style={{ flex: 1 }} />
+            <Button
+              label={editing ? 'Enregistrer' : 'Créer le plan'}
+              onPress={save}
+              loading={saving}
+              style={{ flex: 1 }}
+            />
+          </View>
         </>
-      ) : null}
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button
-        label={editing ? 'Enregistrer les ajustements' : 'Créer le plan'}
-        onPress={save}
-        disabled={saving}
-      />
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 28, fontWeight: '800', color: colors.text, lineHeight: 35, marginBottom: 8 },
+  title: { fontSize: 25, fontWeight: '800', color: colors.text, lineHeight: 31, marginBottom: 6 },
   body: { fontSize: 16, color: colors.textSecondary, lineHeight: 23, marginBottom: 18 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 18 },
   chip: {
@@ -365,7 +388,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: colors.card,
   },
-  chipSelected: { backgroundColor: colors.cardSoft, borderColor: '#2E6E7E' },
+  chipSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
   chipDot: { width: 12, height: 12, borderRadius: 6 },
   chipLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
   capacityChip: {
@@ -388,14 +411,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
   },
-  rhythmCardSelected: { backgroundColor: colors.dark, borderColor: colors.dark },
+  rhythmCardSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
   rhythmHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rhythmTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
   rhythmAmount: { fontSize: 15, fontWeight: '800', color: colors.accent, marginTop: 7 },
-  rhythmSelected: { fontSize: 13, fontWeight: '800', color: colors.textOnDarkMuted },
-  rhythmTextSelected: { color: colors.textOnDark },
+  rhythmSelected: { fontSize: 13, fontWeight: '800', color: colors.accent },
+  rhythmTextSelected: { color: colors.text },
   rhythmBody: { fontSize: 14, color: colors.textSecondary, marginTop: 5, lineHeight: 20 },
-  rhythmBodySelected: { color: colors.textOnDarkMuted },
+  rhythmBodySelected: { color: colors.textSecondary },
   compatCard: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
@@ -407,4 +430,6 @@ const styles = StyleSheet.create({
   compatTitle: { fontSize: 18, fontWeight: '800', color: colors.accent, marginBottom: 6 },
   compatBody: { fontSize: 15, color: colors.textSecondary, lineHeight: 22 },
   error: { color: colors.accent, fontSize: 15, fontWeight: '700', marginBottom: 12, paddingHorizontal: 4 },
+  primaryAction: { marginTop: 16 },
+  finalActions: { flexDirection: 'row', gap: 10, marginBottom: 8 },
 });

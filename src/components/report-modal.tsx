@@ -41,6 +41,7 @@ export function ReportModal({
   const [dateText, setDateText] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const latestDate = postponeDateLimit(goal);
   const nextRegularDate = nextRegularReminderAfterCurrent(goal);
   const anchorHasArrived = postponeIsNearNextAnchor(goal, latestDate);
@@ -53,6 +54,7 @@ export function ReportModal({
       setDateText('');
       setSelectedDate(null);
       setError(null);
+      setSaving(false);
     }
   }, [visible]);
 
@@ -61,14 +63,19 @@ export function ReportModal({
       setError(dateLimitError);
       return;
     }
-    const result = await postponeReminder(goal, date, {
-      source: isTestAction ? 'test_notification' : 'app',
-    });
-    if (!result.ok) {
-      setError(result.reason === 'permission' ? PERMISSION_ERROR : dateLimitError);
-      return;
+    setSaving(true);
+    try {
+      const result = await postponeReminder(goal, date, {
+        source: isTestAction ? 'test_notification' : 'app',
+      });
+      if (!result.ok) {
+        setError(result.reason === 'permission' ? PERMISSION_ERROR : dateLimitError);
+        return;
+      }
+      onDone();
+    } finally {
+      setSaving(false);
     }
-    onDone();
   };
 
   const chooseDate = (date: Date) => {
@@ -151,8 +158,8 @@ export function ReportModal({
               ) : null}
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <View style={styles.buttons}>
-                <Button label="Annuler" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
-                <Button label="Valider la date" onPress={applyPrecise} style={{ flex: 1 }} />
+                <Button label="Annuler" variant="secondary" onPress={onClose} disabled={saving} style={{ flex: 1 }} />
+                <Button label="Valider la date" onPress={applyPrecise} loading={saving} style={{ flex: 1 }} />
               </View>
             </Pressable>
           </Pressable>

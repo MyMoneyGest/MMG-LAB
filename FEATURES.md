@@ -4,7 +4,7 @@ Description technique de toutes les fonctionnalités : ce qu'elles font, comment
 fonctionnent, où elles vivent dans le code. **Mis à jour à chaque fonctionnalité ajoutée ou
 modifiée**, pas après coup.
 
-Dernière mise à jour : 2026-07-12 (Codex).
+Dernière mise à jour : 2026-07-13 (Codex).
 
 ---
 
@@ -19,10 +19,12 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 ## 2. Accueil « Avant le projet »
 
-- **Quoi** : promesse (« Combien peux-tu mettre de côté sans te serrer ? »), CTA adaptatif
-  (Estimer ma capacité / Voir mes plans / Créer un nouveau plan), lien exemple, réassurance
-  (« Pas de compte bancaire connecté… »), checklist « Ce que MMG vérifie d'abord ».
-- **Comment** : variantes selon `budget` et `goals.length` du store.
+- **Quoi** : premier lancement volontairement minimal — grand M terracotta, promesse
+  « Un projet. Un geste par mois. », CTA principal adaptatif, lien exemple et courte
+  réassurance. L'espace autour de la marque est intentionnel et l'écran ne comporte plus la
+  checklist pédagogique ni un header de type site.
+- **Comment** : variantes selon `budget` et `goals.length` du store. La pédagogie sur la
+  capacité d'épargne est présentée à l'étape Budget, au moment où elle devient utile.
 - **Où** : `src/app/home.tsx`.
 
 ## 3. Budget et capacité d'épargne
@@ -38,13 +40,17 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Refus non oublié** : si l'utilisateur conserve ses anciens plans, MMG mémorise ce choix et
   attend 14 jours. Une bannière non bloquante propose alors **Revoir** ou **Dans 14 jours**.
   Aucune notification système n'est envoyée. Appliquer le réajustement efface la relance.
+- **Parcours visible** : cet écran constitue l'étape 1 du fil **Budget → Projet → Rythme** et
+  accueille désormais la checklist expliquant le reste à vivre, la marge de sécurité de 20 %
+  et l'effort cumulé des projets.
 - **Où** : `src/app/onboarding/budget.tsx`, `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
 
 ## 4. Création / ajustement d'un plan
 
-- **Quoi** : catégorie (chips colorées : Fonds d'urgence, Voiture, Déménagement, Vacances,
-  Autre), nom, montant cible, déjà disponible, date cible (JJ/MM/AAAA), jour de rappel (1-28),
-  puis choix entre trois rythmes : **stable** (même montant), **progressif** (effort croissant)
+- **Quoi** : parcours en deux écrans compacts après le budget : étape 2 **Projet** avec les cinq
+  catégories (Fonds d'urgence, Voiture, Déménagement, Vacances, Autre), nom, montant cible,
+  déjà disponible et date cible ; puis étape 3 **Rythme** avec le jour de rappel (1-28) et le
+  choix entre trois rythmes : **stable** (même montant), **progressif** (effort croissant)
   et **régressif** (effort décroissant). Chaque carte affiche la moyenne et le mois-pic.
   L'aperçu sombre indique le rythme et, si le montant varie, la première et la dernière
   échéance. Le diagnostic de compatibilité est calculé sur le mois le plus élevé, pas sur la
@@ -66,11 +72,13 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 ## 5. Écran projet (cœur de l'app)
 
-- **Quoi** : carte plan (nom, description par catégorie, barre de progression, % atteint /
-  déjà mis / restants / cible) + 3 onglets :
+- **Quoi** : header contextuel compact, progression centrée sur le montant déjà mis, la cible,
+  une barre et les deux repères Restant / Cible, puis 3 onglets fixés en bas de l'écran :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (X €)** (1 tap), Montant différent, Reporter, puis
-    **Mettre à jour le solde réel**.
+    **Mettre à jour le solde réel**. Les deux prochaines échéances existantes sont reprises
+    sous l'action mensuelle afin d'éviter une zone vide et de donner le prochain repère sans
+    quitter l'onglet.
     Le jour mensuel ouvre une petite fenêtre dédiée avec un seul champ « Jour du mois
     (1 à 28) » et les boutons Annuler / Valider. L'édition complète du plan ne s'ouvre plus.
   - **Échéancier** : occurrences mensuelles futures jusqu'à la cible avec montants reflétant
@@ -91,6 +99,9 @@ Dernière mise à jour : 2026-07-12 (Codex).
 - **Quoi** : écran sombre plein écran après tout versement — check terracotta, montant,
   message encourageant (« Même moins que prévu, c'est déjà bien »), prochain rappel + montant,
   variante « objectif atteint 🎉 ».
+- **Animation** : le badge de confirmation apparaît avec une entrée courte et respectueuse du
+  réglage système de réduction des animations. La barre de progression anime sa nouvelle valeur
+  et effectue une célébration sobre de 0 à 100 lorsque l'objectif est atteint.
 - **Rattachement visible** : lorsqu'un versement solde une dette, l'écran indique le cycle
   concerné (« Ce versement compte pour juillet. »).
 - **Où** : `src/components/confirmation-overlay.tsx` (le fond sombre est réservé à ces moments,
@@ -201,10 +212,11 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 ## 10. Menu / switcher de projets (⋯)
 
-- **Quoi** : accessible depuis tous les écrans — liste « Mes projets » (nom, % atteint,
-  restants, badge Actif, Supprimer avec confirmation), puis Nouveau projet, Accueil,
-  Ajuster ce plan, Voir un exemple, Ajuster mon budget, Confidentialité et CGU. Le projet
-  actuellement consulté est toujours présenté en tête de liste, sans modifier l'ordre stocké.
+- **Quoi** : bottom sheet compacte ouverte depuis `⋯`, à hauteur de contenu — liste « Mes
+  projets » (nom, % atteint, restants, badge Actif, Supprimer avec confirmation), puis Nouveau
+  projet et actions regroupées par deux (Ajuster le plan / Budget, Exemple / Confidentialité ·
+  CGU). L'entrée Accueil a été retirée : « Mes projets » remplit ce rôle. Le projet actuellement
+  consulté est toujours présenté en tête, sans modifier l'ordre stocké.
 - **Où** : `src/components/menu-modal.tsx`, ouvert par `src/components/app-header.tsx`.
 
 ## 11. Exemple et pages légales
@@ -242,8 +254,13 @@ Dernière mise à jour : 2026-07-12 (Codex).
 
 - **Quoi** : tokens de la direction visuelle (fond `#F4EFE6`, accent terracotta `#B5432A`,
   sombre `#2B211A`, radius généreux) et primitives (Screen, Card, Button 4 variantes, Field,
-  ProgressBar, Eyebrow). Les champs sont compacts, bordés, signalent clairement le focus et
-  les erreurs ; `Screen` centralise l'évitement du clavier et le défilement des formulaires.
+  ProgressBar, Eyebrow, StepIndicator). Les CTA principaux sont terracotta ; le sombre reste
+  réservé au récapitulatif et aux moments marquants. Les champs sont compacts, bordés,
+  signalent clairement le focus et les erreurs ; `Screen` centralise l'évitement du clavier
+  et le défilement des formulaires.
   `KeyboardSafeScrollView` révèle le champ dès le focus, conserve 64 px d'espace avec le clavier,
   puis recalcule sa position après l'animation Android, sans attendre la première frappe.
+  `Screen` accepte aussi un pied fixe pour la navigation projet. Les actions asynchrones
+  importantes (création, versement, report, changement du jour, solde et réajustement) affichent
+  un spinner dans leur bouton et empêchent le double appui pendant leur exécution.
 - **Où** : `src/constants/theme.ts`, `src/components/ui.tsx`.

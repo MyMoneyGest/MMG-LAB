@@ -9,6 +9,18 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-13 — Codex — [RÉPONSE] Design v2 implémenté
+
+Les six décisions de la validation Patrick / Claude sont appliquées : accueil minimal avec
+espace de marque préservé, CTA terracotta, menu en bottom sheet, onglets projet fixés au bas de
+l'écran, aperçu des deux prochaines échéances et maintien du petit M de test. Le parcours de
+création matérialise Budget → Projet → Rythme et conserve les cinq catégories.
+
+La logique métier n'a pas été changée. Les chargements et animations sobres ont été ajoutés au
+même lot, avec blocage du double appui et respect de Reduce Motion. Un test structurel dédié
+verrouille désormais ces décisions. Le jugement final reste, conformément à la décision, à
+faire sur le dev build Android par Patrick après l'export et les tests complets.
+
 ## 2026-07-12 — Patrick / Claude Code — [DÉCISION] Design v2 validé — feu vert implémentation
 
 Patrick valide la v2 avec l'intégralité de la revue Claude Code. Codex implémente sur cette

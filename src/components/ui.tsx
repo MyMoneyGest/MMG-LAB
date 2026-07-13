@@ -1,5 +1,6 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
@@ -9,9 +10,16 @@ import {
   TextInput,
   TextInputProps,
   View,
+  StyleProp,
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { colors, radius, spacing } from '@/constants/theme';
 
@@ -52,15 +60,23 @@ export function KeyboardSafeScrollView(props: ScrollViewProps) {
   );
 }
 
-export function Screen({ children }: { children: ReactNode }) {
+export function Screen({
+  children,
+  footer,
+  contentContainerStyle,
+}: {
+  children: ReactNode;
+  footer?: ReactNode;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+}) {
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoider}
         behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
         <KeyboardSafeScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           contentInsetAdjustmentBehavior="automatic"
           automaticallyAdjustKeyboardInsets={process.env.EXPO_OS === 'ios'}
           keyboardDismissMode={process.env.EXPO_OS === 'ios' ? 'interactive' : 'on-drag'}
@@ -68,6 +84,7 @@ export function Screen({ children }: { children: ReactNode }) {
           showsVerticalScrollIndicator={false}>
           {children}
         </KeyboardSafeScrollView>
+        {footer ? <View style={styles.screenFooter}>{footer}</View> : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -88,36 +105,69 @@ export function Button({
   onPress,
   variant = 'primary',
   disabled,
+  loading = false,
   style,
 }: {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
+  loading?: boolean;
   style?: ViewStyle;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading}
       style={({ pressed }) => [
         styles.button,
         variant === 'primary' && { backgroundColor: pressed ? colors.accentPressed : colors.accent },
         variant === 'secondary' && [styles.buttonSecondary, pressed && { opacity: 0.7 }],
         variant === 'dark' && { backgroundColor: pressed ? '#3D3128' : colors.dark },
         variant === 'light-on-dark' && [styles.buttonLightOnDark, pressed && { opacity: 0.85 }],
-        disabled && { opacity: 0.4 },
+        (disabled || loading) && { opacity: 0.55 },
         style,
       ]}>
-      <Text
-        style={[
-          styles.buttonLabel,
-          variant === 'secondary' && { color: colors.text },
-          variant === 'light-on-dark' && { color: colors.dark },
-        ]}>
-        {label}
-      </Text>
+      {loading ? (
+        <ActivityIndicator
+          color={variant === 'secondary' || variant === 'light-on-dark' ? colors.text : '#FFFFFF'}
+        />
+      ) : (
+        <Text
+          style={[
+            styles.buttonLabel,
+            variant === 'secondary' && { color: colors.text },
+            variant === 'light-on-dark' && { color: colors.dark },
+          ]}>
+          {label}
+        </Text>
+      )}
     </Pressable>
+  );
+}
+
+export function StepIndicator({
+  current,
+  labels = ['Budget', 'Projet', 'Rythme'],
+}: {
+  current: 1 | 2 | 3;
+  labels?: [string, string, string];
+}) {
+  return (
+    <View style={styles.steps} accessibilityLabel={`Étape ${current} sur 3`}>
+      <View style={styles.stepLabels}>
+        {labels.map((label, index) => (
+          <Text key={label} style={[styles.stepLabel, index + 1 <= current && styles.stepLabelActive]}>
+            {label}
+          </Text>
+        ))}
+      </View>
+      <View style={styles.stepTracks}>
+        {labels.map((label, index) => (
+          <View key={label} style={[styles.stepTrack, index + 1 <= current && styles.stepTrackActive]} />
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -266,9 +316,24 @@ export function DateField({
 }
 
 export function ProgressBar({ pct }: { pct: number }) {
+  const target = Math.min(100, Math.max(0, pct));
+  const progress = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({ width: `${progress.value}%` }));
+
+  useEffect(() => {
+    if (target >= 100) progress.value = 0;
+    progress.value = withTiming(target, {
+      duration: target >= 100 ? 700 : 280,
+      reduceMotion: ReduceMotion.System,
+    });
+  }, [target]);
+
   return (
-    <View style={styles.progressTrack}>
-      <View style={[styles.progressFill, { width: `${Math.min(100, Math.max(0, pct))}%` }]} />
+    <View
+      style={styles.progressTrack}
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 0, max: 100, now: target }}>
+      <Animated.View style={[styles.progressFill, animatedStyle]} />
     </View>
   );
 }
@@ -278,6 +343,14 @@ const styles = StyleSheet.create({
   keyboardAvoider: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.screen, paddingBottom: 48 },
+  screenFooter: {
+    backgroundColor: colors.background,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingHorizontal: spacing.screen,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.card,
@@ -336,4 +409,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   progressFill: { height: 9, borderRadius: 5, backgroundColor: colors.accent },
+  steps: { gap: 8, marginBottom: 18 },
+  stepLabels: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+  stepLabel: { flex: 1, fontSize: 12, fontWeight: '700', color: colors.textSecondary },
+  stepLabelActive: { color: colors.accent },
+  stepTracks: { flexDirection: 'row', gap: 6 },
+  stepTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.border },
+  stepTrackActive: { backgroundColor: colors.accent },
 });

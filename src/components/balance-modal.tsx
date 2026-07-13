@@ -90,9 +90,9 @@ export function BalanceModal({
                   style={{ flex: 1 }}
                 />
                 <Button
-                  label={saving ? 'Mise à jour…' : 'Confirmer le solde'}
+                  label="Confirmer le solde"
                   onPress={() => void submit()}
-                  disabled={saving}
+                  loading={saving}
                   style={{ flex: 1 }}
                 />
               </View>

@@ -9,6 +9,33 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-13 — Codex — Session 15 : implémentation du design v2 validé
+
+### Fait
+- Implémenté la structure mobile validée sans modifier la logique métier : accueil minimal,
+  header contextuel compact, fil Budget → Projet → Rythme, création répartie sur les étapes 2
+  et 3, progression projet simplifiée et menu `⋯` en bottom sheet.
+- Fixé les onglets Aujourd'hui / Échéancier / Historique au bas de l'écran projet et ajouté
+  sous l'action mensuelle l'aperçu des deux prochaines échéances déjà calculées.
+- Conservé les cinq catégories, le montant dans le CTA, l'appui long de test sur le petit M et
+  la palette MMG avec CTA terracotta ; le sombre reste réservé aux moments marquants.
+- Ajouté les états de chargement aux actions asynchrones principales et la prévention du double
+  appui pendant l'attente.
+- Ajouté des animations sobres via Reanimated : progression vers sa valeur, célébration 0→100
+  à l'objectif atteint et entrée du badge de confirmation, avec respect de Reduce Motion.
+- Ajouté `test:design`, qui verrouille les décisions visuelles structurantes.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 684 modules.
+
+### En cours
+- Aucun code partiellement implémenté. Le lot est prêt ; seule la validation tactile Android
+  par Patrick reste à confirmer.
+
+### Ensuite
+- Validation tactile sur le dev build Android par Patrick, groupée avec les scénarios natifs
+  des sessions 7 à 9, puis rédaction de GUIDE-MAINTENANCE.md.
+
 ## 2026-07-12 — Claude Code — Session 14 : validation du design v2
 
 ### Fait

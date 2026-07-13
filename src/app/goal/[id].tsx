@@ -43,7 +43,6 @@ import {
 import type { ContributionIntent } from '@/lib/plan';
 import type { GlobalRebalanceProposal } from '@/lib/plan';
 import { useStore } from '@/lib/store';
-import { CATEGORY_DESCRIPTIONS } from '@/lib/types';
 import type { Contribution } from '@/lib/types';
 import type { RebalanceReason } from '@/lib/types';
 
@@ -83,6 +82,7 @@ export default function GoalScreen() {
   const [reminderDayOpen, setReminderDayOpen] = useState(false);
   const [modalFromTest, setModalFromTest] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [confirmation, setConfirmation] = useState<{
     amount: number;
     nextReminderAt?: string;
@@ -126,15 +126,20 @@ export default function GoalScreen() {
     const currentGoal = useStore.getState().goals.find((candidate) => candidate.id === goal.id);
     if (!currentGoal) return;
     setAmountModal(null);
-    const plan = await confirmContribution(currentGoal, amount, source, intent);
-    const updated = useStore.getState().goals.find((g) => g.id === goal.id);
-    setConfirmation({
-      amount,
-      nextReminderAt: updated?.nextReminderAt,
-      nextAmount: updated ? suggestedAmount(updated) : undefined,
-      done: updated ? remainingAmount(updated) <= 0 : false,
-      cycleAnchorAt: plan.cycleAnchorAt,
-    });
+    setActionLoading(true);
+    try {
+      const plan = await confirmContribution(currentGoal, amount, source, intent);
+      const updated = useStore.getState().goals.find((g) => g.id === goal.id);
+      setConfirmation({
+        amount,
+        nextReminderAt: updated?.nextReminderAt,
+        nextAmount: updated ? suggestedAmount(updated) : undefined,
+        done: updated ? remainingAmount(updated) <= 0 : false,
+        cycleAnchorAt: plan.cycleAnchorAt,
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const confirm = (amount: number, source: ContributionSource) => {
@@ -213,10 +218,28 @@ export default function GoalScreen() {
       globalPlan &&
       (globalPlan.goals.length > 0 || !globalPlan.possible)
   );
+  const schedule = upcomingSchedule(goal);
+  const tabBar = (
+    <View style={styles.tabs}>
+      {TABS.map((t) => {
+        const active = t.key === tab;
+        return (
+          <Pressable
+            key={t.key}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            onPress={() => setTab(t.key)}
+            style={[styles.tab, active && styles.tabActive]}>
+            <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 
   return (
-    <Screen>
-      <AppHeader showBack currentGoalId={goal.id} />
+    <Screen footer={tabBar}>
+      <AppHeader currentGoalId={goal.id} title={goal.name} subtitle="Plan actif" />
 
       {notifBlocked ? (
         <View style={styles.banner}>
@@ -261,16 +284,20 @@ export default function GoalScreen() {
       ) : null}
 
       <Card>
-        <Eyebrow>Ton plan actuel</Eyebrow>
-        <Text style={styles.goalName}>{goal.name}</Text>
-        <Text style={styles.goalDescription}>{CATEGORY_DESCRIPTIONS[goal.category]}</Text>
-        <ProgressBar pct={pct} />
-        <View style={styles.statsRow}>
-          <Text style={styles.statAccent}>{pct} % atteint</Text>
-          <Text style={styles.stat}>{formatEuro(saved)} estimés</Text>
-          <Text style={styles.stat}>{formatEuro(remaining)} restants</Text>
+        <View style={styles.amountRow}>
+          <View>
+            <Text style={styles.summaryLabel}>Mis de côté</Text>
+            <Text style={styles.savedAmount}>{formatEuro(saved)}</Text>
+          </View>
+          <Text style={styles.targetAmount}>sur {formatEuro(goal.targetAmount)}</Text>
         </View>
-        <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
+        <ProgressBar pct={pct} />
+        <View style={styles.progressMeta}>
+          <Text style={styles.statAccent}>{pct} % atteint</Text>
+          <Text style={styles.stat}>
+            {formatEuro(remaining)} restants · cible {formatDate(goal.targetDate)}
+          </Text>
+        </View>
         <Text style={styles.balanceStatus}>
           {latestSnapshot
             ? `Solde global confirmé le ${formatDate(latestSnapshot.date)}`
@@ -278,23 +305,9 @@ export default function GoalScreen() {
         </Text>
       </Card>
 
-      <View style={styles.tabs}>
-        {TABS.map((t) => {
-          const active = t.key === tab;
-          return (
-            <Pressable
-              key={t.key}
-              onPress={() => setTab(t.key)}
-              style={[styles.tab, active && styles.tabActive]}>
-              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
       {tab === 'today' ? (
         <Card>
-          <Eyebrow>Action du mois</Eyebrow>
+          <Eyebrow>Ce mois-ci</Eyebrow>
           {reached ? (
             <>
               <Text style={styles.reachedTitle}>Objectif atteint 🎉</Text>
@@ -324,6 +337,7 @@ export default function GoalScreen() {
                 <Button
                   label={`Versement fait (${formatEuro(suggested)})`}
                   onPress={() => confirm(suggested, 'one_tap')}
+                  loading={actionLoading}
                 />
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                   <Button
@@ -359,6 +373,20 @@ export default function GoalScreen() {
                   />
                 </View>
               ) : null}
+              {schedule.length ? (
+                <View style={styles.previewSchedule}>
+                  <Text style={styles.previewTitle}>Les deux prochaines échéances</Text>
+                  {schedule.slice(0, 2).map((row, index) => (
+                    <View key={row.date.toISOString()} style={styles.previewRow}>
+                      <View>
+                        <Text style={styles.previewDate}>{formatDate(row.date)}</Text>
+                        <Text style={styles.previewMeta}>{index === 0 ? 'Prochaine' : 'Puis'}</Text>
+                      </View>
+                      <Text style={styles.previewAmount}>{formatEuro(row.amount)}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
             </>
           )}
           <Button
@@ -376,7 +404,7 @@ export default function GoalScreen() {
           {reached ? (
             <Text style={styles.reachedBody}>Aucune échéance à venir : objectif atteint.</Text>
           ) : (
-            upcomingSchedule(goal).map((row, index) => (
+            schedule.map((row, index) => (
               <View key={row.date.toISOString()} style={styles.scheduleRow}>
                 <View>
                   <Text style={styles.scheduleDate}>{formatDate(row.date)}</Text>
@@ -552,12 +580,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   bannerText: { color: colors.accent, fontSize: 15, fontWeight: '600', lineHeight: 21 },
-  goalName: { fontSize: 34, fontWeight: '800', color: colors.text, marginBottom: 8 },
-  goalDescription: { fontSize: 17, color: colors.textSecondary, lineHeight: 24 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 },
+  amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12 },
+  summaryLabel: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: 2 },
+  savedAmount: { fontSize: 32, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  targetAmount: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, paddingBottom: 4 },
+  progressMeta: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 },
   statAccent: { fontSize: 15, fontWeight: '800', color: colors.accent },
-  stat: { fontSize: 15, fontWeight: '700', color: colors.text },
-  targetDate: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 10 },
+  stat: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   balanceStatus: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginTop: 4 },
   capacityWarning: {
     backgroundColor: colors.banner,
@@ -592,12 +621,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.button,
     padding: 6,
-    marginBottom: 16,
   },
   tab: { flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.dark },
-  tabLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
-  tabLabelActive: { color: colors.textOnDark },
+  tabActive: { backgroundColor: colors.accent },
+  tabLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
+  tabLabelActive: { color: '#FFFFFF' },
   adviceCard: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
@@ -617,6 +645,22 @@ const styles = StyleSheet.create({
   adviceReminder: { fontSize: 15, fontWeight: '600', color: colors.text },
   reminderDayLink: { alignSelf: 'flex-start', paddingTop: 10, paddingVertical: 4 },
   reminderDayLinkText: { color: colors.accent, fontSize: 14, fontWeight: '800' },
+  previewSchedule: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    marginTop: 18,
+    paddingTop: 16,
+  },
+  previewTitle: { fontSize: 14, fontWeight: '800', color: colors.text, marginBottom: 4 },
+  previewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 9,
+  },
+  previewDate: { fontSize: 15, fontWeight: '700', color: colors.text },
+  previewMeta: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 1 },
+  previewAmount: { fontSize: 15, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
   reachedTitle: { fontSize: 26, fontWeight: '800', color: colors.text, marginBottom: 8 },
   reachedBody: { fontSize: 16, color: colors.textSecondary, lineHeight: 23 },
   scheduleRow: {

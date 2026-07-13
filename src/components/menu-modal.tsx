@@ -54,7 +54,7 @@ export function MenuModal({
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.eyebrow}>Menu</Text>
+            <View style={styles.grabber} />
             <Text style={styles.title}>Mes projets</Text>
 
             {orderedGoals.map((g) => {
@@ -78,21 +78,46 @@ export function MenuModal({
               );
             })}
 
-            <View style={{ gap: 12, marginTop: goals.length ? 14 : 4 }}>
-              <Button label="Nouveau projet" variant="dark" onPress={() => go(() => router.push('/onboarding/new-goal'))} />
-              <Button label="Accueil" variant="secondary" onPress={() => go(() => router.push('/home'))} />
+            <View style={{ gap: 10, marginTop: goals.length ? 14 : 4 }}>
+              <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/new-goal'))} />
               {currentGoalId ? (
+                <View style={styles.actionRow}>
+                  <Button
+                    label="Ajuster le plan"
+                    variant="secondary"
+                    onPress={() =>
+                      go(() => router.push({ pathname: '/onboarding/new-goal', params: { editId: currentGoalId } }))
+                    }
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    label="Budget"
+                    variant="secondary"
+                    onPress={() => go(() => router.push('/onboarding/budget'))}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              ) : (
                 <Button
-                  label="Ajuster ce plan"
-                  variant="dark"
-                  onPress={() =>
-                    go(() => router.push({ pathname: '/onboarding/new-goal', params: { editId: currentGoalId } }))
-                  }
+                  label="Ajuster mon budget"
+                  variant="secondary"
+                  onPress={() => go(() => router.push('/onboarding/budget'))}
                 />
-              ) : null}
-              <Button label="Voir un exemple" variant="dark" onPress={() => go(() => router.push('/example'))} />
-              <Button label="Ajuster mon budget" variant="dark" onPress={() => go(() => router.push('/onboarding/budget'))} />
-              <Button label="Confidentialité et CGU" variant="secondary" onPress={() => go(() => router.push('/legal'))} />
+              )}
+              <View style={styles.actionRow}>
+                <Button
+                  label="Voir un exemple"
+                  variant="secondary"
+                  onPress={() => go(() => router.push('/example'))}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  label="Confidentialité · CGU"
+                  variant="secondary"
+                  onPress={() => go(() => router.push('/legal'))}
+                  style={{ flex: 1 }}
+                />
+              </View>
             </View>
           </ScrollView>
         </Pressable>
@@ -105,25 +130,27 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(30, 22, 16, 0.45)',
-    justifyContent: 'flex-start',
-    padding: 16,
-    paddingTop: 90,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 12,
   },
   sheet: {
     backgroundColor: colors.card,
-    borderRadius: radius.card,
-    padding: 22,
-    maxHeight: '86%',
+    borderTopLeftRadius: radius.card,
+    borderTopRightRadius: radius.card,
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 24,
+    maxHeight: '82%',
   },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.accent,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginBottom: 8,
+  grabber: {
+    width: 42,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: 14,
   },
-  title: { fontSize: 30, fontWeight: '800', color: colors.text, marginBottom: 16 },
+  title: { fontSize: 23, fontWeight: '800', color: colors.text, marginBottom: 14 },
   goalRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -132,11 +159,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 18,
-    padding: 16,
-    marginBottom: 10,
+    padding: 13,
+    marginBottom: 8,
   },
   goalRowActive: { backgroundColor: colors.cardSoft, borderColor: colors.cardSoftBorder },
-  goalName: { fontSize: 18, fontWeight: '700', color: colors.text },
-  goalMeta: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
-  goalAction: { fontSize: 16, fontWeight: '700', color: colors.accent },
+  goalName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  goalMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  goalAction: { fontSize: 13, fontWeight: '700', color: colors.accent },
+  actionRow: { flexDirection: 'row', gap: 10 },
 });
