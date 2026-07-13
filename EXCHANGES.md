@@ -9,6 +9,50 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-13 — Patrick / Claude Code — [DÉCISION] Retours du jugement téléphone (design) — lot de finition
+
+Patrick a jugé le design sur son Android (dev build). Verdict global positif, avec 6 retours
+précis à appliquer. Recommandations d'implémentation de Claude Code incluses. C'est de la
+finition pure : gel des fonctionnalités toujours en vigueur, aucune logique métier modifiée.
+
+1. **Budget invisible à la création d'un nouveau projet.** Quand un budget existe déjà, le
+   parcours démarre à l'étape 2/3 et le budget n'est jamais rappelé, même à titre informatif.
+   Attendu : pouvoir le VOIR sans devoir le modifier. Recommandation : à l'étape Projet,
+   remplacer l'encart « Capacité prudente globale » par un **récap budget compact et
+   lisible** (revenus − charges − dépenses = reste à vivre → capacité prudente X €/mois)
+   avec un lien discret « Ajuster » vers l'écran Budget. Zéro étape ni tap ajouté, mais le
+   budget redevient visible. Le segment « Budget » du fil d'étapes peut aussi être tappable
+   vers ce même écran.
+
+2. **Densité globale : encadrés trop grands, polices trop grosses (« ça fait agressif »).**
+   Passe de densité à faire au niveau des TOKENS (`src/constants/theme.ts` + primitives
+   `ui.tsx`), pas écran par écran : réduire d'un cran l'échelle typographique (boutons,
+   labels, titres), amincir les paddings verticaux des boutons et cartes. Critère concret
+   donné par Patrick : « Montant différent » doit tenir sur UNE ligne dans un bouton plus
+   fin. Vérifier ensuite tous les écrans (aucun libellé tronqué).
+
+3. **« 48 % atteint » repositionné façon graphique.** Le pourcentage se place SOUS la barre
+   de progression, aligné sur la position de remplissage, avec une petite flèche/repère
+   pointant vers la barre (comme une étiquette de graphique). Attention aux extrêmes
+   (0 % et 100 % : l'étiquette ne doit pas sortir de la carte).
+
+4. **Bas de la carte de progression réorganisé et centré** :
+   `cible 13/10/2026` puis `Solde global pas encore confirmé` en dessous, centrés.
+   (« 698 € restants » reste dans la zone haute avec le pourcentage ou près de la barre.)
+
+5. **« Mettre à jour le solde réel » : ajouter un ⓘ.** Petit symbole info (rond + i) à côté
+   du bouton ; un tap ouvre une explication courte : ce solde = ce qu'il y a **réellement
+   sur le compte** (tous projets confondus), que MMG utilise pour recaler la progression —
+   rien n'est connecté à la banque, c'est déclaratif. Réutiliser une petite fenêtre existante
+   (pas de nouveau pattern).
+
+6. **Bouton « Valider la date » du report : le libellé se coupe sur deux lignes** (vu à
+   l'écran : « Valider la / date »). Avec la passe de densité du point 2, il doit tenir sur
+   une ligne ; sinon élargir ce bouton (ou empiler Annuler/Valider en pleine largeur).
+
+Validation : mêmes règles que le lot précédent — tests + TypeScript avant push, jugement
+final de Patrick sur le téléphone.
+
 ## 2026-07-13 — Codex — [RÉPONSE] Design v2 implémenté
 
 Les six décisions de la validation Patrick / Claude sont appliquées : accueil minimal avec
