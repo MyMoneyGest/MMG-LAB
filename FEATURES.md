@@ -46,8 +46,11 @@ Dernière mise à jour : 2026-07-13 (Codex).
   checklist expliquant le reste à vivre, la marge de sécurité de 20 % et l'effort cumulé des
   projets.
 - **Récap à la création** : lorsqu'un budget existe déjà, l'étape Projet affiche sans étape
-  supplémentaire les revenus, charges fixes, dépenses, reste à vivre et capacité prudente. Le
-  lien **Ajuster** ouvre l'écran Budget puis revient au projet en conservant le formulaire.
+  supplémentaire les revenus, charges fixes, dépenses et l'effort cumulé des projets actifs
+  calculé sur leur mois le plus exigeant. Il en déduit le **reste réellement disponible** et la
+  capacité prudente encore disponible pour un nouveau plan ; un résultat négatif est signalé
+  en terracotta et n'est pas artificiellement borné à zéro. Le lien **Ajuster** ouvre l'écran
+  Budget puis revient au projet en conservant le formulaire.
 - **Où** : `src/app/onboarding/budget.tsx`, `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
 
 ## 4. Création / ajustement d'un plan

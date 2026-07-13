@@ -19,7 +19,6 @@ import {
   peakScheduledAmount,
   plannedAmounts,
   prudentCapacity,
-  resteAVivre,
   remainingAmount,
   scheduledMonths,
   suggestedAmount,
@@ -108,11 +107,21 @@ export default function NewGoalScreen() {
     };
   }
   const previewRemaining = previewValid ? Math.max(0, parsedTarget! - parsedAvailable) : 0;
-  const existingEffort = goals
-    .filter((goal) => goal.id !== editing?.id && remainingAmount(goal) > 0)
+  const activeExistingGoals = goals.filter(
+    (goal) => goal.id !== editing?.id && remainingAmount(goal) > 0
+  );
+  const existingEffort = activeExistingGoals
     .reduce((sum, goal) => sum + peakScheduledAmount(goal), 0);
   const globalPeak = preview ? existingEffort + preview.peak : existingEffort;
   const previewDiagnostic = preview ? diagnostic(globalPeak, budget) : null;
+  const remainingAfterExistingGoals = budget
+    ? Math.round(
+        (budget.income - budget.fixedCharges - budget.variableExpenses - existingEffort) * 100
+      ) / 100
+    : 0;
+  const availablePrudentCapacity = budget
+    ? Math.max(0, Math.round((prudentCapacity(budget) - existingEffort) * 100) / 100)
+    : 0;
 
   const validate = (): string | null => {
     if (!name.trim()) return 'Donne un nom à ton projet.';
@@ -278,12 +287,26 @@ export default function NewGoalScreen() {
                 <Text style={styles.budgetLabel}>Dépenses</Text>
                 <Text style={styles.budgetValue}>− {formatEuro(budget.variableExpenses)}</Text>
               </View>
+              {activeExistingGoals.length ? (
+                <View style={styles.budgetRow}>
+                  <Text style={styles.budgetLabel}>
+                    Projets en cours ({activeExistingGoals.length})
+                  </Text>
+                  <Text style={styles.budgetValue}>− {formatEuro(existingEffort)}</Text>
+                </View>
+              ) : null}
               <View style={[styles.budgetRow, styles.budgetResult]}>
-                <Text style={styles.budgetResultLabel}>Reste à vivre</Text>
-                <Text style={styles.budgetResultValue}>{formatEuro(resteAVivre(budget))}</Text>
+                <Text style={styles.budgetResultLabel}>Reste réellement disponible</Text>
+                <Text
+                  style={[
+                    styles.budgetResultValue,
+                    remainingAfterExistingGoals < 0 && styles.budgetResultWarning,
+                  ]}>
+                  {formatEuro(remainingAfterExistingGoals)}
+                </Text>
               </View>
               <Text style={styles.capacityChipMain}>
-                Capacité prudente : {formatEuro(prudentCapacity(budget))} / mois
+                Capacité prudente encore disponible : {formatEuro(availablePrudentCapacity)} / mois
               </Text>
               {preview ? (
                 <Text style={styles.capacityChipDetail}>
@@ -450,6 +473,7 @@ const styles = StyleSheet.create({
   },
   budgetResultLabel: { fontSize: 13, fontWeight: '800', color: colors.text },
   budgetResultValue: { fontSize: 13, fontWeight: '800', color: colors.text },
+  budgetResultWarning: { color: colors.accent },
   capacityChipMain: { fontSize: 14, fontWeight: '800', color: colors.accent, marginTop: 7 },
   capacityChipDetail: { fontSize: 13, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
   capacityHint: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },

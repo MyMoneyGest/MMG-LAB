@@ -9,6 +9,14 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-13 — Patrick / Codex — [DÉCISION] Les projets actifs entrent dans le récap Budget
+
+À l'étape Projet 1/2, le récap ne s'arrête plus au reste à vivre théorique. Il soustrait aussi
+l'effort mensuel agrégé des autres projets actifs et affiche le reste réellement disponible
+ainsi que la capacité prudente encore disponible. Pour rester cohérent avec le diagnostic des
+plans, l'effort retenu est celui du mois le plus exigeant de chaque plan, pas une moyenne qui
+pourrait masquer une future mensualité plus haute.
+
 ## 2026-07-13 — Patrick / Codex — [DÉCISION] Budget isolé du parcours de création
 
 Budget est désormais un réglage autonome : il ne porte plus le numéro 1/3 et son ouverture

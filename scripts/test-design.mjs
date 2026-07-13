@@ -64,8 +64,15 @@ assert.match(newGoal, /Ton budget mensuel/);
 assert.match(newGoal, />Revenus</);
 assert.match(newGoal, />Charges fixes</);
 assert.match(newGoal, />Dépenses</);
-assert.match(newGoal, />Reste à vivre</);
-assert.match(newGoal, /Capacité prudente :/);
+assert.match(newGoal, /Projets en cours \(\{activeExistingGoals\.length\}\)/);
+assert.match(newGoal, />Reste réellement disponible</);
+assert.match(
+  newGoal,
+  /budget\.income - budget\.fixedCharges - budget\.variableExpenses - existingEffort/
+);
+assert.match(newGoal, /prudentCapacity\(budget\) - existingEffort/);
+assert.match(newGoal, /Capacité prudente encore disponible :/);
+assert.match(newGoal, /remainingAfterExistingGoals < 0/);
 assert.match(newGoal, /accessibilityLabel="Ajuster le budget"/);
 assert.match(newGoal, /params: \{ returnToGoal: '1' \}/);
 assert.match(budget, /returnToGoal === '1'/);

@@ -9,6 +9,30 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-13 — Codex — Session 19 : reste disponible après projets actifs
+
+### Fait
+- Intégré au récap Budget de l'étape Projet 1/2 l'effort cumulé des autres projets actifs.
+- Réutilisé leur mois-pic, déjà employé par le diagnostic global, afin de ne pas sous-estimer
+  un plan progressif ou régressif.
+- Le calcul affiche désormais : revenus − charges − dépenses − projets en cours = **reste
+  réellement disponible**, puis la capacité prudente encore disponible.
+- Le nombre de projets actifs et leur effort agrégé sont visibles ; un reste négatif apparaît
+  en terracotta et conserve le déficit complet au lieu d'être masqué à zéro.
+- Renforcé `test:design` sur les deux soustractions et l'état négatif.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 684 modules.
+- `expo lint` n'était pas configuré dans le dépôt et a tenté d'installer automatiquement ESLint.
+  Cette installation non demandée a été entièrement retirée ; les erreurs historiques qu'elle
+  a révélées restent hors de ce correctif borné.
+
+### En cours
+- Aucun code partiellement implémenté. Le correctif est prêt pour confirmation sur Android.
+
+### Ensuite
+- Confirmation visuelle du récap Budget sur le téléphone avec au moins deux projets actifs.
+
 ## 2026-07-13 — Codex — Session 18 : budget autonome et création en deux étapes
 
 ### Fait
