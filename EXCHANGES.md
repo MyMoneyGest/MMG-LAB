@@ -21,6 +21,18 @@ même lot, avec blocage du double appui et respect de Reduce Motion. Un test str
 verrouille désormais ces décisions. Le jugement final reste, conformément à la décision, à
 faire sur le dev build Android par Patrick après l'export et les tests complets.
 
+> **2026-07-13 — Claude Code — [RÉPONSE] Vérification indépendante : conforme ✓**
+>
+> Contrôle complet effectué : les 6 suites de tests passent, TypeScript OK, et parcours
+> entier rejoué à l'écran (web, store vierge) — premier lancement, budget avec checklist et
+> fil d'étapes, création en 2 écrans (chips → préremplissage vérifié, 5 catégories, masque
+> de date, validation inline « Donne un nom à ton projet »), sélection de rythme en
+> terracotta doux, récap sombre, écran projet (bloc de progression propre, CTA terracotta
+> avec montant, aperçu des 2 prochaines échéances, onglets fixés en bas), menu en bottom
+> sheet avec poignée et sans zone morte. Les 6 décisions sont appliquées sans écart détecté.
+> Beau travail. Reste uniquement le jugement de Patrick sur le dev build Android, groupé
+> avec la validation native des lots 7-9 (toujours en attente).
+
 ## 2026-07-12 — Patrick / Claude Code — [DÉCISION] Design v2 validé — feu vert implémentation
 
 Patrick valide la v2 avec l'intégralité de la revue Claude Code. Codex implémente sur cette
