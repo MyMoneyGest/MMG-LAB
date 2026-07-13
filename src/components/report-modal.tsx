@@ -158,8 +158,8 @@ export function ReportModal({
               ) : null}
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <View style={styles.buttons}>
-                <Button label="Annuler" variant="secondary" onPress={onClose} disabled={saving} style={{ flex: 1 }} />
-                <Button label="Valider la date" onPress={applyPrecise} loading={saving} style={{ flex: 1 }} />
+                <Button label="Annuler" variant="secondary" onPress={onClose} disabled={saving} style={{ flex: 0.8 }} />
+                <Button label="Valider la date" onPress={applyPrecise} loading={saving} style={{ flex: 1.2 }} />
               </View>
             </Pressable>
           </Pressable>
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  sheet: { backgroundColor: colors.card, borderRadius: radius.card, padding: 20 },
+  sheet: { backgroundColor: colors.card, borderRadius: radius.card, padding: 18 },
   eyebrow: {
     fontSize: 13,
     fontWeight: '700',
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 6,
   },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: 5 },
+  title: { fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 4 },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 13 },
   option: {
     flexDirection: 'row',
@@ -195,12 +195,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.cardSoft,
     borderRadius: 18,
-    paddingVertical: 14,
-    paddingHorizontal: 15,
+    paddingVertical: 11,
+    paddingHorizontal: 13,
     marginBottom: 8,
   },
-  optionLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
-  optionDate: { fontSize: 16, fontWeight: '700', color: colors.accent },
+  optionLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
+  optionDate: { fontSize: 15, fontWeight: '700', color: colors.accent },
   fieldTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 6, marginBottom: 6 },
   error: { color: colors.accent, fontSize: 13, fontWeight: '600', marginBottom: 8 },
   info: {

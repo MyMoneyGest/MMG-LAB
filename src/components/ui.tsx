@@ -134,6 +134,9 @@ export function Button({
         />
       ) : (
         <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.82}
           style={[
             styles.buttonLabel,
             variant === 'secondary' && { color: colors.text },
@@ -315,10 +318,16 @@ export function DateField({
   );
 }
 
-export function ProgressBar({ pct }: { pct: number }) {
+export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
   const target = Math.min(100, Math.max(0, pct));
   const progress = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({ width: `${progress.value}%` }));
+  const markerPosition: ViewStyle =
+    target <= 14
+      ? { left: `${target}%` }
+      : target >= 86
+        ? { right: `${100 - target}%` }
+        : { left: `${target}%`, transform: [{ translateX: -46 }] };
 
   useEffect(() => {
     if (target >= 100) progress.value = 0;
@@ -329,11 +338,27 @@ export function ProgressBar({ pct }: { pct: number }) {
   }, [target]);
 
   return (
-    <View
-      style={styles.progressTrack}
-      accessibilityRole="progressbar"
-      accessibilityValue={{ min: 0, max: 100, now: target }}>
-      <Animated.View style={[styles.progressFill, animatedStyle]} />
+    <View style={styles.progressContainer}>
+      <View
+        style={styles.progressTrack}
+        accessibilityRole="progressbar"
+        accessibilityValue={{ min: 0, max: 100, now: target }}>
+        <Animated.View style={[styles.progressFill, animatedStyle]} />
+      </View>
+      {label ? (
+        <View style={styles.progressMarkerArea}>
+          <View style={[styles.progressMarker, markerPosition]}>
+            <View
+              style={[
+                styles.progressMarkerArrow,
+                target <= 14 && styles.progressMarkerArrowStart,
+                target >= 86 && styles.progressMarkerArrowEnd,
+              ]}
+            />
+            <Text numberOfLines={1} style={styles.progressMarkerLabel}>{label}</Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -342,33 +367,34 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   keyboardAvoider: { flex: 1 },
   scroll: { flex: 1 },
-  scrollContent: { padding: spacing.screen, paddingBottom: 48 },
+  scrollContent: { padding: spacing.screen, paddingBottom: 40 },
   screenFooter: {
     backgroundColor: colors.background,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
     paddingHorizontal: spacing.screen,
-    paddingTop: 10,
+    paddingTop: 8,
     paddingBottom: 4,
   },
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.card,
     padding: spacing.card,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   eyebrow: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: colors.accent,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   button: {
     borderRadius: radius.button,
-    paddingVertical: 17,
-    paddingHorizontal: 18,
+    minHeight: 44,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -378,9 +404,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   buttonLightOnDark: { backgroundColor: colors.textOnDark },
-  buttonLabel: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
-  field: { marginBottom: 12 },
-  fieldLabel: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 6 },
+  buttonLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  field: { marginBottom: 10 },
+  fieldLabel: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 5 },
   fieldWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -388,11 +414,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.field,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
   fieldWrapFocused: { borderColor: colors.accent, backgroundColor: colors.card },
   fieldWrapError: { borderColor: colors.accent },
-  fieldInput: { flex: 1, fontSize: 17, fontWeight: '600', color: colors.text, paddingVertical: 12 },
+  fieldInput: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text, paddingVertical: 10 },
   fieldSuffix: { fontSize: 13, fontWeight: '800', color: colors.textSecondary, marginLeft: 8 },
   fieldError: { color: colors.accent, fontSize: 13, marginTop: 5, fontWeight: '600' },
   dateFieldWrap: { justifyContent: 'flex-start', gap: 6 },
@@ -400,16 +426,37 @@ const styles = StyleSheet.create({
   datePartShort: { width: 34 },
   datePartYear: { width: 64 },
   dateSeparator: { color: colors.text, fontSize: 19, fontWeight: '800' },
+  progressContainer: { marginTop: 12, marginBottom: 10 },
   progressTrack: {
     height: 9,
     borderRadius: 5,
     backgroundColor: '#EBE2D2',
     overflow: 'hidden',
-    marginTop: 14,
-    marginBottom: 12,
   },
   progressFill: { height: 9, borderRadius: 5, backgroundColor: colors.accent },
-  steps: { gap: 8, marginBottom: 18 },
+  progressMarkerArea: { position: 'relative', height: 30 },
+  progressMarker: { position: 'absolute', top: 2, width: 92 },
+  progressMarkerArrow: {
+    alignSelf: 'center',
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 5,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: colors.accent,
+  },
+  progressMarkerArrowStart: { alignSelf: 'flex-start' },
+  progressMarkerArrowEnd: { alignSelf: 'flex-end' },
+  progressMarkerLabel: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '800',
+    textAlign: 'center',
+    paddingTop: 2,
+  },
+  steps: { gap: 7, marginBottom: 15 },
   stepLabels: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   stepLabel: { flex: 1, fontSize: 12, fontWeight: '700', color: colors.textSecondary },
   stepLabelActive: { color: colors.accent },

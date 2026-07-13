@@ -19,6 +19,7 @@ import {
   peakScheduledAmount,
   plannedAmounts,
   prudentCapacity,
+  resteAVivre,
   remainingAmount,
   scheduledMonths,
   suggestedAmount,
@@ -249,9 +250,40 @@ export default function NewGoalScreen() {
             }}
           />
           {budget ? (
-            <View style={styles.capacityChip}>
+            <View style={styles.budgetSummary}>
+              <View style={styles.budgetSummaryHeader}>
+                <Text style={styles.budgetSummaryTitle}>Ton budget mensuel</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Ajuster le budget"
+                  hitSlop={8}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/onboarding/budget',
+                      params: { returnToGoal: '1' },
+                    })
+                  }>
+                  <Text style={styles.budgetAdjust}>Ajuster</Text>
+                </Pressable>
+              </View>
+              <View style={styles.budgetRow}>
+                <Text style={styles.budgetLabel}>Revenus</Text>
+                <Text style={styles.budgetValue}>{formatEuro(budget.income)}</Text>
+              </View>
+              <View style={styles.budgetRow}>
+                <Text style={styles.budgetLabel}>Charges fixes</Text>
+                <Text style={styles.budgetValue}>− {formatEuro(budget.fixedCharges)}</Text>
+              </View>
+              <View style={styles.budgetRow}>
+                <Text style={styles.budgetLabel}>Dépenses</Text>
+                <Text style={styles.budgetValue}>− {formatEuro(budget.variableExpenses)}</Text>
+              </View>
+              <View style={[styles.budgetRow, styles.budgetResult]}>
+                <Text style={styles.budgetResultLabel}>Reste à vivre</Text>
+                <Text style={styles.budgetResultValue}>{formatEuro(resteAVivre(budget))}</Text>
+              </View>
               <Text style={styles.capacityChipMain}>
-                Capacité prudente globale : {formatEuro(prudentCapacity(budget))} / mois
+                Capacité prudente : {formatEuro(prudentCapacity(budget))} / mois
               </Text>
               {preview ? (
                 <Text style={styles.capacityChipDetail}>
@@ -374,33 +406,51 @@ export default function NewGoalScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 25, fontWeight: '800', color: colors.text, lineHeight: 31, marginBottom: 6 },
-  body: { fontSize: 16, color: colors.textSecondary, lineHeight: 23, marginBottom: 18 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 18 },
+  title: { fontSize: 23, fontWeight: '800', color: colors.text, lineHeight: 28, marginBottom: 5 },
+  body: { fontSize: 15, color: colors.textSecondary, lineHeight: 21, marginBottom: 15 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 8,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 22,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 13,
     backgroundColor: colors.card,
   },
   chipSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
   chipDot: { width: 12, height: 12, borderRadius: 6 },
-  chipLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
-  capacityChip: {
+  chipLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
+  budgetSummary: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.cardSoftBorder,
     borderRadius: radius.field,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    padding: 13,
     overflow: 'hidden',
   },
-  capacityChipMain: { fontSize: 16, fontWeight: '800', color: colors.accent },
+  budgetSummaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  budgetSummaryTitle: { fontSize: 14, fontWeight: '800', color: colors.text },
+  budgetAdjust: { fontSize: 13, fontWeight: '800', color: colors.accent },
+  budgetRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
+  budgetLabel: { fontSize: 13, color: colors.textSecondary },
+  budgetValue: { fontSize: 13, fontWeight: '700', color: colors.text },
+  budgetResult: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.cardSoftBorder,
+    marginTop: 5,
+    paddingTop: 7,
+  },
+  budgetResultLabel: { fontSize: 13, fontWeight: '800', color: colors.text },
+  budgetResultValue: { fontSize: 13, fontWeight: '800', color: colors.text },
+  capacityChipMain: { fontSize: 14, fontWeight: '800', color: colors.accent, marginTop: 7 },
   capacityChipDetail: { fontSize: 13, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
   capacityHint: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   rhythmChoices: { gap: 10, marginTop: 4 },
@@ -409,12 +459,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 20,
-    padding: 16,
+    padding: 13,
   },
   rhythmCardSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
   rhythmHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rhythmTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
-  rhythmAmount: { fontSize: 15, fontWeight: '800', color: colors.accent, marginTop: 7 },
+  rhythmTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
+  rhythmAmount: { fontSize: 14, fontWeight: '800', color: colors.accent, marginTop: 6 },
   rhythmSelected: { fontSize: 13, fontWeight: '800', color: colors.accent },
   rhythmTextSelected: { color: colors.text },
   rhythmBody: { fontSize: 14, color: colors.textSecondary, marginTop: 5, lineHeight: 20 },
@@ -424,11 +474,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.cardSoftBorder,
     borderRadius: radius.card,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
   },
-  compatTitle: { fontSize: 18, fontWeight: '800', color: colors.accent, marginBottom: 6 },
-  compatBody: { fontSize: 15, color: colors.textSecondary, lineHeight: 22 },
+  compatTitle: { fontSize: 17, fontWeight: '800', color: colors.accent, marginBottom: 5 },
+  compatBody: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   error: { color: colors.accent, fontSize: 15, fontWeight: '700', marginBottom: 12, paddingHorizontal: 4 },
   primaryAction: { marginTop: 16 },
   finalActions: { flexDirection: 'row', gap: 10, marginBottom: 8 },

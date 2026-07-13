@@ -43,6 +43,9 @@ Dernière mise à jour : 2026-07-13 (Codex).
 - **Parcours visible** : cet écran constitue l'étape 1 du fil **Budget → Projet → Rythme** et
   accueille désormais la checklist expliquant le reste à vivre, la marge de sécurité de 20 %
   et l'effort cumulé des projets.
+- **Récap à la création** : lorsqu'un budget existe déjà, l'étape Projet affiche sans étape
+  supplémentaire les revenus, charges fixes, dépenses, reste à vivre et capacité prudente. Le
+  lien **Ajuster** ouvre l'écran Budget puis revient au projet en conservant le formulaire.
 - **Où** : `src/app/onboarding/budget.tsx`, `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
 
 ## 4. Création / ajustement d'un plan
@@ -72,11 +75,15 @@ Dernière mise à jour : 2026-07-13 (Codex).
 
 ## 5. Écran projet (cœur de l'app)
 
-- **Quoi** : header contextuel compact, progression centrée sur le montant déjà mis, la cible,
-  une barre et les deux repères Restant / Cible, puis 3 onglets fixés en bas de l'écran :
+- **Quoi** : header contextuel compact, progression centrée sur le montant déjà mis et le reste,
+  puis barre avec une étiquette de pourcentage placée sous le remplissage. Son repère reste
+  contenu dans la carte aux extrêmes 0 % et 100 %. La date cible et l'état du solde global
+  sont centrés sous la barre, puis 3 onglets restent fixés en bas de l'écran :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (X €)** (1 tap), Montant différent, Reporter, puis
-    **Mettre à jour le solde réel**. Les deux prochaines échéances existantes sont reprises
+    **Mettre à jour le solde réel** accompagné d'un bouton d'information. Celui-ci explique
+    dans une petite fenêtre native qu'il s'agit du montant réellement présent sur le compte,
+    tous projets confondus, déclaré sans connexion bancaire. Les deux prochaines échéances sont reprises
     sous l'action mensuelle afin d'éviter une zone vide et de donner le prochain repère sans
     quitter l'onglet.
     Le jour mensuel ouvre une petite fenêtre dédiée avec un seul champ « Jour du mois
@@ -116,6 +123,8 @@ Dernière mise à jour : 2026-07-13 (Codex).
   séparateurs restent visibles avant et pendant la saisie. Elle reste défilable au-dessus du
   clavier et peut être fermée par son bouton Annuler,
   le bouton retour Android ou un appui sur l'arrière-plan.
+- **Actions** : les boutons sont compacts et forcés sur une ligne ; **Valider la date** dispose
+  d'une part plus large que **Annuler** pour éviter toute coupure sur les petits écrans Android.
 - **Limite avant l'ancre** : tant que le jour du rappel n'est pas arrivé, le report ne peut pas
   le dépasser (rappel le 28 juillet → le 29 juillet est refusé avant le 28).
 - **Limite à partir de l'ancre** : le jour du rappel arrivé, le report peut aller jusqu'à la
@@ -263,4 +272,7 @@ Dernière mise à jour : 2026-07-13 (Codex).
   `Screen` accepte aussi un pied fixe pour la navigation projet. Les actions asynchrones
   importantes (création, versement, report, changement du jour, solde et réajustement) affichent
   un spinner dans leur bouton et empêchent le double appui pendant leur exécution.
+- **Densité mobile** : rayons, espacements de carte, boutons, champs, chips, choix de rythme et
+  récapitulatif sombre ont été réduits d'un cran après validation Android. Les libellés de
+  bouton restent sur une seule ligne et peuvent se réduire légèrement plutôt que se couper.
 - **Où** : `src/constants/theme.ts`, `src/components/ui.tsx`.

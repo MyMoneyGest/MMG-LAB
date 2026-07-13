@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -23,6 +23,7 @@ import { useStore } from '@/lib/store';
 
 export default function BudgetScreen() {
   const router = useRouter();
+  const { returnToGoal } = useLocalSearchParams<{ returnToGoal?: string }>();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
   const setBudget = useStore((s) => s.setBudget);
@@ -53,7 +54,8 @@ export default function BudgetScreen() {
     setBudget(draft);
     if (goals.length === 0) {
       clearGlobalRebalanceReview();
-      router.push('/onboarding/new-goal');
+      if (returnToGoal === '1') router.back();
+      else router.push('/onboarding/new-goal');
       return;
     }
     const proposal = buildGlobalRebalanceProposal(goals, draft);
@@ -148,18 +150,18 @@ export default function BudgetScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 25, fontWeight: '800', color: colors.text, lineHeight: 31, marginBottom: 8 },
-  body: { fontSize: 16, color: colors.textSecondary, lineHeight: 23, marginBottom: 20 },
+  title: { fontSize: 23, fontWeight: '800', color: colors.text, lineHeight: 28, marginBottom: 7 },
+  body: { fontSize: 15, color: colors.textSecondary, lineHeight: 21, marginBottom: 16 },
   capacity: {
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: '800',
     color: colors.accent,
     backgroundColor: colors.cardSoft,
     borderWidth: 1,
     borderColor: colors.cardSoftBorder,
     borderRadius: radius.field,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     overflow: 'hidden',
     marginTop: 4,
   },

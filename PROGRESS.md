@@ -9,6 +9,34 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-13 — Codex — Session 16 : finition issue du jugement Android
+
+### Fait
+- Appliqué les six retours Patrick / Claude sans modifier la logique métier.
+- Remplacé l'encart de capacité à l'étape Projet par un récap budget compact : revenus,
+  charges, dépenses, reste à vivre, capacité prudente et lien **Ajuster** avec retour au
+  formulaire en cours.
+- Réduit les tokens communs de rayon et d'espacement, la hauteur et la typographie des boutons,
+  les champs, chips, choix de rythme et récapitulatif sombre. Les textes de bouton sont forcés
+  sur une ligne avec réduction contrôlée ; **Valider la date** reçoit plus de largeur.
+- Replacé le pourcentage sous la barre avec un repère aligné sur le remplissage et protégé aux
+  extrêmes. Le reste est remonté, puis la date cible et l'état du solde sont centrés dessous.
+- Ajouté le bouton d'information du solde réel et son explication native, sans nouveau pattern
+  de fenêtre.
+- Renforcé `test:design` pour verrouiller chacun de ces points.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, compilation web puis export
+  Android Hermes de 1 684 modules.
+
+### En cours
+- Aucun code partiellement implémenté. Seule la confirmation tactile Android par Patrick reste
+  à effectuer.
+
+### Ensuite
+- Confirmation visuelle finale sur le téléphone de Patrick ; aucun appareil n'est actuellement
+  visible via ADB. Le contrôle web intégré n'a pas pu initialiser son moteur local et n'est pas
+  présenté comme une validation visuelle.
+
 ## 2026-07-13 — Codex — Session 15 : implémentation du design v2 validé
 
 ### Fait

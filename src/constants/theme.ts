@@ -33,12 +33,12 @@ export const colors = {
 } as const;
 
 export const radius = {
-  card: 26,
-  button: 22,
-  field: 16,
+  card: 22,
+  button: 18,
+  field: 14,
 } as const;
 
 export const spacing = {
-  screen: 18,
-  card: 22,
+  screen: 16,
+  card: 18,
 } as const;

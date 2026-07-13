@@ -9,6 +9,19 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-13 — Codex — [RÉPONSE] Six retours Android appliqués
+
+Les six points du jugement téléphone sont implémentés comme un lot de finition : récap budget
+visible avec Ajuster, densité commune réduite, boutons sur une ligne, pourcentage sous la barre
+avec repère borné, bas de progression centré, information déclarative sur le solde réel et
+largeur renforcée pour Valider la date. Le chemin notification → Fait et toute la logique
+métier restent inchangés.
+
+Le test de design couvre désormais explicitement ces décisions, y compris les deux extrêmes de
+positionnement et la navigation de retour depuis Budget. La compilation web aboutit, mais son
+inspection visuelle intégrée n'a pas pu se connecter dans cette session ; la confirmation finale
+reste donc à faire sur le dev build Android, conformément à la décision de Patrick.
+
 ## 2026-07-13 — Patrick / Claude Code — [DÉCISION] Retours du jugement téléphone (design) — lot de finition
 
 Patrick a jugé le design sur son Android (dev build). Verdict global positif, avec 6 retours

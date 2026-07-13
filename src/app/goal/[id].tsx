@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AmountModal } from '@/components/amount-modal';
 import { AppHeader } from '@/components/app-header';
@@ -219,6 +219,11 @@ export default function GoalScreen() {
       (globalPlan.goals.length > 0 || !globalPlan.possible)
   );
   const schedule = upcomingSchedule(goal);
+  const explainRealBalance = () =>
+    Alert.alert(
+      'À quoi sert le solde réel ?',
+      "C’est ce que tu as réellement sur le compte où tu épargnes, tous projets confondus. MMG l’utilise pour recaler ta progression. Rien n’est connecté à ta banque : c’est toi qui indiques ce montant."
+    );
   const tabBar = (
     <View style={styles.tabs}>
       {TABS.map((t) => {
@@ -289,20 +294,20 @@ export default function GoalScreen() {
             <Text style={styles.summaryLabel}>Mis de côté</Text>
             <Text style={styles.savedAmount}>{formatEuro(saved)}</Text>
           </View>
-          <Text style={styles.targetAmount}>sur {formatEuro(goal.targetAmount)}</Text>
+          <View style={styles.amountAside}>
+            <Text style={styles.remainingAmount}>{formatEuro(remaining)} restants</Text>
+            <Text style={styles.targetAmount}>sur {formatEuro(goal.targetAmount)}</Text>
+          </View>
         </View>
-        <ProgressBar pct={pct} />
-        <View style={styles.progressMeta}>
-          <Text style={styles.statAccent}>{pct} % atteint</Text>
-          <Text style={styles.stat}>
-            {formatEuro(remaining)} restants · cible {formatDate(goal.targetDate)}
+        <ProgressBar pct={pct} label={`${pct} % atteint`} />
+        <View style={styles.progressFooter}>
+          <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
+          <Text style={styles.balanceStatus}>
+            {latestSnapshot
+              ? `Solde global confirmé le ${formatDate(latestSnapshot.date)}`
+              : 'Solde global pas encore confirmé'}
           </Text>
         </View>
-        <Text style={styles.balanceStatus}>
-          {latestSnapshot
-            ? `Solde global confirmé le ${formatDate(latestSnapshot.date)}`
-            : 'Solde global pas encore confirmé'}
-        </Text>
       </Card>
 
       {tab === 'today' ? (
@@ -389,12 +394,22 @@ export default function GoalScreen() {
               ) : null}
             </>
           )}
-          <Button
-            label="Mettre à jour le solde réel"
-            variant="secondary"
-            onPress={() => setBalanceOpen(true)}
-            style={{ marginTop: 12 }}
-          />
+          <View style={styles.balanceActionRow}>
+            <Button
+              label="Mettre à jour le solde réel"
+              variant="secondary"
+              onPress={() => setBalanceOpen(true)}
+              style={{ flex: 1 }}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Expliquer le solde réel"
+              hitSlop={6}
+              onPress={explainRealBalance}
+              style={({ pressed }) => [styles.infoButton, pressed && styles.infoButtonPressed]}>
+              <Text style={styles.infoButtonText}>i</Text>
+            </Pressable>
+          </View>
         </Card>
       ) : null}
 
@@ -582,12 +597,13 @@ const styles = StyleSheet.create({
   bannerText: { color: colors.accent, fontSize: 15, fontWeight: '600', lineHeight: 21 },
   amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12 },
   summaryLabel: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: 2 },
-  savedAmount: { fontSize: 32, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  targetAmount: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, paddingBottom: 4 },
-  progressMeta: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 },
-  statAccent: { fontSize: 15, fontWeight: '800', color: colors.accent },
-  stat: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  balanceStatus: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginTop: 4 },
+  savedAmount: { fontSize: 30, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  amountAside: { alignItems: 'flex-end', paddingBottom: 3 },
+  remainingAmount: { fontSize: 14, fontWeight: '800', color: colors.text },
+  targetAmount: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 2 },
+  progressFooter: { alignItems: 'center', gap: 3 },
+  targetDate: { fontSize: 13, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  balanceStatus: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, textAlign: 'center' },
   capacityWarning: {
     backgroundColor: colors.banner,
     borderRadius: radius.field,
@@ -616,6 +632,30 @@ const styles = StyleSheet.create({
   },
   balanceCheckTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
   balanceCheckText: { color: colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  balanceActionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  infoButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoButtonPressed: { backgroundColor: colors.cardSoft },
+  infoButtonText: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: colors.accent,
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 17,
+    textAlign: 'center',
+  },
   tabs: {
     flexDirection: 'row',
     backgroundColor: colors.card,
@@ -631,8 +671,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.cardSoftBorder,
     borderRadius: 20,
-    padding: 18,
-    marginBottom: 16,
+    padding: 15,
+    marginBottom: 13,
   },
   adviceLabel: {
     fontSize: 13,
@@ -641,8 +681,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  adviceAmount: { fontSize: 42, fontWeight: '800', color: colors.text, marginVertical: 4 },
-  adviceReminder: { fontSize: 15, fontWeight: '600', color: colors.text },
+  adviceAmount: { fontSize: 38, fontWeight: '800', color: colors.text, marginVertical: 3 },
+  adviceReminder: { fontSize: 14, fontWeight: '600', color: colors.text },
   reminderDayLink: { alignSelf: 'flex-start', paddingTop: 10, paddingVertical: 4 },
   reminderDayLinkText: { color: colors.accent, fontSize: 14, fontWeight: '800' },
   previewSchedule: {
