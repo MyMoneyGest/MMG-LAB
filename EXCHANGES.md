@@ -9,6 +9,16 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-14 — Patrick / Codex — [DÉCISION] La progression encourage par la couleur
+
+La barre, son repère et le pourcentage évoluent ensemble selon l'avancement, dans une gamme
+limitée au bloc de progression. Le parcours retenu est argile sombre → terracotta MMG → ocre
+chaud → vert profond. Le démarrage ne devient jamais rouge « échec » et les couleurs de
+catégories comme celles des CTA restent inchangées.
+
+La transition est continue pendant le remplissage. Le pourcentage reste écrit afin de ne jamais
+faire reposer la compréhension sur la couleur seule.
+
 ## 2026-07-14 — Patrick / Codex — [DÉCISION] Les actions sensibles parlent le langage MMG
 
 Les boîtes de dialogue natives Android, perçues comme étrangères au design de l'application,

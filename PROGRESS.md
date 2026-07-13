@@ -9,6 +9,28 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 24 : progression chromatique encourageante
+
+### Fait
+- Ajouté une évolution continue de la couleur de la barre selon le pourcentage atteint.
+- Synchronisé la même couleur sur le remplissage, la flèche de repère et le libellé « X %
+  atteint » pendant l'animation de progression.
+- Intégré quatre teintes cohérentes avec MMG : argile sombre, terracotta de marque, ocre chaud
+  et vert profond. Aucun rouge d'alerte n'est utilisé pour un projet qui débute.
+- Conservé le pourcentage écrit, les bornes du repère et `ReduceMotion.System` pour
+  l'accessibilité ; ajouté des chiffres tabulaires pour stabiliser le libellé.
+- Renforcé `test:design` sur les quatre tokens, les seuils et les trois surfaces animées.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 689 modules.
+
+### En cours
+- Aucun code partiellement implémenté. La progression chromatique est prête pour confirmation
+  sur Android.
+
+### Ensuite
+- Confirmation visuelle par Patrick de l'équilibre des quatre teintes sur son téléphone.
+
 ## 2026-07-14 — Codex — Session 23 : confirmations sensibles au design MMG
 
 ### Fait

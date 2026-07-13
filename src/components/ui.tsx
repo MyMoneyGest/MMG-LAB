@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
+  interpolateColor,
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
@@ -25,6 +26,13 @@ import { colors, radius, spacing } from '@/constants/theme';
 
 const KeyboardScrollContext = createContext<(target: number) => void>(() => {});
 const KEYBOARD_FIELD_GAP = 64;
+const PROGRESS_COLOR_STOPS = [0, 35, 70, 100];
+const PROGRESS_COLORS = [
+  colors.progress.start,
+  colors.progress.steady,
+  colors.progress.advanced,
+  colors.progress.complete,
+];
 
 /**
  * ScrollView qui révèle le champ dès le focus, puis une seconde fois à la fin
@@ -337,7 +345,20 @@ export function DateField({
 export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
   const target = Math.min(100, Math.max(0, pct));
   const progress = useSharedValue(0);
-  const animatedStyle = useAnimatedStyle(() => ({ width: `${progress.value}%` }));
+  const animatedFillStyle = useAnimatedStyle(() => ({
+    width: `${progress.value}%`,
+    backgroundColor: interpolateColor(progress.value, PROGRESS_COLOR_STOPS, PROGRESS_COLORS),
+  }));
+  const animatedLabelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, PROGRESS_COLOR_STOPS, PROGRESS_COLORS),
+  }));
+  const animatedArrowStyle = useAnimatedStyle(() => ({
+    borderBottomColor: interpolateColor(
+      progress.value,
+      PROGRESS_COLOR_STOPS,
+      PROGRESS_COLORS
+    ),
+  }));
   const markerPosition: ViewStyle =
     target <= 14
       ? { left: `${target}%` }
@@ -359,19 +380,24 @@ export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
         style={styles.progressTrack}
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: target }}>
-        <Animated.View style={[styles.progressFill, animatedStyle]} />
+        <Animated.View style={[styles.progressFill, animatedFillStyle]} />
       </View>
       {label ? (
         <View style={styles.progressMarkerArea}>
           <View style={[styles.progressMarker, markerPosition]}>
-            <View
+            <Animated.View
               style={[
                 styles.progressMarkerArrow,
+                animatedArrowStyle,
                 target <= 14 && styles.progressMarkerArrowStart,
                 target >= 86 && styles.progressMarkerArrowEnd,
               ]}
             />
-            <Text numberOfLines={1} style={styles.progressMarkerLabel}>{label}</Text>
+            <Animated.Text
+              numberOfLines={1}
+              style={[styles.progressMarkerLabel, animatedLabelStyle]}>
+              {label}
+            </Animated.Text>
           </View>
         </View>
       ) : null}
@@ -450,7 +476,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EBE2D2',
     overflow: 'hidden',
   },
-  progressFill: { height: 9, borderRadius: 5, backgroundColor: colors.accent },
+  progressFill: { height: 9, borderRadius: 5, backgroundColor: colors.progress.start },
   progressMarkerArea: { position: 'relative', height: 30 },
   progressMarker: { position: 'absolute', top: 2, width: 92 },
   progressMarkerArrow: {
@@ -462,14 +488,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 5,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: colors.accent,
+    borderBottomColor: colors.progress.start,
   },
   progressMarkerArrowStart: { alignSelf: 'flex-start' },
   progressMarkerArrowEnd: { alignSelf: 'flex-end' },
   progressMarkerLabel: {
-    color: colors.accent,
+    color: colors.progress.start,
     fontSize: 12,
     fontWeight: '800',
+    fontVariant: ['tabular-nums'],
     textAlign: 'center',
     paddingTop: 2,
   },

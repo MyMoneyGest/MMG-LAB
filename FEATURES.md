@@ -109,6 +109,10 @@ Dernière mise à jour : 2026-07-14 (Codex).
   - **Historique** : versements datés ; les retraits saisis dans les anciennes versions restent
     visibles pour préserver les données existantes.
   Bannière si permission de notification manquante (fidèle à l'ancienne app).
+- **Couleur encourageante** : la barre, sa flèche et « X % atteint » évoluent ensemble et sans
+  palier brutal selon la progression : argile sombre au démarrage, terracotta MMG, ocre à un
+  stade avancé puis vert profond à 100 %. Le début n'utilise jamais un rouge d'alerte. Le
+  pourcentage écrit reste présent pour que la couleur ne soit pas l'unique information.
 - **Comment** : le reste à financer est redistribué sur les échéances selon le rythme choisi,
   puis recalculé après chaque geste : les écarts sont absorbés sans pénalité. Les projets créés
   avant l'ajout de ce réglage restent automatiquement en rythme stable (`rhythm ?? 'stable'`).
@@ -311,6 +315,9 @@ Dernière mise à jour : 2026-07-14 (Codex).
   `Screen` accepte aussi un pied fixe pour la navigation projet. Les actions asynchrones
   importantes (création, versement, report, changement du jour, solde et réajustement) affichent
   un spinner dans leur bouton et empêchent le double appui pendant leur exécution.
+- **Progression** : quatre tokens dédiés et suffisamment contrastés (`progress.start`,
+  `steady`, `advanced`, `complete`) sont interpolés avec Reanimated pendant le remplissage. Ils
+  ne modifient ni les CTA terracotta ni les couleurs de catégories.
 - **Densité mobile** : rayons, espacements de carte, boutons, champs, chips, choix de rythme et
   récapitulatif sombre ont été réduits d'un cran après validation Android. Les libellés de
   bouton restent sur une seule ligne et peuvent se réduire légèrement plutôt que se couper.

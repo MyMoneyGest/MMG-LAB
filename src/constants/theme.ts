@@ -23,6 +23,15 @@ export const colors = {
   success: '#5BA97C',
   banner: '#F3DCCF',
 
+  // Progression encourageante : jamais de rouge d'alerte au démarrage.
+  // Les teintes restent assez sombres pour conserver la lisibilité du pourcentage.
+  progress: {
+    start: '#8A6554',
+    steady: '#B5432A',
+    advanced: '#96641F',
+    complete: '#3F7D59',
+  },
+
   category: {
     emergency: '#2E7D8A',
     car: '#3A6EA5',
