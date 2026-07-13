@@ -106,6 +106,7 @@ export function Button({
   variant = 'primary',
   disabled,
   loading = false,
+  loadingLabel,
   style,
 }: {
   label: string;
@@ -113,6 +114,7 @@ export function Button({
   variant?: ButtonVariant;
   disabled?: boolean;
   loading?: boolean;
+  loadingLabel?: string;
   style?: ViewStyle;
 }) {
   return (
@@ -129,9 +131,22 @@ export function Button({
         style,
       ]}>
       {loading ? (
-        <ActivityIndicator
-          color={variant === 'secondary' || variant === 'light-on-dark' ? colors.text : '#FFFFFF'}
-        />
+        <View style={styles.buttonLoadingContent}>
+          <ActivityIndicator
+            color={variant === 'secondary' || variant === 'light-on-dark' ? colors.text : '#FFFFFF'}
+          />
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.82}
+            style={[
+              styles.buttonLabel,
+              variant === 'secondary' && { color: colors.text },
+              variant === 'light-on-dark' && { color: colors.dark },
+            ]}>
+            {loadingLabel ?? label}
+          </Text>
+        </View>
       ) : (
         <Text
           numberOfLines={1}
@@ -406,6 +421,7 @@ const styles = StyleSheet.create({
   },
   buttonLightOnDark: { backgroundColor: colors.textOnDark },
   buttonLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  buttonLoadingContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   field: { marginBottom: 10 },
   fieldLabel: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 5 },
   fieldWrap: {

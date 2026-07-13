@@ -9,6 +9,18 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-14 — Patrick / Codex — [DÉCISION] Retours visibles aux moments marquants
+
+Les opérations importantes ne doivent plus donner l'impression que l'application est figée.
+Création, ajustement et versement utilisent un état de traitement explicite seulement lorsque
+l'attente est perceptible ; les actions courtes gardent leur bouton visible avec spinner et
+libellé précis. Une bannière confirme ensuite les changements qui ramènent à l'écran projet.
+
+La confirmation de versement reste le moment de marque principal : son contenu apparaît en une
+séquence sobre, avec un traitement spécifique de l'objectif atteint. Il n'y a ni animation
+décorative permanente ni confettis, et le réglage système de réduction des animations est
+respecté partout.
+
 ## 2026-07-14 — Patrick / Codex — [DÉCISION] Ajuster n'est plus recréer
 
 « Ajuster le plan » ne réutilise plus le parcours de création. Il ouvre un écran unique centré

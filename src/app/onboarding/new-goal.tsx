@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppHeader } from '@/components/app-header';
 import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, DateField, Field, Screen, StepIndicator } from '@/components/ui';
@@ -142,7 +143,10 @@ export default function NewGoalScreen() {
         reminderDay,
         rhythm,
       });
-      router.replace({ pathname: '/goal/[id]', params: { id: goal.id } });
+      router.replace({
+        pathname: '/goal/[id]',
+        params: { id: goal.id, feedback: 'created', feedbackId: String(Date.now()) },
+      });
     } finally {
       setSaving(false);
     }
@@ -388,11 +392,17 @@ export default function NewGoalScreen() {
               label="Créer le plan"
               onPress={save}
               loading={saving}
+              loadingLabel="Création…"
               style={{ flex: 1 }}
             />
           </View>
         </>
       )}
+      <ActionLoadingOverlay
+        visible={saving}
+        title="Création de ton plan…"
+        detail="Calcul de l’échéancier et programmation du premier rappel."
+      />
     </Screen>
   );
 }

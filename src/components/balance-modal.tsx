@@ -93,6 +93,7 @@ export function BalanceModal({
                   label="Confirmer le solde"
                   onPress={() => void submit()}
                   loading={saving}
+                  loadingLabel="Recalcul…"
                   style={{ flex: 1 }}
                 />
               </View>

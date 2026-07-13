@@ -91,6 +91,7 @@ export function RebalanceModal({
                   label="Appliquer"
                   onPress={() => void apply()}
                   loading={saving}
+                  loadingLabel="Application…"
                   style={{ flex: 1 }}
                 />
               ) : null}

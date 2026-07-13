@@ -9,6 +9,31 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 21 : moments marquants et retours d'action
+
+### Fait
+- Remplacé les chargements trop discrets par des retours explicites : spinner accompagné d'un
+  libellé d'action sur les boutons de report, jour de rappel, solde réel et rééquilibrage.
+- Ajouté une fenêtre de traitement différée de 160 ms pour la création d'un plan, son
+  ajustement et l'enregistrement d'un versement. Elle ne s'affiche pas pour les opérations
+  instantanées, afin d'éviter un flash inutile.
+- Ajouté des bannières de succès temporaires après création, ajustement, report, changement du
+  jour de rappel, confirmation du solde et application d'un nouvel échéancier.
+- Animé l'intégralité de l'écran sombre de confirmation dans une séquence courte et ajouté une
+  célébration sobre dédiée à l'objectif atteint. Toutes les animations respectent le réglage
+  système de réduction des animations.
+- Renforcé les tests de design et de saisie pour verrouiller les chargements, les retours de
+  succès et les animations événementielles.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 687 modules.
+
+### En cours
+- Aucun code partiellement implémenté. Le lot est prêt pour confirmation sur Android.
+
+### Ensuite
+- Confirmation visuelle et tactile de ces transitions sur le téléphone Android de Patrick.
+
 ## 2026-07-14 — Codex — Session 20 : ajustement de plan séparé de la création
 
 ### Fait

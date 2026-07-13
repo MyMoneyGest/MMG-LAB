@@ -2,6 +2,7 @@ import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppHeader } from '@/components/app-header';
 import { Button, Card, DateField, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
@@ -141,7 +142,10 @@ export default function AdjustGoalScreen() {
         const scheduled = await scheduleGoalReminders(updated, suggestedAmount(updated));
         updateGoal(goal.id, scheduled);
       }
-      router.back();
+      router.dismissTo({
+        pathname: '/goal/[id]',
+        params: { id: goal.id, feedback: 'adjusted', feedbackId: String(Date.now()) },
+      });
     } finally {
       setSaving(false);
     }
@@ -233,8 +237,14 @@ export default function AdjustGoalScreen() {
         label="Enregistrer les ajustements"
         onPress={() => void save()}
         loading={saving}
+        loadingLabel="Mise à jour…"
         disabled={!hasChanges}
         style={styles.saveButton}
+      />
+      <ActionLoadingOverlay
+        visible={saving}
+        title="Mise à jour du plan…"
+        detail="Recalcul des montants et reprogrammation des rappels."
       />
     </Screen>
   );

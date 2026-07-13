@@ -76,6 +76,7 @@ export function ReminderDayModal({
                   label="Valider"
                   onPress={() => void submit()}
                   loading={saving}
+                  loadingLabel="Mise à jour…"
                   style={{ flex: 1 }}
                 />
               </View>

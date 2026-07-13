@@ -159,7 +159,13 @@ export function ReportModal({
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <View style={styles.buttons}>
                 <Button label="Annuler" variant="secondary" onPress={onClose} disabled={saving} style={{ flex: 0.8 }} />
-                <Button label="Valider la date" onPress={applyPrecise} loading={saving} style={{ flex: 1.2 }} />
+                <Button
+                  label="Valider la date"
+                  onPress={applyPrecise}
+                  loading={saving}
+                  loadingLabel="Programmation…"
+                  style={{ flex: 1.2 }}
+                />
               </View>
             </Pressable>
           </Pressable>

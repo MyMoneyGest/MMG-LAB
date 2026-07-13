@@ -1,12 +1,15 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AmountModal } from '@/components/amount-modal';
 import { AppHeader } from '@/components/app-header';
 import { BalanceModal } from '@/components/balance-modal';
 import { ConfirmationOverlay } from '@/components/confirmation-overlay';
 import { ContributionChoiceModal } from '@/components/contribution-choice-modal';
+import { FeedbackBanner } from '@/components/feedback-banner';
+import type { FeedbackMessage } from '@/components/feedback-banner';
 import { ReportModal } from '@/components/report-modal';
 import { RecentContributionModal } from '@/components/recent-contribution-modal';
 import { RebalanceModal } from '@/components/rebalance-modal';
@@ -55,13 +58,23 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 const handledNotificationActions = new Set<string>();
+const handledFeedbackMessages = new Set<string>();
 
 export default function GoalScreen() {
-  const { id, notificationAction, notificationIsTest, responseKey } = useLocalSearchParams<{
+  const {
+    id,
+    notificationAction,
+    notificationIsTest,
+    responseKey,
+    feedback: routeFeedback,
+    feedbackId,
+  } = useLocalSearchParams<{
     id: string;
     notificationAction?: 'done' | 'edit' | 'postpone';
     notificationIsTest?: string;
     responseKey?: string;
+    feedback?: 'created' | 'adjusted';
+    feedbackId?: string;
   }>();
   const goal = useStore((s) => s.goals.find((g) => g.id === id));
   const goals = useStore((s) => s.goals);
@@ -83,6 +96,7 @@ export default function GoalScreen() {
   const [modalFromTest, setModalFromTest] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(null);
   const [confirmation, setConfirmation] = useState<{
     amount: number;
     nextReminderAt?: string;
@@ -98,6 +112,10 @@ export default function GoalScreen() {
     choiceAnchorAt?: string;
     intent: ContributionIntent;
   } | null>(null);
+  const clearFeedback = useCallback(() => setFeedbackMessage(null), []);
+  const showFeedback = useCallback((title: string, detail: string) => {
+    setFeedbackMessage({ key: String(Date.now()), title, detail });
+  }, []);
 
   useEffect(() => {
     if (hydrated) return;
@@ -111,6 +129,24 @@ export default function GoalScreen() {
   useEffect(() => {
     if (goal) setLastViewed(goal.id);
   }, [goal?.id]);
+
+  useEffect(() => {
+    if (!feedbackId || !routeFeedback || handledFeedbackMessages.has(feedbackId)) return;
+    handledFeedbackMessages.add(feedbackId);
+    setFeedbackMessage(
+      routeFeedback === 'created'
+        ? {
+            key: feedbackId,
+            title: 'Ton plan est prêt',
+            detail: 'Le premier rappel et l’échéancier ont été programmés.',
+          }
+        : {
+            key: feedbackId,
+            title: 'Plan mis à jour',
+            detail: 'Les montants et les prochains rappels ont été recalculés.',
+          }
+    );
+  }, [feedbackId, routeFeedback]);
 
   useEffect(() => {
     if (!notificationsSupported) return; // web : pas de rappels, pas de bannière
@@ -246,6 +282,14 @@ export default function GoalScreen() {
     <Screen footer={tabBar}>
       <AppHeader currentGoalId={goal.id} title={goal.name} subtitle="Plan actif" />
 
+      {feedbackMessage ? (
+        <FeedbackBanner
+          key={feedbackMessage.key}
+          message={feedbackMessage}
+          onFinished={clearFeedback}
+        />
+      ) : null}
+
       {notifBlocked ? (
         <View style={styles.banner}>
           <Text style={styles.bannerText}>
@@ -338,6 +382,7 @@ export default function GoalScreen() {
                   label={`Versement fait (${formatEuro(suggested)})`}
                   onPress={() => confirm(suggested, 'one_tap')}
                   loading={actionLoading}
+                  loadingLabel="Enregistrement…"
                 />
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                   <Button
@@ -487,6 +532,10 @@ export default function GoalScreen() {
             setRebalanceProposal(proposal);
           } else {
             clearGlobalRebalanceReview();
+            showFeedback(
+              'Solde réel confirmé',
+              'La progression et les montants conseillés sont maintenant recalés.'
+            );
           }
         }}
       />
@@ -504,6 +553,10 @@ export default function GoalScreen() {
           if (!rebalanceProposal) return;
           await applyGlobalRebalance(rebalanceProposal);
           setRebalanceProposal(null);
+          showFeedback(
+            'Échéancier mis à jour',
+            'Les prochaines dates ont été adaptées à ta situation.'
+          );
         }}
       />
       <ReminderDayModal
@@ -517,6 +570,7 @@ export default function GoalScreen() {
           if (!currentGoal) return;
           await changeReminderDay(currentGoal, day);
           setReminderDayOpen(false);
+          showFeedback('Jour de rappel modifié', `Le rappel mensuel est maintenant prévu le ${day}.`);
         }}
       />
       <ReportModal
@@ -530,6 +584,15 @@ export default function GoalScreen() {
         onDone={() => {
           setModalFromTest(false);
           setReportOpen(false);
+          const updated = useStore
+            .getState()
+            .goals.find((candidate) => candidate.id === goal.id);
+          showFeedback(
+            'Rappel reporté',
+            updated
+              ? `Le prochain rappel est prévu le ${formatDate(updated.nextReminderAt)}.`
+              : 'La nouvelle date a été programmée.'
+          );
         }}
       />
       <ConfirmationOverlay
@@ -577,6 +640,11 @@ export default function GoalScreen() {
             );
           }
         }}
+      />
+      <ActionLoadingOverlay
+        visible={actionLoading}
+        title="Enregistrement du versement…"
+        detail="Mise à jour de la progression et du prochain rappel."
       />
     </Screen>
   );
