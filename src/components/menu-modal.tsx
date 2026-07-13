@@ -112,8 +112,8 @@ export function MenuModal({
                 {currentGoalId
                   ? action('Ajuster le plan', () =>
                       router.push({
-                        pathname: '/onboarding/new-goal',
-                        params: { editId: currentGoalId },
+                        pathname: '/adjust-goal',
+                        params: { id: currentGoalId },
                       })
                     )
                   : null}

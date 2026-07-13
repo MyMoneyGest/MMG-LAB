@@ -4,7 +4,7 @@ Description technique de toutes les fonctionnalités : ce qu'elles font, comment
 fonctionnent, où elles vivent dans le code. **Mis à jour à chaque fonctionnalité ajoutée ou
 modifiée**, pas après coup.
 
-Dernière mise à jour : 2026-07-13 (Codex).
+Dernière mise à jour : 2026-07-14 (Codex).
 
 ---
 
@@ -53,7 +53,7 @@ Dernière mise à jour : 2026-07-13 (Codex).
   Budget puis revient au projet en conservant le formulaire.
 - **Où** : `src/app/onboarding/budget.tsx`, `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
 
-## 4. Création / ajustement d'un plan
+## 4. Création et ajustement d'un plan
 
 - **Quoi** : parcours de création en deux écrans compacts : étape 1/2 **Projet** avec les cinq
   catégories (Fonds d'urgence, Voiture, Déménagement, Vacances, Autre), nom, montant cible,
@@ -63,11 +63,15 @@ Dernière mise à jour : 2026-07-13 (Codex).
   L'aperçu sombre indique le rythme et, si le montant varie, la première et la dernière
   échéance. Le diagnostic de compatibilité est calculé sur le mois le plus élevé, pas sur la
   moyenne, et additionne l'effort des autres projets actifs. Un nouveau plan ne peut donc pas
-  consommer à lui seul une capacité déjà utilisée ailleurs. Mode édition via `?editId=` (menu
-  « Ajuster ce plan »).
+  consommer à lui seul une capacité déjà utilisée ailleurs.
+- **Ajustement dédié** : « Ajuster le plan » ouvre un seul écran, séparé du parcours de
+  création. Le nom et la catégorie restent inchangés ; l'utilisateur peut modifier le montant
+  cible, la date cible, le jour de rappel et le rythme. Un tableau **Avant → après** recalcule
+  immédiatement le versement conseillé et le mois le plus élevé. La nouvelle cible ne peut pas
+  être inférieure au montant déjà mis de côté. Toute sauvegarde reprogramme les rappels.
 - **Suggestions** : sélectionner une catégorie préremplit le nom correspondant. Changer de
   catégorie actualise un nom suggéré, sans écraser un nom personnalisé ; « Autre » vide le
-  champ pour laisser l'utilisateur nommer librement son projet.
+  champ et affiche « Choisis un nom pour ton projet » pour guider la saisie libre.
 - **Saisie** : la date cible est une seule ligne `JJ / MM / AAAA` dont les séparateurs restent
   toujours visibles. Chaque bloc utilise le clavier numérique et passe automatiquement au
   suivant. L'écran reste défilable et remonte son contenu lorsque le clavier est affiché.
@@ -75,15 +79,17 @@ Dernière mise à jour : 2026-07-13 (Codex).
   0,7 à 1,3, dont la moyenne vaut 1. La répartition conserve le total exact au centime.
   `createGoal()` orchestre : store + première demande de permission notifications (uniquement
   ici, jamais à l'ouverture) + programmation du rappel + événement `goal_created`.
-- **Où** : `src/app/onboarding/new-goal.tsx`, `src/lib/actions.ts` (`createGoal`),
+- **Où** : `src/app/onboarding/new-goal.tsx`, `src/app/adjust-goal.tsx`,
+  `src/lib/actions.ts` (`createGoal`, `changeReminderDay`),
   `src/components/plan-summary.tsx`.
 
 ## 5. Écran projet (cœur de l'app)
 
 - **Quoi** : header contextuel compact, progression centrée sur le montant déjà mis et le reste,
   puis barre avec une étiquette de pourcentage placée sous le remplissage. Son repère reste
-  contenu dans la carte aux extrêmes 0 % et 100 %. La date cible et l'état du solde global
-  sont centrés sous la barre, puis 3 onglets restent fixés en bas de l'écran :
+  contenu dans la carte aux extrêmes 0 % et 100 %. Seule la date cible reste centrée sous la
+  barre ; l'ancien statut de confirmation du solde global a été retiré car il n'offrait aucune
+  action à cet endroit. Les 3 onglets restent fixés en bas de l'écran :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (X €)** (1 tap), Montant différent, Reporter, puis
     **Mettre à jour le solde réel** accompagné d'un bouton d'information. Celui-ci explique
@@ -91,7 +97,7 @@ Dernière mise à jour : 2026-07-13 (Codex).
     tous projets confondus, déclaré sans connexion bancaire. Les deux prochaines échéances sont reprises
     sous l'action mensuelle afin d'éviter une zone vide et de donner le prochain repère sans
     quitter l'onglet.
-    Le jour mensuel ouvre une petite fenêtre dédiée avec un seul champ « Jour du mois
+    Le **Jour de rappel** ouvre une petite fenêtre dédiée avec un seul champ « Jour du mois
     (1 à 28) » et les boutons Annuler / Valider. L'édition complète du plan ne s'ouvre plus.
   - **Échéancier** : occurrences mensuelles futures jusqu'à la cible avec montants reflétant
     le rythme stable, progressif ou régressif choisi.

@@ -302,11 +302,6 @@ export default function GoalScreen() {
         <ProgressBar pct={pct} label={`${pct} % atteint`} />
         <View style={styles.progressFooter}>
           <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
-          <Text style={styles.balanceStatus}>
-            {latestSnapshot
-              ? `Solde global confirmé le ${formatDate(latestSnapshot.date)}`
-              : 'Solde global pas encore confirmé'}
-          </Text>
         </View>
       </Card>
 
@@ -334,7 +329,7 @@ export default function GoalScreen() {
                   onPress={() => setReminderDayOpen(true)}
                   style={styles.reminderDayLink}>
                   <Text style={styles.reminderDayLinkText}>
-                    Jour mensuel : le {goal.reminderDay} · Modifier
+                    Jour de rappel : le {goal.reminderDay} · Modifier
                   </Text>
                 </Pressable>
               </View>
@@ -603,7 +598,6 @@ const styles = StyleSheet.create({
   targetAmount: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 2 },
   progressFooter: { alignItems: 'center', gap: 3 },
   targetDate: { fontSize: 13, fontWeight: '800', color: colors.text, textAlign: 'center' },
-  balanceStatus: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, textAlign: 'center' },
   capacityWarning: {
     backgroundColor: colors.banner,
     borderRadius: radius.field,

@@ -9,6 +9,32 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 20 : ajustement de plan séparé de la création
+
+### Fait
+- Remplacé l'ancien mode `editId` du parcours Projet 1/2 → Rythme 2/2 par une route dédiée
+  `/adjust-goal`, ouverte depuis « Ajuster le plan ».
+- L'écran d'ajustement conserve le nom et la catégorie et ne présente que le montant cible, la
+  date cible, le jour de rappel et le rythme.
+- Ajouté une comparaison dynamique **Avant → après** pour la cible, la date, le jour de rappel,
+  le versement conseillé et le mois le plus élevé.
+- Empêché une cible inférieure au montant réellement déjà mis de côté et conservé la
+  reprogrammation native après chaque sauvegarde.
+- Ajouté le placeholder « Choisis un nom pour ton projet » lorsque la catégorie Autre est
+  sélectionnée.
+- Renommé « Jour mensuel » en « Jour de rappel » sur l'écran projet.
+- Retiré le statut « Solde global pas encore confirmé » de la carte de progression ; la mise à
+  jour du solde réel, son explication et la vérification trimestrielle restent inchangées.
+- Validations finales réussies : TypeScript, `git diff --check`, les sept suites design,
+  analytics, solde, cycles/report, saisie, notifications et format, puis export Android Hermes
+  de 1 685 modules avec la nouvelle route.
+
+### En cours
+- Aucun code partiellement implémenté. Le correctif est prêt pour confirmation sur Android.
+
+### Ensuite
+- Confirmation tactile Android de l'écran Ajuster le plan et de sa comparaison avant/après.
+
 ## 2026-07-13 — Codex — Session 19 : reste disponible après projets actifs
 
 ### Fait

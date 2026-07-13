@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -6,7 +6,7 @@ import { AppHeader } from '@/components/app-header';
 import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, DateField, Field, Screen, StepIndicator } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { changeReminderDay, createGoal } from '@/lib/actions';
+import { createGoal } from '@/lib/actions';
 import {
   formatDate,
   formatEuro,
@@ -21,9 +21,7 @@ import {
   prudentCapacity,
   remainingAmount,
   scheduledMonths,
-  suggestedAmount,
 } from '@/lib/plan';
-import { scheduleGoalReminders } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
 import {
   CATEGORY_DESCRIPTIONS,
@@ -45,22 +43,19 @@ const RHYTHMS: {
 
 export default function NewGoalScreen() {
   const router = useRouter();
-  const { editId } = useLocalSearchParams<{ editId?: string }>();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
-  const updateGoal = useStore((s) => s.updateGoal);
-  const editing = editId ? goals.find((g) => g.id === editId) : undefined;
 
-  const [category, setCategory] = useState<GoalCategory>(editing?.category ?? 'emergency');
-  const [name, setName] = useState(editing?.name ?? '');
+  const [category, setCategory] = useState<GoalCategory>('emergency');
+  const [name, setName] = useState('');
   const [nameIsSuggested, setNameIsSuggested] = useState(false);
-  const [target, setTarget] = useState(editing ? String(editing.targetAmount) : '');
-  const [available, setAvailable] = useState(editing ? String(editing.alreadyAvailable) : '');
-  const [dateText, setDateText] = useState(editing ? formatDate(editing.targetDate) : '');
+  const [target, setTarget] = useState('');
+  const [available, setAvailable] = useState('');
+  const [dateText, setDateText] = useState('');
   const [reminderDayText, setReminderDayText] = useState(
-    String(editing?.reminderDay ?? Math.min(28, new Date().getDate()))
+    String(Math.min(28, new Date().getDate()))
   );
-  const [rhythm, setRhythm] = useState<SavingsRhythm>(editing?.rhythm ?? 'stable');
+  const [rhythm, setRhythm] = useState<SavingsRhythm>('stable');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
@@ -107,9 +102,7 @@ export default function NewGoalScreen() {
     };
   }
   const previewRemaining = previewValid ? Math.max(0, parsedTarget! - parsedAvailable) : 0;
-  const activeExistingGoals = goals.filter(
-    (goal) => goal.id !== editing?.id && remainingAmount(goal) > 0
-  );
+  const activeExistingGoals = goals.filter((goal) => remainingAmount(goal) > 0);
   const existingEffort = activeExistingGoals
     .reduce((sum, goal) => sum + peakScheduledAmount(goal), 0);
   const globalPeak = preview ? existingEffort + preview.peak : existingEffort;
@@ -140,37 +133,16 @@ export default function NewGoalScreen() {
     }
     setSaving(true);
     try {
-      if (editing) {
-        const patch = {
-          name: name.trim(),
-          category,
-          targetAmount: parsedTarget!,
-          alreadyAvailable: parsedAvailable,
-          targetDate: parsedDate!.toISOString(),
-          reminderDay: editing.reminderDay,
-          rhythm,
-        };
-        updateGoal(editing.id, patch);
-        const updated = useStore.getState().goals.find((g) => g.id === editing.id)!;
-        if (reminderDay !== editing.reminderDay) {
-          await changeReminderDay(updated, reminderDay);
-        } else {
-          const scheduled = await scheduleGoalReminders(updated, suggestedAmount(updated));
-          updateGoal(editing.id, scheduled);
-        }
-        router.back();
-      } else {
-        const goal = await createGoal({
-          name: name.trim(),
-          category,
-          targetAmount: parsedTarget!,
-          alreadyAvailable: parsedAvailable,
-          targetDate: parsedDate!,
-          reminderDay,
-          rhythm,
-        });
-        router.replace({ pathname: '/goal/[id]', params: { id: goal.id } });
-      }
+      const goal = await createGoal({
+        name: name.trim(),
+        category,
+        targetAmount: parsedTarget!,
+        alreadyAvailable: parsedAvailable,
+        targetDate: parsedDate!,
+        reminderDay,
+        rhythm,
+      });
+      router.replace({ pathname: '/goal/[id]', params: { id: goal.id } });
     } finally {
       setSaving(false);
     }
@@ -188,12 +160,7 @@ export default function NewGoalScreen() {
 
   return (
     <Screen>
-      <AppHeader
-        showBack
-        currentGoalId={editing?.id}
-        title={editing ? 'Ajuster le plan' : 'Créer mon plan'}
-        subtitle={`Étape ${step} sur 2`}
-      />
+      <AppHeader showBack title="Créer mon plan" subtitle={`Étape ${step} sur 2`} />
       <StepIndicator current={step} labels={['Projet', 'Rythme']} />
 
       {step === 1 ? (
@@ -226,7 +193,9 @@ export default function NewGoalScreen() {
               setNameIsSuggested(false);
               setError(null);
             }}
-            placeholder={CATEGORY_LABELS[category]}
+            placeholder={
+              category === 'other' ? 'Choisis un nom pour ton projet' : CATEGORY_LABELS[category]
+            }
           />
           <Field
             label="Montant cible"
@@ -416,7 +385,7 @@ export default function NewGoalScreen() {
           <View style={styles.finalActions}>
             <Button label="Revenir au projet" variant="secondary" onPress={() => setStep(1)} style={{ flex: 1 }} />
             <Button
-              label={editing ? 'Enregistrer' : 'Créer le plan'}
+              label="Créer le plan"
               onPress={save}
               loading={saving}
               style={{ flex: 1 }}

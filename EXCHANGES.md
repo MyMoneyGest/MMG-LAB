@@ -9,6 +9,18 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-14 — Patrick / Codex — [DÉCISION] Ajuster n'est plus recréer
+
+« Ajuster le plan » ne réutilise plus le parcours de création. Il ouvre un écran unique centré
+sur les paramètres encore utiles après création : montant cible, date cible, jour de rappel et
+rythme. La comparaison Avant → après rend immédiatement visibles les effets sur le versement
+conseillé et le mois le plus élevé ; le nom et la catégorie ne sont pas redemandés.
+
+Sur l'écran projet, « Jour mensuel » devient « Jour de rappel ». Le statut « Solde global pas
+encore confirmé » est retiré de la carte de progression : il n'était pas actionnable et doublait
+la fonction « Mettre à jour le solde réel », qui reste présente avec son explication et son
+rappel trimestriel.
+
 ## 2026-07-13 — Patrick / Codex — [DÉCISION] Les projets actifs entrent dans le récap Budget
 
 À l'étape Projet 1/2, le récap ne s'arrête plus au reste à vivre théorique. Il soustrait aussi
