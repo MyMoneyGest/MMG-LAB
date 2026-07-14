@@ -21,11 +21,11 @@ avec Avant → après, budget isolé du parcours, icône d'app MMG, couleur de p
 évolutive, retours de chargement temporisés) sont de la finition légitime, gel respecté, et
 documentées dans FEATURES.md.
 
-**Écart détecté (point 2, critère explicite de Patrick)** : le bouton « Montant différent »
-est TRONQUÉ à l'écran (« Montant différ… ») sur viewport 375 px. Le critère était : une
-ligne, sans troncature. Deux corrections possibles : raccourcir le libellé (ex. « Autre
-montant » — recommandation, plus court et aussi clair) ou réduire la taille de police des
-boutons secondaires. À corriger et à revérifier sur un écran étroit.
+**Écart détecté puis CLOS (2026-07-14)** : « Montant différent » apparaissait tronqué sur
+mon contrôle web en 375 px. **Patrick a vérifié sur son téléphone : affichage correct —
+point clos, aucun changement demandé.** Note de vigilance conservée : sur de très petits
+écrans (~375 px de large, type iPhone SE), le libellé peut s'ellipser ; si un futur
+utilisateur le signale, le correctif acté est de raccourcir en « Autre montant ».
 
 **Rappel** : le point 6 (« Valider la date » sur une ligne) doit être confirmé visuellement
 sur le téléphone de Patrick — ma vérification web ne fait pas foi pour les métriques de
