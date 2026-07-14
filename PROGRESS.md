@@ -9,6 +9,34 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 27 : captures iPhone pour la campagne MMG
+
+### Fait
+- Ajouté le profil EAS `dev-sim` pour produire un client de développement iOS destiné au
+  simulateur, sans modifier les profils Android existants.
+- Exclu `.env.eas-simulator` de Git afin qu'aucune configuration locale ou valeur sensible du
+  simulateur ne puisse être versionnée.
+- Installé et piloté le build iOS de développement dans un simulateur iPhone 17 Pro Max, puis
+  réalisé un parcours de démonstration cohérent : accueil, exemple, budget, création du projet
+  « Déménagement », choix du rythme, progression, échéancier, versement, historique, menu et
+  objectif atteint.
+- Produit 11 captures iPhone authentiques dans
+  `/Users/patrickngouala/Documents/Images-MMG/Captures-iPhone-MMG`.
+- Désactivé le bouton flottant du client de développement et recapturé les écrans concernés ;
+  contrôle visuel final réussi sur les 11 images, sans clavier, outil de développement ni
+  cadrage parasite.
+- Vérifié les dimensions de chaque PNG : `1320 × 2868`, format iPhone 6,9 pouces accepté par
+  App Store Connect. Le dossier `Images-MMG` contient également les logos MMG et le prompt
+  Canva déjà préparé.
+
+### En cours
+- Aucun changement applicatif partiellement implémenté. Les visuels sont prêts pour Canva et
+  pour la future fiche App Store.
+
+### Ensuite
+- Pour l'App Store, sélectionner 10 captures au maximum parmi les 11 ; Canva peut utiliser la
+  série complète pour les flyers, affiches et réseaux sociaux.
+
 ## 2026-07-14 — Codex — Session 26 : lancement du build d'icône
 
 ### Fait

@@ -44,3 +44,4 @@ example
 
 # env files (secrets Supabase) — ne jamais committer
 .env
+.env.eas-simulator
