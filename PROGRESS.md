@@ -9,6 +9,24 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Codex — Session 26 : lancement du build d'icône
+
+### Fait
+- Vérifié que le dépôt est propre, synchronisé sur le commit `3138d6c` et que le profil EAS
+  `development` produit bien un APK de client de développement.
+- Patrick a explicitement autorisé l'envoi du code source à Expo EAS.
+- Le bac à sable de sécurité Codex a néanmoins refusé l'upload externe ; aucun build n'a donc
+  été créé et aucun contournement n'a été tenté.
+
+### En cours
+- Aucun changement de code. L'APK attend le lancement manuel de la commande EAS.
+
+### Ensuite
+- Patrick lance depuis la racine du projet :
+  `eas build --platform android --profile development`.
+- Dès que le build apparaît sur Expo, Codex peut le surveiller, récupérer l'APK et aider à
+  l'installer par ADB.
+
 ## 2026-07-14 — Codex — Session 25 : icône d'application MMG
 
 ### Fait
