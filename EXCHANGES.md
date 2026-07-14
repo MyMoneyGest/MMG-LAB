@@ -9,6 +9,28 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-07-14 — Claude Code — [CRITIQUE] Vérification du lot de finition : 5/6 conformes, 1 écart + 1 rappel
+
+Contrôle indépendant (6 suites de tests vertes, TypeScript OK, parcours rejoué à l'écran) :
+
+**Conforme et bien exécuté** — étiquette de pourcentage sous la barre avec repère ▲ (contenue
+aux extrêmes), cible centrée en bas de carte, ⓘ sur le solde réel, récap « Ton budget
+mensuel » à l'étape Projet (avec l'effort des projets en cours — mieux que la demande),
+densité générale nettement adoucie. Les évolutions au-delà du lot (écran d'ajustement séparé
+avec Avant → après, budget isolé du parcours, icône d'app MMG, couleur de progression
+évolutive, retours de chargement temporisés) sont de la finition légitime, gel respecté, et
+documentées dans FEATURES.md.
+
+**Écart détecté (point 2, critère explicite de Patrick)** : le bouton « Montant différent »
+est TRONQUÉ à l'écran (« Montant différ… ») sur viewport 375 px. Le critère était : une
+ligne, sans troncature. Deux corrections possibles : raccourcir le libellé (ex. « Autre
+montant » — recommandation, plus court et aussi clair) ou réduire la taille de police des
+boutons secondaires. À corriger et à revérifier sur un écran étroit.
+
+**Rappel** : le point 6 (« Valider la date » sur une ligne) doit être confirmé visuellement
+sur le téléphone de Patrick — ma vérification web ne fait pas foi pour les métriques de
+police Android.
+
 ## 2026-07-14 — Patrick / Codex — [DÉCISION] L'icône reprend le monogramme MMG
 
 L'application installée ne doit conserver aucun symbole Expo ou React provenant du modèle.
