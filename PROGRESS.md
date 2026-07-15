@@ -9,6 +9,31 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-14 — Claude Code — Session 28 : GUIDE-MAINTENANCE.md (clôture chantier 4)
+
+### Fait
+- Audit de l'état final : app terminée (25 sessions Codex), 7 suites de tests vertes,
+  TypeScript OK, arbre git propre, `.env` et `.env.eas-simulator` bien ignorés, captures
+  iPhone App Store prêtes. Constat : les chantiers 1, 2 et 3 sont soldés.
+- Rédigé **GUIDE-MAINTENANCE.md** — dernier livrable du chantier 4, manuel non-technique
+  destiné à Patrick pour maintenir MMG seul sans IA : 5 règles d'or, rôle de chaque outil
+  (Node/Volta/Expo/EAS/Supabase/GitHub/TestFlight), carte du code, lancer l'app et faire un
+  build, modifier texte/bouton/couleur, ajouter/retirer une fonctionnalité, commit + push pas
+  à pas, `.env` et table `events` Supabase, diagnostic des pannes types, contact
+  mymoneygest@mail.com.
+
+### En cours
+- Rien de partiellement implémenté (documentation uniquement, aucune modification de code).
+
+### Ensuite
+- **Seul point non-technique encore ouvert : le [BLOCAGE] RGPD** (identité juridique du
+  responsable, base légale du suivi d'usage, durée de conservation des événements Supabase) —
+  décision de Patrick à intégrer dans `src/app/legal.tsx` avant diffusion élargie / App Store.
+- Passe finale de cohérence FEATURES.md (déjà tenu à jour au fil de l'eau — vérification
+  légère suffit).
+
+---
+
 ## 2026-07-14 — Codex — Session 27 : captures iPhone pour la campagne MMG
 
 ### Fait
