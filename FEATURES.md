@@ -277,6 +277,12 @@ Dernière mise à jour : 2026-07-14 (Codex).
   mois » pédagogique). `/legal` = éditeur et contact, positionnement (pas une banque),
   données locales, tracking pseudonymisé détaillé, notifications, suppression et droits,
   CGU de phase de test. Contact : `mymoneygest@mail.com`.
+- **RGPD** : responsable du traitement = **Patrick NGOUALA** (contact `mymoneygest@mail.com`) ;
+  base légale de la mesure d'usage = **intérêt légitime** (statistiques anonymes
+  d'amélioration, aucune donnée personnelle identifiante) avec **droit d'opposition** par
+  email ; **conservation des événements : 12 mois** maximum puis suppression. Choix de
+  l'intérêt légitime plutôt que du consentement pour éviter un écran d'opt-in qui biaiserait
+  le test de rétention (cf. décision dans EXCHANGES.md).
 - **Où** : `src/app/example.tsx`, `src/app/legal.tsx`.
 
 ## 12. Persistance locale

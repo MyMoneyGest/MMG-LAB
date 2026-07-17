@@ -13,8 +13,9 @@ export default function LegalScreen() {
         <Eyebrow>Informations</Eyebrow>
         <Text style={styles.title}>Éditeur et contact</Text>
         <Text style={styles.paragraph}>
-          MMG est éditée, pour cette phase de test, sous le nom MyMoneyGest. Pour toute
-          question sur l'app, tes données ou les présentes conditions, écris à :
+          MMG est éditée, pour cette phase de test, sous le nom MyMoneyGest par Patrick
+          NGOUALA, responsable du traitement des données au sens du RGPD. Pour toute question
+          sur l'app, tes données ou les présentes conditions, écris à :
         </Text>
         <Text selectable style={styles.contact}>mymoneygest@mail.com</Text>
       </Card>
@@ -56,6 +57,13 @@ export default function LegalScreen() {
           mouvement, une tranche de montant. Les montants exacts, le nom des projets et le
           détail du budget ne sont jamais transmis. Ces données ne servent ni à la publicité
           ni à la revente.
+        </Text>
+        <Text style={styles.paragraph}>
+          La base légale de cette mesure est l'intérêt légitime de MyMoneyGest à vérifier la
+          fiabilité du rituel et à améliorer l'app pendant sa phase de test, sans traiter
+          aucune donnée personnelle identifiante. Tu peux t'opposer à tout moment à cette
+          mesure en écrivant à mymoneygest@mail.com. Ces événements pseudonymisés sont
+          conservés 12 mois au maximum, puis supprimés.
         </Text>
 
         <Text style={styles.section}>Notifications</Text>

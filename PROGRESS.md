@@ -9,6 +9,26 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-17 — Claude Code — Session 29 : mentions RGPD intégrées (blocage clos)
+
+### Fait
+- Recueilli les 3 décisions RGPD de Patrick et intégré dans `src/app/legal.tsx` : responsable
+  du traitement **Patrick NGOUALA** (contact mymoneygest@mail.com), base légale **intérêt
+  légitime** avec droit d'opposition par email, **conservation 12 mois** des événements.
+- Écarté le « consentement » initialement évoqué : il aurait imposé un écran d'opt-in au 1er
+  lancement (rupture du gel) et biaisé le test de rétention. Décision tracée dans EXCHANGES.md,
+  blocage RGPD marqué RÉSOLU/CLOS.
+- FEATURES.md §11 mis à jour. `npx tsc --noEmit` OK, page Confidentialité vérifiée à l'écran
+  (web), aucune erreur console.
+
+### En cours
+- Rien de partiellement implémenté.
+
+### Ensuite
+- **Plan de reconstruction et de consolidation entièrement soldé.** Restent des actions
+  hors-code côté Patrick : lancer le build APK/TestFlight pour élargir aux premiers
+  utilisateurs, et le suivi de rétention via SQL sur Supabase.
+
 ## 2026-07-14 — Claude Code — Session 28 : GUIDE-MAINTENANCE.md (clôture chantier 4)
 
 ### Fait

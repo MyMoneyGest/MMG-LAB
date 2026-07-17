@@ -493,6 +493,18 @@ inventées : l'identité juridique complète du responsable, la base légale du 
 la durée de conservation des événements Supabase. Patrick doit les définir avant une diffusion
 au-delà de la phase de test.
 
+> **2026-07-17 — Patrick / Claude Code — [DÉCISION] Blocage RGPD RÉSOLU et CLOS.**
+> Réponses de Patrick : (1) responsable = **Patrick NGOUALA**, contact `mymoneygest@mail.com` ;
+> (2) base légale = **intérêt légitime** ; (3) conservation = **12 mois**.
+> Point important tranché avec Patrick : il avait d'abord dit « consentement », mais en RGPD
+> le consentement impose un opt-in explicite AVANT tout envoi d'événement → cela aurait exigé
+> un écran de consentement au 1er lancement (rupture du gel des fonctionnalités) ET aurait
+> biaisé le test de rétention (friction + non-suivi des refus). L'intérêt légitime, adapté à
+> des statistiques anonymes sans donnée personnelle, évite tout cela et ne demande aucun code
+> supplémentaire. Intégré dans `src/app/legal.tsx` (mention responsable + base légale + droit
+> d'opposition + durée 12 mois) et documenté dans FEATURES.md §11. Aucune obligation d'écran
+> de consentement. tsc OK, page vérifiée à l'écran.
+
 ---
 
 ## 2026-07-11 — Claude Code — [SUGGESTION] Notes de conception pour le chantier 1 (relais à Codex)
