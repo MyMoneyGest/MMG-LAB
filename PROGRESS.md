@@ -9,6 +9,31 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-22 — Claude Code — Session 31 : correction adresse contact + rebuild des deux plateformes
+
+### Fait
+- **Coquille corrigée** (repérée par Patrick) : l'adresse de contact était
+  `mymoneygest@mail.com` au lieu de `mymoneygest@gmail.com` (le « g » de gmail manquait).
+  Corrigée dans l'app (`src/app/legal.tsx`, 3 endroits) et dans toute la doc. tsc OK.
+  Adresse publique définitive validée par Patrick : **mymoneygest@gmail.com**.
+- Un email est gravé dans le build → les 2 builds précédents (iOS 2ca9784d déjà sur
+  TestFlight, Android 511d59e8 en file) contenaient l'ancienne adresse. Android annulé.
+- **Rebuild des deux plateformes depuis le commit corrigé 7a67f37** (env Supabase confirmées
+  chargées) : Android APK `2d82f6d1`, iOS production `183e9032` (certificats déjà en place,
+  build lancé sans interaction).
+
+### En cours
+- Les deux builds en file d'attente EAS.
+- **3 commits locaux non poussés** (auth GitHub KO depuis le terminal de Claude) : Patrick
+  doit lancer `git push`.
+
+### Ensuite (Patrick)
+- Quand le build iOS finit : `eas submit --platform ios --latest` (clé API App Store Connect
+  déjà enregistrée → devrait être fluide) pour l'envoyer sur TestFlight.
+- Quand l'APK Android finit : récupérer le lien de téléchargement.
+- Installer les 2, vérifier qu'un `app_open` arrive dans Supabase, puis `truncate` avant
+  diffusion.
+
 ## 2026-07-17 — Claude Code — Session 30 : lancement des builds de production
 
 ### Fait
