@@ -9,6 +9,27 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-17 — Claude Code — Session 30 : lancement des builds de production
+
+### Fait
+- **Correctif critique avant tout build** : aucune variable d'environnement Supabase n'était
+  configurée sur EAS. Comme `.env` est gitignoré (donc non envoyé au cloud EAS), un build de
+  production serait parti SANS clé Supabase → tracking mort en production → mesure de
+  rétention aveugle. Créé sur EAS `EXPO_PUBLIC_SUPABASE_URL` (plaintext) et
+  `EXPO_PUBLIC_SUPABASE_ANON_KEY` (sensitive) pour les environnements **preview ET production**.
+- Lancé le build **Android APK** (profil `preview`, distribution interne = lien de
+  téléchargement direct pour les forums). Log EAS confirme le chargement des deux variables
+  Supabase dans le build. Build : 511d59e8-9294-4b88-a0bd-b9cd8e9d52aa.
+
+### En cours
+- Build Android en file d'attente EAS (suivi via le lien du build).
+
+### Ensuite (Patrick — nécessite ses identifiants Apple, Claude ne peut pas les saisir)
+- **iOS / TestFlight** : Patrick doit lancer lui-même `eas build --profile production
+  --platform ios` (login Apple Developer interactif pour les certificats), puis
+  `eas submit --platform ios`. Les variables Supabase sont déjà prêtes côté `production`.
+- Rappel non-code : purge trimestrielle des events Supabase de +12 mois (conformité RGPD).
+
 ## 2026-07-17 — Claude Code — Session 29 : mentions RGPD intégrées (blocage clos)
 
 ### Fait
