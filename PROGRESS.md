@@ -9,6 +9,26 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-23 — Claude Code — Session 32 : rappel de test réservé au dev (anti-pollution du vrai plan)
+
+### Fait
+- Problème repéré par Patrick : la notification de test (appui long sur le M) appelait la
+  **vraie** `confirmContribution` sur « Fait » → enregistrait un vrai dépôt, soldait le cycle
+  et reprogrammait le vrai rappel. Le marquage `test_notification` ne protégeait QUE Supabase
+  (mesure), pas le plan réel de l'utilisateur.
+- Correctif : le déclencheur de test (appui long sur le M) est désormais **réservé aux builds
+  de développement** (`__DEV__`). En production, le M reste un simple élément de marque, sans
+  action. → aucun vrai utilisateur ne peut fausser son plan ; Patrick garde l'outil en dev.
+- Aucune autre entrée vers `scheduleTestReminder`. tsc OK, 7 suites de tests vertes.
+- Fait avant toute distribution réelle (rien n'était encore entre les mains d'utilisateurs).
+
+### En cours
+- Rebuild des deux plateformes depuis ce commit à relancer.
+
+### Ensuite
+- Nouveau build Android (preview) + iOS (production) → re-soumettre l'iOS à TestFlight.
+- Puis distribution.
+
 ## 2026-07-22 — Claude Code — Session 31 : correction adresse contact + rebuild des deux plateformes
 
 ### Fait

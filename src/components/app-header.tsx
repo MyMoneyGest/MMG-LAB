@@ -104,16 +104,25 @@ export function AppHeader({
           <Text style={styles.iconLabel}>‹</Text>
         </Pressable>
       ) : showTestMark ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Programmer un rappel test"
-          accessibilityHint="Maintenir appuyé pour recevoir un rappel dans 15 secondes"
-          delayLongPress={700}
-          disabled={testPending}
-          onLongPress={testNotification}
-          style={[styles.logo, testPending && styles.logoPending]}>
-          <Text style={styles.logoLetter}>M</Text>
-        </Pressable>
+        __DEV__ ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Programmer un rappel test"
+            accessibilityHint="Maintenir appuyé pour recevoir un rappel dans 15 secondes"
+            delayLongPress={700}
+            disabled={testPending}
+            onLongPress={testNotification}
+            style={[styles.logo, testPending && styles.logoPending]}>
+            <Text style={styles.logoLetter}>M</Text>
+          </Pressable>
+        ) : (
+          // Production : le M reste un simple élément de marque. Le rappel de test
+          // (appui long) est réservé aux builds de développement, car ses actions
+          // Fait/Modifier/Reporter modifieraient le vrai plan de l'utilisateur.
+          <View style={styles.logo}>
+            <Text style={styles.logoLetter}>M</Text>
+          </View>
+        )
       ) : (
         <View style={styles.iconPlaceholder} />
       )}

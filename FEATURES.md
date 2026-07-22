@@ -217,10 +217,14 @@ Dernière mise à jour : 2026-07-14 (Codex).
 - **Actions** : Fait exécute la même confirmation en un tap et affiche l'écran de confirmation ;
   Modifier ouvre la saisie d'un autre montant ; Reporter ouvre les choix de date. Dans les trois
   cas, l'onglet Aujourd'hui du projet porté par `data.goalId` est ouvert.
-- **Test caché** : maintenir le **M** du logo pendant 700 ms programme un rappel test après
-  15 secondes pour le projet affiché (ou le dernier projet actif). Une confirmation immédiate
-  indique quel projet sera utilisé. Sur Android, il faut déplier la notification pour voir les
-  trois actions. Une seule notification de test reste programmée à la fois.
+- **Test caché (builds de développement uniquement)** : maintenir le **M** du logo pendant
+  700 ms programme un rappel test après 15 secondes pour le projet affiché (ou le dernier
+  projet actif). **Réservé aux builds `__DEV__`** : en production le M est un simple élément
+  de marque sans action. Raison : les actions Fait/Modifier/Reporter d'un rappel test appellent
+  la vraie confirmation (`confirmContribution`), qui enregistre un dépôt réel et avance le cycle
+  — le marquage `test_notification` ne protège que la mesure Supabase, pas le plan. Gaté au dev
+  pour qu'aucun utilisateur réel ne puisse fausser son propre plan. Sur Android (dev), il faut
+  déplier la notification pour voir les trois actions. Une seule notification de test à la fois.
 - **Message contextuel** : les surplus du cycle sont additionnés dans le rappel d'ancre
   (« Tu as déjà mis X € ce mois-ci… »). Chaque nouveau surplus reprogramme les rappels afin que
   le message et le montant conseillé restent à jour.
