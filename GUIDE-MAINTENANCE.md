@@ -266,15 +266,27 @@ fichier `.gitignore` qui dit « n'envoie jamais ça en ligne »).
 - La règle de sécurité de cette table autorise **uniquement l'ajout** de lignes depuis l'app,
   pas la lecture. C'est normal et voulu. Toi, tu lis les données depuis le tableau de bord
   Supabase (qui a tous les droits).
-- Pour compter la rétention, tu peux utiliser l'onglet **SQL Editor** de Supabase et poser
-  des questions simples à la base. Exemple pour voir le nombre d'événements par type :
-  ```sql
-  select event_type, count(*) from events group by event_type order by 2 desc;
-  ```
+- Pour compter la rétention, utilise l'onglet **SQL Editor** de Supabase. **Toutes les
+  requêtes prêtes à copier-coller sont dans le fichier `scripts/retention-queries.sql`** du
+  projet : santé de la base, entonnoir d'activation, **rétention au 3e rappel** (la mesure
+  clé, avec les seuils 40 % / 20 %), courbe rappel par rappel, et analyses par catégorie /
+  rythme. Ouvre ce fichier, copie la requête voulue, colle-la dans le SQL Editor, lance.
+- **Deux entretiens à faire à la main** (aussi dans ce fichier, section 0) :
+  1. **Avant de diffuser l'app** : vider les données de test, une seule fois, juste avant de
+     partager le lien (sinon tes propres tests re-salissent la table) :
+     `truncate table events restart identity;`
+  2. **Tous les trois mois environ (RGPD)** : effacer les événements de plus de 12 mois, comme
+     l'annonce la page Confidentialité :
+     `delete from events where created_at < now() - interval '12 months';`
 - La clé utilisée par l'app est une clé « publique » par nature (elle est de toute façon dans
   l'app installée) ; ce sont les règles de la table qui protègent les données, pas le secret
   de la clé. **La clé à ne JAMAIS exposer**, elle, est la clé « service_role » du tableau de
   bord : ne la mets jamais dans le code ni dans `.env` de l'app.
+- **Les clés dans les builds** : quand une IA ou toi fabriquez un build (Android/iPhone) via
+  EAS, le fichier `.env` local n'est PAS envoyé (il est gitignoré). Les clés Supabase sont
+  donc enregistrées séparément dans EAS (déjà fait pour `preview` et `production`). Pour les
+  revoir : `eas env:list production`. Sans elles, un build fonctionnerait mais n'enverrait
+  aucun événement — le suivi de rétention serait muet.
 
 ---
 
