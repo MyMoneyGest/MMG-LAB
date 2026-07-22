@@ -23,11 +23,13 @@ ce qui vient ensuite.
 - Fait avant toute distribution réelle (rien n'était encore entre les mains d'utilisateurs).
 
 ### En cours
-- Rebuild des deux plateformes depuis ce commit à relancer.
+- Builds neufs lancés depuis 9f332d1 : Android `1baebe04`, iOS `64911ac5` (= build 4).
 
 ### Ensuite
-- Nouveau build Android (preview) + iOS (production) → re-soumettre l'iOS à TestFlight.
-- Puis distribution.
+- Quand iOS build 4 finit → `eas submit --platform ios --id 64911ac5-8ddd-48a1-bdbd-17dba471d359`.
+- ⚠️ La Beta App Review externe (lien public forums) doit porter sur le **build 4** (le
+  build 3 avait encore le rappel de test en prod) — ne pas soumettre le build 3 en externe.
+- Android : récupérer le lien APK du build `1baebe04`.
 
 ## 2026-07-22 — Claude Code — Session 31 : correction adresse contact + rebuild des deux plateformes
 
