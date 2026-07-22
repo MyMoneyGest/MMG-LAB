@@ -17,7 +17,7 @@ export default function LegalScreen() {
           NGOUALA, responsable du traitement des données au sens du RGPD. Pour toute question
           sur l'app, tes données ou les présentes conditions, écris à :
         </Text>
-        <Text selectable style={styles.contact}>mymoneygest@mail.com</Text>
+        <Text selectable style={styles.contact}>mymoneygest@gmail.com</Text>
       </Card>
 
       <Card>
@@ -62,7 +62,7 @@ export default function LegalScreen() {
           La base légale de cette mesure est l'intérêt légitime de MyMoneyGest à vérifier la
           fiabilité du rituel et à améliorer l'app pendant sa phase de test, sans traiter
           aucune donnée personnelle identifiante. Tu peux t'opposer à tout moment à cette
-          mesure en écrivant à mymoneygest@mail.com. Ces événements pseudonymisés sont
+          mesure en écrivant à mymoneygest@gmail.com. Ces événements pseudonymisés sont
           conservés 12 mois au maximum, puis supprimés.
         </Text>
 
@@ -82,7 +82,7 @@ export default function LegalScreen() {
         </Text>
         <Text style={styles.paragraph}>
           Pour toute question ou demande concernant les événements techniques pseudonymisés,
-          contacte mymoneygest@mail.com. Tu peux également adresser une réclamation à la CNIL.
+          contacte mymoneygest@gmail.com. Tu peux également adresser une réclamation à la CNIL.
         </Text>
       </Card>
 

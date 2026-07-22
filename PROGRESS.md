@@ -34,7 +34,7 @@ ce qui vient ensuite.
 
 ### Fait
 - Recueilli les 3 décisions RGPD de Patrick et intégré dans `src/app/legal.tsx` : responsable
-  du traitement **Patrick NGOUALA** (contact mymoneygest@mail.com), base légale **intérêt
+  du traitement **Patrick NGOUALA** (contact mymoneygest@gmail.com), base légale **intérêt
   légitime** avec droit d'opposition par email, **conservation 12 mois** des événements.
 - Écarté le « consentement » initialement évoqué : il aurait imposé un écran d'opt-in au 1er
   lancement (rupture du gel) et biaisé le test de rétention. Décision tracée dans EXCHANGES.md,
@@ -61,7 +61,7 @@ ce qui vient ensuite.
   (Node/Volta/Expo/EAS/Supabase/GitHub/TestFlight), carte du code, lancer l'app et faire un
   build, modifier texte/bouton/couleur, ajouter/retirer une fonctionnalité, commit + push pas
   à pas, `.env` et table `events` Supabase, diagnostic des pannes types, contact
-  mymoneygest@mail.com.
+  mymoneygest@gmail.com.
 
 ### En cours
 - Rien de partiellement implémenté (documentation uniquement, aucune modification de code).
@@ -734,7 +734,7 @@ ce qui vient ensuite.
   avec le projet courant en tête, sans muter ni réordonner les données persistées.
 - Item 1.4 commit et push effectués : `46385d2`.
 - **Chantier 1.5 — Confidentialité et CGU** : contenu séparé en cartes lisibles et enrichi
-  avec l'éditeur, le contact `mymoneygest@mail.com`, les données locales, les événements
+  avec l'éditeur, le contact `mymoneygest@gmail.com`, les données locales, les événements
   pseudonymisés, les notifications, la suppression, les droits et les conditions de test.
 - Item 1.5 vérifié, commit et push effectués : `bba31e7`.
 - **Chantier 1.3 — Trois rythmes d'épargne** : choix stable, progressif ou régressif à la
@@ -800,7 +800,7 @@ ce qui vient ensuite.
 2. **1.4 Plan actif en premier** : dans `src/components/menu-modal.tsx`, trier `goals` pour
    afficher `currentGoalId` en tête.
 3. **1.5 CGU/Confidentialité enrichies** : étoffer `src/app/legal.tsx` (éditeur, données,
-   notifications, suppression des données, CGU phase de test) + contact `mymoneygest@mail.com`.
+   notifications, suppression des données, CGU phase de test) + contact `mymoneygest@gmail.com`.
 4. **1.3 Trois rythmes d'épargne** (stable / progressif / régressif) — voir la note de
    conception détaillée dans EXCHANGES.md avant de coder.
 5. **1.1 Système de test des notifications** (appui long sur le M → notif test à 15 s avec

@@ -494,7 +494,7 @@ la durée de conservation des événements Supabase. Patrick doit les définir a
 au-delà de la phase de test.
 
 > **2026-07-17 — Patrick / Claude Code — [DÉCISION] Blocage RGPD RÉSOLU et CLOS.**
-> Réponses de Patrick : (1) responsable = **Patrick NGOUALA**, contact `mymoneygest@mail.com` ;
+> Réponses de Patrick : (1) responsable = **Patrick NGOUALA**, contact `mymoneygest@gmail.com` ;
 > (2) base légale = **intérêt légitime** ; (3) conservation = **12 mois**.
 > Point important tranché avec Patrick : il avait d'abord dit « consentement », mais en RGPD
 > le consentement impose un opt-in explicite AVANT tout envoi d'événement → cela aurait exigé

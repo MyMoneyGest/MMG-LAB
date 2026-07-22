@@ -276,8 +276,8 @@ Dernière mise à jour : 2026-07-14 (Codex).
 - **Quoi** : `/example` = plan statique de démonstration (récap sombre + « ensuite, chaque
   mois » pédagogique). `/legal` = éditeur et contact, positionnement (pas une banque),
   données locales, tracking pseudonymisé détaillé, notifications, suppression et droits,
-  CGU de phase de test. Contact : `mymoneygest@mail.com`.
-- **RGPD** : responsable du traitement = **Patrick NGOUALA** (contact `mymoneygest@mail.com`) ;
+  CGU de phase de test. Contact : `mymoneygest@gmail.com`.
+- **RGPD** : responsable du traitement = **Patrick NGOUALA** (contact `mymoneygest@gmail.com`) ;
   base légale de la mesure d'usage = **intérêt légitime** (statistiques anonymes
   d'amélioration, aucune donnée personnelle identifiante) avec **droit d'opposition** par
   email ; **conservation des événements : 12 mois** maximum puis suppression. Choix de

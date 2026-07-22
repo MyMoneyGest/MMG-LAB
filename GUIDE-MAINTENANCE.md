@@ -331,7 +331,7 @@ serveur.
 - **Pour du code** (bug, nouvelle fonctionnalité, erreur qui persiste) : repasse par une IA
   (Claude Code ou Codex). Donne-lui le **message d'erreur copié tel quel** et dis-lui de lire
   `EXCHANGES.md` et `FEATURES.md` d'abord — tout le contexte y est.
-- **Contact du projet** : `mymoneygest@mail.com`.
+- **Contact du projet** : `mymoneygest@gmail.com`.
 
 ---
 
