@@ -45,6 +45,25 @@
 --   delete from events where created_at < now() - interval '12 months';
 
 
+-- 0.c  ⭐ À LANCER UNE FOIS : la vue « events_reels » (sans tes appareils de test).
+--      Chaque INSTALLATION a son propre install_id (ton Android et un simulateur
+--      iPhone = deux identifiants différents). Toi, tu ouvres l'app en permanence :
+--      si tu restes dans la mesure, tu gonfles artificiellement la rétention.
+--      Cette vue écarte tes installations une bonne fois pour toutes ; toutes les
+--      requêtes de mesure ci-dessous l'utilisent à la place de « events ».
+--
+--      Pour ajouter un appareil à exclure plus tard : relance ce bloc en ajoutant
+--      son install_id à la liste (garde la virgule entre chaque).
+
+create or replace view events_reels as
+select *
+from events
+where install_id not in (
+  'install-1784788834062-uklf43hsnw'   -- Patrick — téléphone Android
+  -- , 'install-xxxx'                  -- ex. simulateur iPhone, proches testant « pour voir »
+);
+
+
 -- ############################################################################
 -- SECTION 1 — SANTÉ / VOLUME (à lancer quand tu veux vérifier que ça vit)
 -- ############################################################################
@@ -81,7 +100,7 @@ select
   count(distinct install_id) filter (where event_type = 'goal_created')         as ont_cree_un_projet,
   count(distinct install_id) filter (where event_type = 'contribution_logged'
                                         and metadata->>'type' = 'deposit')       as ont_verse_au_moins_1x
-from events;
+from events_reels;
 
 
 -- ############################################################################
@@ -100,7 +119,7 @@ from events;
 
 with activation as (
   select install_id, min(created_at) as activated_at
-  from events
+  from events_reels
   where event_type = 'goal_created'
   group by install_id
 ),
@@ -111,7 +130,7 @@ cohorte_eligible as (
 ),
 actifs_au_3e as (
   select distinct e.install_id
-  from events e
+  from events_reels e
   join cohorte_eligible c on c.install_id = e.install_id
   where e.event_type = 'contribution_logged'
     and e.metadata->>'type' = 'deposit'
@@ -135,7 +154,7 @@ select
 
 with activation as (
   select install_id, min(created_at) as activated_at
-  from events
+  from events_reels
   where event_type = 'goal_created'
   group by install_id
 ),
@@ -143,7 +162,7 @@ versements as (
   select a.install_id,
          floor(extract(epoch from (e.created_at - a.activated_at)) / (30 * 24 * 3600))::int as rappel_no
   from activation a
-  join events e
+  join events_reels e
     on e.install_id = a.install_id
    and e.event_type = 'contribution_logged'
    and e.metadata->>'type' = 'deposit'
@@ -164,7 +183,7 @@ order by rappel_no;
 -- 5.a  Popularité des catégories de projet à la création.
 select metadata->>'category' as categorie,
        count(*)              as projets_crees
-from events
+from events_reels
 where event_type = 'goal_created'
 group by categorie
 order by projets_crees desc;
@@ -172,7 +191,7 @@ order by projets_crees desc;
 -- 5.b  Rythme choisi (stable / progressif / régressif).
 select metadata->>'rhythm' as rythme,
        count(*)            as projets
-from events
+from events_reels
 where event_type = 'goal_created'
 group by rythme
 order by projets desc;
@@ -180,7 +199,7 @@ order by projets desc;
 -- 5.c  Réaction aux propositions de réajustement (accepté / gardé / reporté).
 select metadata->>'choice' as decision,
        count(*)            as occurrences
-from events
+from events_reels
 where event_type = 'rebalance_decided'
 group by decision
 order by occurrences desc;
@@ -190,4 +209,4 @@ select
   count(*) filter (where event_type = 'reminder_opened')    as rappels_ouverts,
   count(*) filter (where event_type = 'reminder_postponed') as rappels_reportes,
   count(*) filter (where event_type = 'goal_deleted')       as projets_supprimes
-from events;
+from events_reels;
