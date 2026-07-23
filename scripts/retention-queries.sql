@@ -55,13 +55,21 @@
 --      Pour ajouter un appareil à exclure plus tard : relance ce bloc en ajoutant
 --      son install_id à la liste (garde la virgule entre chaque).
 
-create or replace view events_reels as
+--      ⚠️ SÉCURITÉ : « security_invoker = true » est indispensable. Sans lui, la vue
+--      s'exécuterait avec les droits de son créateur et contournerait la règle
+--      « insert seulement » de la table events — rendant tous les événements
+--      lisibles par la clé publique de l'app. Le REVOKE est une sécurité de plus.
+
+create or replace view events_reels
+with (security_invoker = true) as
 select *
 from events
 where install_id not in (
   'install-1784788834062-uklf43hsnw'   -- Patrick — téléphone Android
-  -- , 'install-xxxx'                  -- ex. simulateur iPhone, proches testant « pour voir »
+  -- , 'install-xxxx'                  -- ex. proches testant « pour voir »
 );
+
+revoke all on events_reels from anon, authenticated;
 
 
 -- ############################################################################
