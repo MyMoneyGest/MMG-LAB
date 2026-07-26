@@ -7,6 +7,19 @@ lumière des données de rétention.
 Pour chaque retour : source, date, l'idée, l'analyse (Claude Code), et le verdict/horizon.
 Chercher les **motifs récurrents** (plusieurs personnes) plutôt que réagir à un retour isolé.
 
+**Micro-ajustements cosmétiques** (copie, ponctuation, espacements…) : ne rien refaire au coup
+par coup. On les **groupe pour le prochain build obligatoire** (avant l'expiration TestFlight
+~90 j) → coût zéro, pas de churn réactive en plein test.
+
+---
+
+## Cosmétique — à grouper sur le prochain build
+
+- **2026-07-24 (n=1)** : les points de « Un projet. Un geste par mois. » (accueil) trouvés un
+  peu secs. Ponctuation volontaire (rythme slogan). Alternative si on change : virgule
+  (« Un projet, un geste par mois. »), plus douce. Fichier : `src/app/home.tsx`. Ne changer
+  que si le retour se répète. Cosmétique, sans effet sur la mesure.
+
 ---
 
 ## 2026-07-24 — Ami de Patrick (installation APK Android, n=1)
