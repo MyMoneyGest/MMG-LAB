@@ -55,3 +55,22 @@ a assez bien marché pour qu'il se projette en v2). Les 4 idées vont toutes ver
      financier »). Décrit en réalité une autre app (agrégateur fintech). Besoin sous-jacent
      réel (« que faire de l'argent épargné ? ») mais mauvaise réponse.
    - *Verdict* : à écarter, même à long terme, sauf pivot produit assumé.
+
+---
+
+## 2026-07-24 — Testeur : date de début différée du projet  ⭐ (priorité haute post-test)
+
+Idée : pouvoir créer un projet dont le démarrage (plan + rappels) commence à une **date
+future** choisie (« je m'y mets dans 2-3 mois »).
+
+- *Analyse* : **meilleur retour reçu à ce jour** — il renforce le cœur (planifier = méthode),
+  ne dilue pas le positionnement, et répond à un cas réel (projet en cours à finir, prime à
+  venir…). Pas de workaround propre aujourd'hui (le « Reporter » est borné, ne saute pas des
+  mois).
+- ⚠️ *Piège de conception à ne PAS oublier à l'implémentation* : la « date d'activation »
+  servant au calcul de rétention devra démarrer à la **date de début choisie**, pas à la date
+  de `goal_created`. Sinon un « démarrage différé » ressemble à un abandon immédiat dans les
+  requêtes (cf. `scripts/retention-queries.sql`, section 3) → mesure faussée. Même famille de
+  piège que la notif de test.
+- *Verdict* : après test (gel), mais **priorité plus haute** que anglais / FCFA / gamification.
+  À prioriser si le retour se répète.
