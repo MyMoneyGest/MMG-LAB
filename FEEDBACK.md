@@ -19,6 +19,9 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
   peu secs. Ponctuation volontaire (rythme slogan). Alternative si on change : virgule
   (« Un projet, un geste par mois. »), plus douce. Fichier : `src/app/home.tsx`. Ne changer
   que si le retour se répète. Cosmétique, sans effet sur la mesure.
+- **2026-07-24 (Patrick)** : jour de rappel « le 1 » → « le **1er** » (règle FR : seul le
+  jour 1 prend l'ordinal ; les jours 2-31 restent cardinaux « le 2 », « le 3 »…). Fichiers :
+  `src/components/plan-summary.tsx` et `src/app/goal/[id].tsx`. À inclure au prochain build.
 
 ---
 
@@ -74,3 +77,30 @@ future** choisie (« je m'y mets dans 2-3 mois »).
   piège que la notif de test.
 - *Verdict* : après test (gel), mais **priorité plus haute** que anglais / FCFA / gamification.
   À prioriser si le retour se répète.
+
+---
+
+## 2026-07-24 — Patrick (dogfooding) : mode « épargne libre » sans budget/revenus  ⭐⭐ (insight structurant)
+
+Découvert par Patrick en essayant d'utiliser l'app pour son propre cas : entrepreneur à
+revenus **irréguliers et non quantifiables à l'avance**. Il « subit » des rentrées d'argent
+distinctes du salaire, ne peut pas les budgéter, mais veut en mettre une partie de côté au fil
+de l'eau (« comme un fichier Excel qu'on remplit quand l'argent rentre »).
+
+- *Constat* : MMG suppose aujourd'hui un revenu régulier et quantifiable (budget → capacité
+  prudente → montant conseillé). Cette hypothèse fondatrice exclut une grosse population :
+  entrepreneurs, freelances, commissions, saisonniers. C'est un **second mode** possible :
+  « épargne libre » = un objectif + des versements quand on peut, **sans budget imposé ni
+  montant mensuel calculé**, mais **avec le rappel conservé**.
+- *On-positionnement* : oui — reste méthode manuelle + rituel, pas de produit à côté. Élargit
+  QUI la méthode sert plutôt que de la dénaturer.
+- ⚠️ *Tension stratégique* : si on retire budget + montant conseillé, qu'est-ce qui distingue
+  MMG d'un simple tableur (que Patrick cite lui-même) ? Réponse : le **rituel** (rappel qui
+  fait revenir) + la visualisation de progression. → en mode libre, GARDER le rappel, sinon
+  MMG *devient* l'Excel.
+- ⚠️ *Piège mesure* : l'épargnant irrégulier verse par à-coups (gros dépôt ponctuel, puis
+  rien). Il peut être fidèle sans coller à la cadence mensuelle → risque de passer pour un
+  abandon dans la métrique actuelle. À gérer si ce mode est développé.
+- *Verdict* : après test (gel), **priorité stratégique haute** — remet en cause l'hypothèse
+  « tout le monde a un revenu régulier à budgéter ». Possiblement le retour le plus structurant
+  reçu. À croiser avec les données de rétention (les revenus irréguliers churnent-ils plus ?).
