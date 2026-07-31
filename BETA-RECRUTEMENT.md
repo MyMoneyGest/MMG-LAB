@@ -14,6 +14,8 @@ règles et au ton de chaque communauté.
   `5eb46a303b8a84cf24abd863a065ea7ed43d1ac07badc7a83d5ff0613530092e`.
 - iPhone : lien TestFlight préparé, mais build encore en Beta App Review. Limite volontaire
   du lien public : 200 testeurs. Ne pas annoncer que l'accès est ouvert avant son activation.
+  Pour recevoir l'invitation, le testeur doit fournir l'adresse e-mail associée au compte
+  Apple utilisé sur son iPhone.
 
 ## Formulaire Tally
 
@@ -38,7 +40,8 @@ deux minutes et ne demande aucun montant de revenu, de budget ou d'épargne.
 1. **Prénom ou pseudonyme** — réponse courte, obligatoire.
 2. **Adresse e-mail** — e-mail, obligatoire.
    Aide : « Uniquement pour vous envoyer l'accès à la bêta et les informations essentielles du
-   test. »
+   test. Pour tester sur iPhone, indiquez impérativement l'adresse e-mail associée au compte
+   Apple utilisé sur l'appareil. »
 3. **Sur quelle plateforme souhaitez-vous tester MMG ?** — choix unique, obligatoire :
    - Android
    - iPhone

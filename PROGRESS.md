@@ -29,6 +29,9 @@ ce qui vient ensuite.
   `https://tally.so/r/vGVapv`.
 - Vérifié le lien public comme un testeur : contenu, champs obligatoires, plateforme,
   consentement et notice de confidentialité sont correctement affichés.
+- Précisé dans le formulaire publié que les testeurs iPhone doivent fournir l'adresse e-mail
+  associée au compte Apple utilisé sur leur appareil ; nouvelle version vérifiée sur le lien
+  public et règle reportée dans `BETA-RECRUTEMENT.md`.
 
 ### En cours
 - Préparation de la Release GitHub Android avec l'APK vérifié ; aucune publication de forum
