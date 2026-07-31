@@ -41,11 +41,32 @@ ce qui vient ensuite.
 - Le formulaire de message Reddit s'est vidé après l'envoi. Comme pour MoneyVox, cette
   démarche ne constitue pas un lancement et ne doit pas être utilisée comme borne Supabase.
 
+### Distribution Android directe prête
+- **2026-07-31 vers 16:00 CEST** : publication de la préversion GitHub
+  **MMG — bêta Android 1.0.0** :
+  <https://github.com/MyMoneyGest/MMG-LAB/releases/tag/android-beta-v1.0.0>.
+- APK direct :
+  <https://github.com/MyMoneyGest/MMG-LAB/releases/download/android-beta-v1.0.0/MMG-beta-Android-1.0.0.apk>.
+- La Release pointe sur le commit exact du build `9f332d1d647bdb36408f615836173326134a0bb3`,
+  pas sur les commits de documentation ultérieurs. L'APK publié fait 104 966 577 octets.
+- La page affiche l'empreinte SHA-256 vérifiée, le build EAS source, les conditions de
+  confidentialité et l'avertissement d'installation hors Play Store.
+- Cette mise à disposition technique ne démarre pas à elle seule la cohorte budget : seule
+  la première diffusion publique dans un canal budget déclenchera la borne Supabase.
+
+### Canaux écartés ou non directement publiables
+- `r/EconomiserArgent` n'existe pas : Reddit affiche « Nous n'avons pas trouvé cette
+  communauté ». Aucun canal de remplacement non qualifié n'est ajouté.
+- La finance pour tous n'a pas de forum ni de publication communautaire directe. Son
+  formulaire de contact est le seul point d'entrée pertinent pour demander un relais.
+- Les groupes Facebook restent à sélectionner après connexion au compte Facebook de Patrick.
+
 ### Ensuite
 - Attendre la réponse MoneyVox avant toute publication sur ce forum.
 - Attendre la réponse de `r/vosfinances` avant toute publication sur ce subreddit.
-- Évaluer `r/EconomiserArgent`, les groupes Facebook budget/épargne et La finance pour tous,
-  en privilégiant les espaces dont la population correspond au protocole de rétention.
+- Envoyer la demande de relais à La finance pour tous après validation manuelle du reCAPTCHA.
+- Connecter le compte Facebook de Patrick, sélectionner des groupes budget/épargne dont les
+  règles autorisent ce type de partage, puis demander l'accord des administrateurs si besoin.
 
 ## 2026-07-31 — Claude Code — Session 34 : chronologie de lancement + garde-fou cohortes
 

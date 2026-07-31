@@ -1,4 +1,15 @@
-# Kit de recrutement bêta — MMG
+# Kit de diffusion bêta — MMG
+
+> **Décision du 2026-07-31 — séparation impérative des cohortes**
+>
+> Le formulaire Tally et les messages « recherche de testeurs » ci-dessous sont conservés
+> uniquement pour la cohorte de **rodage technique** déjà lancée sur `r/BetaTests` et son
+> Discord. Ils ne doivent pas être utilisés pour la décision produit.
+>
+> La cohorte de **décision** doit venir de communautés budget/épargne et recevoir MMG comme un
+> outil fini : transparence sur Patrick comme créateur, lien Android direct, aucun formulaire,
+> aucun engagement de test et aucune consigne artificielle sur les rappels. Le lien iPhone ne
+> sera ajouté qu'après validation Apple du build 4.
 
 Document de travail pour recruter des testeurs Android et iPhone sans présenter MMG comme un
 produit bancaire. Aucun message public ne doit être copié partout à l'identique : l'adapter aux
@@ -8,8 +19,12 @@ règles et au ton de chaque communauté.
 
 - Android : build EAS `1baebe04-dd8f-4ff9-9a48-653959d90e71`, version `1.0.0` (build 1),
   profil `preview`, créé depuis le commit `9f332d1`.
-- Fichier local prêt à publier :
+- Fichier local publié :
   `/Users/patrickngouala/Downloads/MMG-beta-Android-1.0.0.apk`.
+- Release GitHub :
+  <https://github.com/MyMoneyGest/MMG-LAB/releases/tag/android-beta-v1.0.0>.
+- Téléchargement direct de l'APK :
+  <https://github.com/MyMoneyGest/MMG-LAB/releases/download/android-beta-v1.0.0/MMG-beta-Android-1.0.0.apk>.
 - SHA-256 Android :
   `5eb46a303b8a84cf24abd863a065ea7ed43d1ac07badc7a83d5ff0613530092e`.
 - iPhone : lien TestFlight préparé, mais build encore en Beta App Review. Limite volontaire
