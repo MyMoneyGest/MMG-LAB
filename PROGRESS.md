@@ -9,6 +9,35 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-31 — Codex — Session 35 : lancement de la cohorte budget
+
+### Principe appliqué
+- La cohorte `r/BetaTests` + Discord reste réservée au **rodage technique** et ne doit pas
+  être utilisée pour la décision de rétention.
+- Les canaux budget recrutent des **utilisateurs réels** : MMG est présenté comme un outil
+  fini et utilisable, sans appel à « tester pendant trois mois », sans engagement à réagir aux
+  rappels et sans formulaire d'inscription. Les liens sont directs.
+- Aucun code produit n'est modifié : gel des fonctionnalités maintenu.
+
+### MoneyVox — autorisation en attente, pas encore de lancement
+- **2026-07-31 à 15:51 CEST** : lecture de la charte officielle. L'article 5 interdit les
+  contributions commerciales, publicitaires ou prospectives ; aucune publication publique
+  n'a donc été faite sans accord préalable.
+- Demande d'autorisation envoyée via le formulaire officiel de contact à la
+  rédaction/modération, sous l'identité de Patrick NGOUALA et avec
+  `mymoneygest@gmail.com`. Le site a confirmé : « Votre message a été envoyé ! ».
+- Le message décrit MMG comme une application française gratuite et finie, sans connexion
+  bancaire, sans compte MMG ni publicité. Il propose un sujet transparent, sans formulaire de
+  recrutement, et précise que le lien iPhone ne sera ajouté qu'après validation Apple.
+- **Important** : cette demande ne démarre pas la cohorte de décision. La chronologie des
+  canaux ci-dessous ne recevra une date MoneyVox qu'après publication publique autorisée.
+
+### Ensuite
+- Attendre la réponse MoneyVox avant toute publication sur ce forum.
+- Vérifier les règles et demander l'accord de `r/vosfinances` avant toute publication.
+- Évaluer `r/EconomiserArgent`, les groupes Facebook budget/épargne et La finance pour tous,
+  en privilégiant les espaces dont la population correspond au protocole de rétention.
+
 ## 2026-07-31 — Claude Code — Session 34 : chronologie de lancement + garde-fou cohortes
 
 ### Chronologie des canaux (à tenir à jour — sert à SÉPARER les cohortes dans Supabase)
