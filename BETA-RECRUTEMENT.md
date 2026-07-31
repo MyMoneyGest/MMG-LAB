@@ -219,11 +219,26 @@ Je suis le créateur et répondrai volontiers aux questions techniques ou de con
 - `r/AskFrance` interdit l'autopromotion et les panels de test ; ne pas y publier.
 - `r/FranceFinance` est en publication restreinte ; contacter la modération avant tout message.
 
+## Publication Discord BetaTests Community
+
+- Serveur rejoint avec le compte Discord `l45vy_01133` et les rôles Android et iOS.
+- Salon de diffusion : `#post-your-product-here` :
+  <https://discord.com/channels/1405234773449773077/1412101252317184184>
+- Message MMG publié le 31 juillet 2026 sous le nom d'affichage `l45vy`.
+- Le message précise que l'application est en français, recherche des testeurs francophones,
+  présente les accès Android/iPhone et renvoie directement vers le formulaire Tally.
+- Règles propres au salon respectées : tous les liens figurent directement dans le message,
+  aucun renvoi vers les messages privés, lien non masqué, une seule application présentée et
+  aucune conversation annexe dans ce salon.
+- Le salon applique un délai initial de 10 minutes aux nouveaux membres et un mode lent de
+  6 heures entre deux publications.
+
 ## Ordre de diffusion
 
 1. Formulaire Tally et Release Android finalisés.
 2. Demande d'autorisation aux modérateurs avant toute publication.
-3. Discords et groupes Facebook disposant d'un canal d'autopromotion explicite.
+3. Discords et groupes Facebook disposant d'un canal d'autopromotion explicite : publication
+   effectuée dans `BetaTests Community`, salon `#post-your-product-here`.
 4. MoneyVox uniquement après lecture de la charte et accord si nécessaire.
 5. Reddit uniquement dans les communautés autorisant le message : publication effectuée sur
    `r/BetaTests` ; ne pas publier dans `r/vosfinances` ou `r/AskFrance` sans autorisation

@@ -41,10 +41,19 @@ ce qui vient ensuite.
   `https://www.reddit.com/r/betatests/comments/1vbnmim/opportunity_frenchspeaking_android_testers_wanted/`.
 - La publication Reddit est créée mais reste en attente de validation par la modération de
   `r/BetaTests`.
+- Rejoint le Discord officiel `BetaTests Community` avec le compte `l45vy_01133`, accepté les
+  règles et sélectionné les rôles Android et iOS.
+- Vérifié les règles de `#post-your-product-here` : formulaires d'inscription autorisés, tous
+  les liens doivent être présents et non masqués dans le message, aucun renvoi en message
+  privé, une seule application par publication et mode lent de 6 heures.
+- Publié le message MMG dans `#post-your-product-here` sous le nom `l45vy`, en précisant que
+  l'application est en français, que les testeurs recherchés sont francophones et en incluant
+  directement le formulaire Tally :
+  `https://discord.com/channels/1405234773449773077/1412101252317184184`.
 
 ### En cours
 - Préparation de la Release GitHub Android avec l'APK vérifié et attente de la validation du
-  message `r/BetaTests` par la modération.
+  message `r/BetaTests` par la modération ; recrutement également lancé sur Discord.
 
 ### Ensuite
 - Créer la Release GitHub `android-beta-v1.0.0` avec l'APK et son SHA-256.
