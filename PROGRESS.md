@@ -38,8 +38,14 @@ ce qui vient ensuite.
 - Demande d'autorisation envoyée aux modérateurs depuis le compte Reddit `u/L-45-VY`.
   Le message annonce Patrick comme créateur, présente MMG comme un outil fini et demande
   l'accord pour un sujet unique avec lien direct, sans formulaire ni engagement de test.
-- Le formulaire de message Reddit s'est vidé après l'envoi. Comme pour MoneyVox, cette
-  démarche ne constitue pas un lancement et ne doit pas être utilisée comme borne Supabase.
+- **2026-07-31 à 15:57 CEST** : réponse de la modération demandant le texte complet afin
+  que l'équipe puisse l'étudier.
+- **2026-07-31 à 21:13 CEST** : texte exact transmis dans le modmail. Il présente MMG comme
+  un outil fini, gratuit et sans publicité, annonce Patrick comme créateur, décrit la méthode
+  manuelle et la confidentialité, et fournit uniquement la Release Android. Aucun formulaire,
+  engagement de test ou lien iPhone non validé n'est inclus.
+- Statut : en attente de la décision de l'équipe de modération. Cette conversation privée
+  ne constitue pas un lancement et ne doit pas être utilisée comme borne Supabase.
 
 ### Distribution Android directe prête
 - **2026-07-31 vers 16:00 CEST** : publication de la préversion GitHub
