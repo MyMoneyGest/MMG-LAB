@@ -32,14 +32,24 @@ ce qui vient ensuite.
 - Précisé dans le formulaire publié que les testeurs iPhone doivent fournir l'adresse e-mail
   associée au compte Apple utilisé sur leur appareil ; nouvelle version vérifiée sur le lien
   public et règle reportée dans `BETA-RECRUTEMENT.md`.
+- Vérifié les règles actuelles des autres canaux : MoneyVox interdit la prospection et les
+  publications publicitaires, `r/AskFrance` interdit explicitement l'autopromotion et les
+  panels de test, et `r/FranceFinance` est en publication restreinte.
+- Sélectionné `r/BetaTests`, communauté qui accepte explicitement les appels à bêta-testeurs,
+  puis publié avec le compte `u/L-45-VY` un message en anglais précisant que MMG est une
+  application en français et recherche des testeurs francophones :
+  `https://www.reddit.com/r/betatests/comments/1vbnmim/opportunity_frenchspeaking_android_testers_wanted/`.
+- La publication Reddit est créée mais reste en attente de validation par la modération de
+  `r/BetaTests`.
 
 ### En cours
-- Préparation de la Release GitHub Android avec l'APK vérifié ; aucune publication de forum
-  n'a encore été mise en ligne.
+- Préparation de la Release GitHub Android avec l'APK vérifié et attente de la validation du
+  message `r/BetaTests` par la modération.
 
 ### Ensuite
 - Créer la Release GitHub `android-beta-v1.0.0` avec l'APK et son SHA-256.
-- Demander l'autorisation aux modérateurs avant le lancement de la première vague.
+- Vérifier la validation de la publication `r/BetaTests`, puis traiter les premières
+  candidatures Tally.
 
 ## 2026-07-23 — Claude Code — Session 32 : rappel de test réservé au dev (anti-pollution du vrai plan)
 

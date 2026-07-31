@@ -201,13 +201,32 @@ Formulaire de participation : **<https://tally.so/r/vGVapv>**
 
 Je suis le créateur et répondrai volontiers aux questions techniques ou de confidentialité.
 
+## Publication r/BetaTests
+
+- Publication créée le 31 juillet 2026 avec le compte Reddit `u/L-45-VY` :
+  <https://www.reddit.com/r/betatests/comments/1vbnmim/opportunity_frenchspeaking_android_testers_wanted/>
+- Titre publié :
+  `[opportunity] French-speaking Android testers wanted for MMG, a manual savings-goal app
+  (iPhone waitlist open)`.
+- Le texte précise dès le premier paragraphe que MMG est une application en français et cible
+  explicitement les testeurs francophones.
+- État au moment de la publication : en attente de validation par la modération de
+  `r/BetaTests`.
+- `r/BetaTests` accepte les appels à bêta-testeurs. Le compte doit avoir au moins 24 heures et
+  2 points de karma.
+- MoneyVox interdit les contributions publicitaires, commerciales ou de prospection : ne pas y
+  publier sans autorisation explicite de la modération.
+- `r/AskFrance` interdit l'autopromotion et les panels de test ; ne pas y publier.
+- `r/FranceFinance` est en publication restreinte ; contacter la modération avant tout message.
+
 ## Ordre de diffusion
 
 1. Formulaire Tally et Release Android finalisés.
 2. Demande d'autorisation aux modérateurs avant toute publication.
 3. Discords et groupes Facebook disposant d'un canal d'autopromotion explicite.
 4. MoneyVox uniquement après lecture de la charte et accord si nécessaire.
-5. Reddit uniquement dans les communautés ayant accepté le message ; ne pas publier dans
-   `r/vosfinances` sans autorisation explicite.
+5. Reddit uniquement dans les communautés autorisant le message : publication effectuée sur
+   `r/BetaTests` ; ne pas publier dans `r/vosfinances` ou `r/AskFrance` sans autorisation
+   explicite.
 6. Hardware.fr après lecture du topic et de ses règles locales.
 7. Relance iPhone seulement lorsque le lien TestFlight est réellement actif.
