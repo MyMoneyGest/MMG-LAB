@@ -9,6 +9,35 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-31 — Codex — Session 33 : préparation du recrutement bêta public
+
+### Fait
+- Vérifié les canaux proposés pour le recrutement : `r/vosfinances` interdit
+  l'autopromotion sans exception explicite de la modération ; chaque communauté devra recevoir
+  un message adapté et non un copier-coller massif.
+- Identifié le dernier APK réellement distribuable : build EAS Android `1baebe04`, profil
+  `preview`, créé depuis `9f332d1` après la désactivation du rappel de test en production.
+- Téléchargé l'APK sous
+  `/Users/patrickngouala/Downloads/MMG-beta-Android-1.0.0.apk`, vérifié son intégrité et calculé
+  son SHA-256 :
+  `5eb46a303b8a84cf24abd863a065ea7ed43d1ac07badc7a83d5ff0613530092e`.
+- Confirmé que le dépôt `MyMoneyGest/MMG-LAB` est public et ne contient encore aucune Release.
+- Créé `BETA-RECRUTEMENT.md` : structure complète du formulaire Tally, notice de
+  confidentialité, fiche de Release Android, message aux modérateurs et variantes de
+  publication forum/Reddit.
+- Créé, fait valider puis publié le formulaire Tally de recrutement :
+  `https://tally.so/r/vGVapv`.
+- Vérifié le lien public comme un testeur : contenu, champs obligatoires, plateforme,
+  consentement et notice de confidentialité sont correctement affichés.
+
+### En cours
+- Préparation de la Release GitHub Android avec l'APK vérifié ; aucune publication de forum
+  n'a encore été mise en ligne.
+
+### Ensuite
+- Créer la Release GitHub `android-beta-v1.0.0` avec l'APK et son SHA-256.
+- Demander l'autorisation aux modérateurs avant le lancement de la première vague.
+
 ## 2026-07-23 — Claude Code — Session 32 : rappel de test réservé au dev (anti-pollution du vrai plan)
 
 ### Fait
