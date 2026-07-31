@@ -9,6 +9,29 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-07-31 — Claude Code — Session 34 : chronologie de lancement + garde-fou cohortes
+
+### Chronologie des canaux (à tenir à jour — sert à SÉPARER les cohortes dans Supabase)
+L'app ne tague pas la source d'installation → la **date de lancement de chaque canal** est le
+seul moyen d'isoler les populations. Tenir cette liste précise.
+
+| Date | Canal | Population | Usage pour la mesure |
+|------|-------|-----------|----------------------|
+| ~2026-07-31 | Reddit **r/BetaTests** + son Discord (APK Android) | Testeurs / early-adopters | ⚠️ **Rodage technique uniquement** — PAS la cohorte de décision |
+| à venir | MoneyVox, r/vosfinances, groupes FB budget | Épargnants budget (cible brief §5) | ✅ **Cohorte de décision** rétention |
+
+### Garde-fou (rappel Claude Code)
+- r/BetaTests = population non représentative (le brief §5 l'excluait explicitement). Sens du
+  biais : churn rapide → rétention **artificiellement basse** → risque de **faux négatif**.
+- **La décision go/no-go (seuils 40 %/20 %) doit se lire sur la cohorte budget**, pas sur
+  r/BetaTests. Éviter Hardware.fr (tech, même biais) ; prioriser MoneyVox (post déjà rédigé) +
+  communautés budget.
+- Au moment de l'analyse : filtrer par `created_at` >= date du lancement budget pour isoler la
+  bonne cohorte (cf. `scripts/retention-queries.sql`).
+
+### Ensuite
+- Lancer les canaux budget et **noter leur date exacte ici**.
+
 ## 2026-07-31 — Codex — Session 33 : préparation du recrutement bêta public
 
 ### Fait
