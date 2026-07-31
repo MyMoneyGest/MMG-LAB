@@ -32,9 +32,18 @@ ce qui vient ensuite.
 - **Important** : cette demande ne démarre pas la cohorte de décision. La chronologie des
   canaux ci-dessous ne recevra une date MoneyVox qu'après publication publique autorisée.
 
+### r/vosfinances — autorisation en attente, pas encore de lancement
+- **2026-07-31 à 15:54 CEST** : la règle interdisant toute publicité ou promotion a été
+  respectée ; aucune publication publique n'a été faite.
+- Demande d'autorisation envoyée aux modérateurs depuis le compte Reddit `u/L-45-VY`.
+  Le message annonce Patrick comme créateur, présente MMG comme un outil fini et demande
+  l'accord pour un sujet unique avec lien direct, sans formulaire ni engagement de test.
+- Le formulaire de message Reddit s'est vidé après l'envoi. Comme pour MoneyVox, cette
+  démarche ne constitue pas un lancement et ne doit pas être utilisée comme borne Supabase.
+
 ### Ensuite
 - Attendre la réponse MoneyVox avant toute publication sur ce forum.
-- Vérifier les règles et demander l'accord de `r/vosfinances` avant toute publication.
+- Attendre la réponse de `r/vosfinances` avant toute publication sur ce subreddit.
 - Évaluer `r/EconomiserArgent`, les groupes Facebook budget/épargne et La finance pour tous,
   en privilégiant les espaces dont la population correspond au protocole de rétention.
 
