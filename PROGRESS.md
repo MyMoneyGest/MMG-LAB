@@ -9,6 +9,35 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-01 — Codex — Session 36 : lancement Facebook de la cohorte budget
+
+### Publications effectuées
+- **2026-08-01 à 20:47 CEST** — publication soumise dans le groupe Facebook public
+  **« GÉRER SON BUDGET : Astuce, recette, comparaison, coaching »** (environ 6,9 K membres),
+  avec un visuel montrant réellement l'application MMG et le lien direct vers la Release
+  Android. Le message présente Patrick comme créateur, MMG comme un outil fini et gratuit,
+  et rappelle l'absence de connexion bancaire, de compte MMG et de publicité.
+  Statut : **en attente d'approbation par un administrateur** ; cette soumission ne démarre
+  pas encore une borne de cohorte dans Supabase.
+  Publication en attente :
+  <https://www.facebook.com/groups/787110589432740/pending_posts/1569614567849001/>.
+- **2026-08-01 à 20:52 CEST** — publication au ton chaleureux mise en ligne dans le groupe
+  Facebook public **« Enveloppes budgétaires - Conseils gestion de budget »** (environ
+  3,1 K membres), avec le même visuel de l'application et le lien direct vers la Release
+  Android. Le texte part du vécu de Patrick, explique simplement le rituel mensuel de MMG et
+  invite à des retours francs, sans employer « recherche de testeurs », sans formulaire et
+  sans engagement artificiel.
+  Statut : **publiée et visible publiquement** :
+  <https://www.facebook.com/groups/1376187369477505/posts/2584490881980475/>.
+
+### Cohorte et garde-fous
+- La publication visible de **20:52 CEST** est le premier lancement Facebook auprès d'une
+  population directement intéressée par le budget et l'épargne : elle appartient à la
+  **cohorte de décision** pour la mesure de rétention.
+- Le lien TestFlight n'a pas été diffusé : la validation Apple du build externe reste en
+  attente. Seule la Release Android déjà vérifiée a été partagée.
+- Aucun code produit n'a été modifié ; le gel des fonctionnalités est maintenu.
+
 ## 2026-07-31 — Codex — Session 35 : lancement de la cohorte budget
 
 ### Principe appliqué
@@ -83,7 +112,9 @@ seul moyen d'isoler les populations. Tenir cette liste précise.
 | Date | Canal | Population | Usage pour la mesure |
 |------|-------|-----------|----------------------|
 | ~2026-07-31 | Reddit **r/BetaTests** + son Discord (APK Android) | Testeurs / early-adopters | ⚠️ **Rodage technique uniquement** — PAS la cohorte de décision |
-| à venir | MoneyVox, r/vosfinances, groupes FB budget | Épargnants budget (cible brief §5) | ✅ **Cohorte de décision** rétention |
+| 2026-08-01 à 20:47 CEST (soumise, non visible) | Facebook — **GÉRER SON BUDGET : Astuce, recette, comparaison, coaching** | Épargnants intéressés par le budget | ⏳ Approbation admin en attente — ne démarre pas encore la cohorte |
+| 2026-08-01 à 20:52 CEST | Facebook — **Enveloppes budgétaires - Conseils gestion de budget** | Utilisateurs budget / enveloppes budgétaires | ✅ **Cohorte de décision** — première borne Facebook publique |
+| à venir | MoneyVox, r/vosfinances, autres groupes FB budget | Épargnants budget (cible brief §5) | ✅ **Cohorte de décision** rétention |
 
 ### Garde-fou (rappel Claude Code)
 - r/BetaTests = population non représentative (le brief §5 l'excluait explicitement). Sens du
