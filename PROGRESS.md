@@ -19,6 +19,9 @@ ce qui vient ensuite.
   et rappelle l'absence de connexion bancaire, de compte MMG et de publicité.
   Statut : **en attente d'approbation par un administrateur** ; cette soumission ne démarre
   pas encore une borne de cohorte dans Supabase.
+  **2026-08-01 à 21:00 CEST** : texte modifié pendant l'attente pour adopter le même ton
+  chaleureux et personnel que la seconde publication, sans créer de doublon et sans changer
+  l'image, le lien Android ni le statut de validation.
   Publication en attente :
   <https://www.facebook.com/groups/787110589432740/pending_posts/1569614567849001/>.
 - **2026-08-01 à 20:52 CEST** — publication au ton chaleureux mise en ligne dans le groupe
