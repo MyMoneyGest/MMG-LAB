@@ -9,6 +9,18 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-02 — Codex — Session 37 : refus de publication par r/vosfinances
+
+- **2026-08-02 à 07:19 CEST** : la modération de `r/vosfinances` a refusé la demande
+  d'autorisation après avoir examiné le texte complet proposé.
+- Motif communiqué : la communauté n'autorise pas ses utilisateurs à partager des outils,
+  même lorsqu'ils ne sont pas encore commerciaux, afin d'éviter que le subreddit devienne
+  un espace de promotion au détriment des échanges entre utilisateurs.
+- Décision : ne pas publier, ne pas contourner la règle et ne pas contester le refus.
+  `r/vosfinances` est retiré des canaux à venir.
+- Cette conversation de modération n'est pas un lancement public et ne constitue aucune borne
+  de cohorte dans Supabase. Aucun code produit n'a été modifié.
+
 ## 2026-08-01 — Codex — Session 36 : lancement Facebook de la cohorte budget
 
 ### Publications effectuées
@@ -64,7 +76,7 @@ ce qui vient ensuite.
 - **Important** : cette demande ne démarre pas la cohorte de décision. La chronologie des
   canaux ci-dessous ne recevra une date MoneyVox qu'après publication publique autorisée.
 
-### r/vosfinances — autorisation en attente, pas encore de lancement
+### r/vosfinances — autorisation refusée, aucun lancement
 - **2026-07-31 à 15:54 CEST** : la règle interdisant toute publicité ou promotion a été
   respectée ; aucune publication publique n'a été faite.
 - Demande d'autorisation envoyée aux modérateurs depuis le compte Reddit `u/L-45-VY`.
@@ -76,8 +88,11 @@ ce qui vient ensuite.
   un outil fini, gratuit et sans publicité, annonce Patrick comme créateur, décrit la méthode
   manuelle et la confidentialité, et fournit uniquement la Release Android. Aucun formulaire,
   engagement de test ou lien iPhone non validé n'est inclus.
-- Statut : en attente de la décision de l'équipe de modération. Cette conversation privée
-  ne constitue pas un lancement et ne doit pas être utilisée comme borne Supabase.
+- **2026-08-02 à 07:19 CEST** : demande refusée. La modération n'autorise pas le partage
+  d'outils, même non encore commerciaux, en raison du volume de demandes et du risque de
+  transformer le subreddit en espace de promotion.
+- Statut final : **refusé**. Aucune publication ne sera tentée et cette conversation privée
+  ne constitue pas un lancement ni une borne Supabase.
 
 ### Distribution Android directe prête
 - **2026-07-31 vers 16:00 CEST** : publication de la préversion GitHub
@@ -101,10 +116,9 @@ ce qui vient ensuite.
 
 ### Ensuite
 - Attendre la réponse MoneyVox avant toute publication sur ce forum.
-- Attendre la réponse de `r/vosfinances` avant toute publication sur ce subreddit.
 - Envoyer la demande de relais à La finance pour tous après validation manuelle du reCAPTCHA.
-- Connecter le compte Facebook de Patrick, sélectionner des groupes budget/épargne dont les
-  règles autorisent ce type de partage, puis demander l'accord des administrateurs si besoin.
+- Suivre les deux publications Facebook déjà soumises et ne sélectionner d'autres groupes
+  budget/épargne que si leurs règles autorisent ce type de partage.
 
 ## 2026-07-31 — Claude Code — Session 34 : chronologie de lancement + garde-fou cohortes
 
@@ -115,9 +129,10 @@ seul moyen d'isoler les populations. Tenir cette liste précise.
 | Date | Canal | Population | Usage pour la mesure |
 |------|-------|-----------|----------------------|
 | ~2026-07-31 | Reddit **r/BetaTests** + son Discord (APK Android) | Testeurs / early-adopters | ⚠️ **Rodage technique uniquement** — PAS la cohorte de décision |
+| 2026-08-02 à 07:19 CEST (refus modération, non publié) | Reddit **r/vosfinances** | Communauté finances personnelles visée, mais non atteinte | ❌ Aucun lancement — exclu de toute mesure |
 | 2026-08-01 à 20:47 CEST (soumise, non visible) | Facebook — **GÉRER SON BUDGET : Astuce, recette, comparaison, coaching** | Épargnants intéressés par le budget | ⏳ Approbation admin en attente — ne démarre pas encore la cohorte |
 | 2026-08-01 à 20:52 CEST | Facebook — **Enveloppes budgétaires - Conseils gestion de budget** | Utilisateurs budget / enveloppes budgétaires | ✅ **Cohorte de décision** — première borne Facebook publique |
-| à venir | MoneyVox, r/vosfinances, autres groupes FB budget | Épargnants budget (cible brief §5) | ✅ **Cohorte de décision** rétention |
+| à venir | MoneyVox, autres groupes FB budget | Épargnants budget (cible brief §5) | ✅ **Cohorte de décision** rétention |
 
 ### Garde-fou (rappel Claude Code)
 - r/BetaTests = population non représentative (le brief §5 l'excluait explicitement). Sens du

@@ -231,6 +231,9 @@ Je suis le créateur et répondrai volontiers aux questions techniques ou de con
   2 points de karma.
 - MoneyVox interdit les contributions publicitaires, commerciales ou de prospection : ne pas y
   publier sans autorisation explicite de la modération.
+- `r/vosfinances` a refusé l'autorisation le 2 août 2026 à 07:19 CEST après lecture du texte
+  complet : la communauté n'autorise aucun partage d'outil, même non encore commercial.
+  Décision définitive : ne pas publier et ne pas contourner ce refus.
 - `r/AskFrance` interdit l'autopromotion et les panels de test ; ne pas y publier.
 - `r/FranceFinance` est en publication restreinte ; contacter la modération avant tout message.
 
