@@ -9,7 +9,22 @@ ce qui vient ensuite.
 
 ---
 
-## 2026-08-XX — Claude Code — Session 38 : lien public TestFlight approuvé (iOS débloqué)
+## 2026-08-09 — Codex — Session 39 : diffusion sur le profil Facebook de Patrick
+
+- **2026-08-09 vers 12:53 CEST** : Patrick a publié MMG en visibilité publique sur son
+  profil Facebook personnel, avec un visuel réel de l'application et les deux accès directs :
+  Release Android GitHub et lien public TestFlight iPhone.
+- Le message est personnel et transparent : Patrick se présente comme créateur, explique le
+  rituel mensuel et demande aux contacts de transmettre MMG à une personne ayant réellement
+  un projet d'épargne. Aucune devise ni limitation géographique n'est suggérée, afin de laisser
+  remonter spontanément les besoins de marché.
+- Population : réseau personnel et réseau de second niveau, donc plus digne de confiance que
+  les publications génériques mais **mixte**. Ce canal est une acquisition d'appoint ; il ne
+  doit pas être confondu seul avec la cohorte budget pour une décision de rétention.
+- Cette publication constitue la première diffusion publique simultanée des accès Android et
+  iPhone. Aucun code produit n'a été modifié et le gel des fonctionnalités reste en vigueur.
+
+## 2026-08-09 — Claude Code — Session 38 : lien public TestFlight approuvé (iOS débloqué)
 
 ### Fait
 - La Beta App Review externe est **approuvée** (~2 semaines d'attente, backlog Apple 2026).
@@ -152,6 +167,7 @@ seul moyen d'isoler les populations. Tenir cette liste précise.
 | 2026-08-02 à 07:19 CEST (refus modération, non publié) | Reddit **r/vosfinances** | Communauté finances personnelles visée, mais non atteinte | ❌ Aucun lancement — exclu de toute mesure |
 | 2026-08-01 à 20:47 CEST (soumise, non visible) | Facebook — **GÉRER SON BUDGET : Astuce, recette, comparaison, coaching** | Épargnants intéressés par le budget | ⏳ Approbation admin en attente — ne démarre pas encore la cohorte |
 | 2026-08-01 à 20:52 CEST | Facebook — **Enveloppes budgétaires - Conseils gestion de budget** | Utilisateurs budget / enveloppes budgétaires | ✅ **Cohorte de décision** — première borne Facebook publique |
+| 2026-08-09 vers 12:53 CEST | Profil Facebook public de Patrick — Android + TestFlight iPhone | Réseau personnel et second niveau, population mixte | ⚠️ Acquisition d'appoint — interpréter séparément de la cohorte budget |
 | à venir | MoneyVox, autres groupes FB budget | Épargnants budget (cible brief §5) | ✅ **Cohorte de décision** rétention |
 
 ### Garde-fou (rappel Claude Code)

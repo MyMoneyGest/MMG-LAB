@@ -7,9 +7,9 @@
 > Discord. Ils ne doivent pas être utilisés pour la décision produit.
 >
 > La cohorte de **décision** doit venir de communautés budget/épargne et recevoir MMG comme un
-> outil fini : transparence sur Patrick comme créateur, lien Android direct, aucun formulaire,
-> aucun engagement de test et aucune consigne artificielle sur les rappels. Le lien iPhone ne
-> sera ajouté qu'après validation Apple du build 4.
+> outil fini : transparence sur Patrick comme créateur, liens Android et iPhone directs, aucun
+> formulaire, aucun engagement de test et aucune consigne artificielle sur les rappels. Le lien
+> public iPhone a été ajouté après validation Apple du build 4.
 
 Document de travail pour recruter des testeurs Android et iPhone sans présenter MMG comme un
 produit bancaire. Aucun message public ne doit être copié partout à l'identique : l'adapter aux
@@ -27,10 +27,9 @@ règles et au ton de chaque communauté.
   <https://github.com/MyMoneyGest/MMG-LAB/releases/download/android-beta-v1.0.0/MMG-beta-Android-1.0.0.apk>.
 - SHA-256 Android :
   `5eb46a303b8a84cf24abd863a065ea7ed43d1ac07badc7a83d5ff0613530092e`.
-- iPhone : lien TestFlight préparé, mais build encore en Beta App Review. Limite volontaire
-  du lien public : 200 testeurs. Ne pas annoncer que l'accès est ouvert avant son activation.
-  Pour recevoir l'invitation, le testeur doit fournir l'adresse e-mail associée au compte
-  Apple utilisé sur son iPhone.
+- iPhone : build `1.0.0 (4)` approuvé pour la diffusion TestFlight externe. Lien public actif :
+  <https://testflight.apple.com/join/SJ9XBTxZ>. Limite volontaire : 200 utilisateurs. Le lien
+  public ne nécessite pas de collecte préalable de l'adresse e-mail Apple.
 
 ## Formulaire Tally
 
