@@ -50,6 +50,15 @@ a assez bien marché pour qu'il se projette en v2). Les 4 idées vont toutes ver
      « fais le virement depuis ta banque » ne colle peut-être pas. Décision de marché cible,
      pas un simple changement d'étiquette.
    - *Verdict* : après test, si le marché Afrique francophone devient une cible. À creuser.
+   - **MISE À JOUR 2026-08 (montée d'un cran)** : la campagne de recrutement en ligne (APK
+     sur r/BetaTests/Discord) est un **fiasco** — quasi aucune installation. Patrick se rabat
+     sur son **réseau perso Facebook** (camarades lycée/école), en majorité **francophone
+     d'Afrique**. Il anticipe que beaucoup buteront sur l'**absence de FCFA**. → Le FCFA
+     n'est plus une idée isolée : il révèle QUI est réellement à portée de Patrick. Signal de
+     **marché**, pas de feature. Rappel : FCFA seul ne suffit pas (mobile money vs virement
+     bancaire = le vrai chantier). ACTION : utiliser le post FB comme mini-étude (« l'utiliseriez-
+     vous ? qu'est-ce qui manque ? comment épargnez-vous aujourd'hui ? ») et récolter les
+     réponses ici avant toute décision.
 
 4. **Simulateur de prêts (comparaison de taux) + vitrine de placements**
    - *Analyse* : viole le positionnement fondateur (« pas une banque, outil de méthode, rien
