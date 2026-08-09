@@ -9,6 +9,26 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-XX — Claude Code — Session 38 : lien public TestFlight approuvé (iOS débloqué)
+
+### Fait
+- La Beta App Review externe est **approuvée** (~2 semaines d'attente, backlog Apple 2026).
+  Lien public iOS actif : **https://testflight.apple.com/join/SJ9XBTxZ** (build 1.0.0 (4)).
+- Les deux canaux sont désormais disponibles pour les communautés budget.
+
+### ⚠️ ÉCHÉANCE CRITIQUE — rebuild iOS avant expiration du build 4
+- Le build 4 **expire dans ~73 jours**. Or le test de rétention dure ~90 j PAR utilisateur.
+- Quand un build TestFlight expire, les testeurs **ne peuvent plus ouvrir l'app** tant qu'ils
+  ne passent pas à un build plus récent → ils sortiraient de la mesure **pile autour du 3e
+  rappel** (le moment décisif). Donnée locale conservée, mais app inutilisable.
+- **ACTION** : prévoir un nouveau build iOS (+ resoumission TestFlight) **avant** cette
+  expiration — vers J+55/60 pour garder de la marge. Y embarquer le lot cosmétique en attente
+  (« le 1er », ponctuation accueil — cf. FEEDBACK.md) : build gratuit, aucune churn réactive.
+
+### Ensuite (Codex)
+- Ajouter le lien iOS aux posts des communautés **budget** (« sur iPhone → TestFlight »).
+- **Dater le lancement iOS** dans le tableau de chronologie (cohorte décision).
+
 ## 2026-08-02 — Codex — Session 37 : refus de publication par r/vosfinances
 
 - **2026-08-02 à 07:19 CEST** : la modération de `r/vosfinances` a refusé la demande
