@@ -26,7 +26,7 @@ import {
   reconcileGlobalBalance,
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
-import { formatDate, formatEuro } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
 import {
   hasPendingAction,
@@ -53,6 +53,7 @@ import {
 } from '@/lib/timing';
 import type { Contribution } from '@/lib/types';
 import type { RebalanceReason } from '@/lib/types';
+import { useMoney } from '@/lib/use-money';
 
 type Tab = 'today' | 'schedule' | 'history';
 
@@ -66,6 +67,7 @@ const handledNotificationActions = new Set<string>();
 const handledFeedbackMessages = new Set<string>();
 
 export default function GoalScreen() {
+  const { money } = useMoney();
   const {
     id,
     notificationAction,
@@ -339,8 +341,8 @@ export default function GoalScreen() {
       ) : capacityExceeded && globalPlan && !rebalanceReview ? (
         <View style={styles.capacityWarning}>
           <Text style={styles.capacityWarningText}>
-            Au mois le plus exigeant, tes plans demandent {formatEuro(globalPlan.currentEffort)},
-            mais ta capacité prudente globale est de {formatEuro(globalPlan.capacity)}. Un
+            Au mois le plus exigeant, tes plans demandent {money(globalPlan.currentEffort)},
+            mais ta capacité prudente globale est de {money(globalPlan.capacity)}. Un
             réajustement est recommandé.
           </Text>
         </View>
@@ -350,11 +352,11 @@ export default function GoalScreen() {
         <View style={styles.amountRow}>
           <View>
             <Text style={styles.summaryLabel}>Mis de côté</Text>
-            <Text style={styles.savedAmount}>{formatEuro(saved)}</Text>
+            <Text style={styles.savedAmount}>{money(saved)}</Text>
           </View>
           <View style={styles.amountAside}>
-            <Text style={styles.remainingAmount}>{formatEuro(remaining)} restants</Text>
-            <Text style={styles.targetAmount}>sur {formatEuro(goal.targetAmount)}</Text>
+            <Text style={styles.remainingAmount}>{money(remaining)} restants</Text>
+            <Text style={styles.targetAmount}>sur {money(goal.targetAmount)}</Text>
           </View>
         </View>
         <ProgressBar pct={pct} label={`${pct} % atteint`} />
@@ -377,7 +379,7 @@ export default function GoalScreen() {
             <>
               <View style={styles.adviceCard}>
                 <Text style={styles.adviceLabel}>Montant conseillé</Text>
-                <Text style={styles.adviceAmount}>{formatEuro(suggested)}</Text>
+                <Text style={styles.adviceAmount}>{money(suggested)}</Text>
                 <Text style={styles.adviceReminder}>
                   {pending ? 'Rappel en cours : ' : 'Rappel prévu : '}
                   {formatDate(goal.nextReminderAt)}
@@ -393,7 +395,7 @@ export default function GoalScreen() {
               </View>
               <View style={{ gap: 12 }}>
                 <Button
-                  label={`Versement fait (${formatEuro(suggested)})`}
+                  label={`Versement fait (${money(suggested)})`}
                   onPress={() => confirm(suggested, 'one_tap')}
                   loading={actionLoading}
                   loadingLabel="Enregistrement…"
@@ -441,7 +443,7 @@ export default function GoalScreen() {
                         <Text style={styles.previewDate}>{formatDate(row.date)}</Text>
                         <Text style={styles.previewMeta}>{index === 0 ? 'Prochaine' : 'Puis'}</Text>
                       </View>
-                      <Text style={styles.previewAmount}>{formatEuro(row.amount)}</Text>
+                      <Text style={styles.previewAmount}>{money(row.amount)}</Text>
                     </View>
                   ))}
                 </View>
@@ -479,7 +481,7 @@ export default function GoalScreen() {
                   <Text style={styles.scheduleDate}>{formatDate(row.date)}</Text>
                   {index === 0 ? <Text style={styles.scheduleNext}>Prochain rappel</Text> : null}
                 </View>
-                <Text style={styles.scheduleAmount}>{formatEuro(row.amount)}</Text>
+                <Text style={styles.scheduleAmount}>{money(row.amount)}</Text>
               </View>
             ))
           )}
@@ -510,7 +512,7 @@ export default function GoalScreen() {
                       { color: c.type === 'deposit' ? colors.success : colors.accent },
                     ]}>
                     {c.type === 'deposit' ? '+' : '−'}
-                    {formatEuro(c.amount)}
+                    {money(c.amount)}
                   </Text>
                 </View>
               ))

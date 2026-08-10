@@ -87,7 +87,7 @@ assert.match(contributionChoiceModal, /C’est un extra/);
 assert.match(contributionChoiceModal, /C’est mon versement de/);
 assert.match(contributionChoiceModal, /intent: ContributionIntent/);
 assert.match(recentContributionModal, /contributions\.map/);
-assert.match(recentContributionModal, /formatEuro\(contribution\.amount\)/);
+assert.match(recentContributionModal, /money\(contribution\.amount\)/);
 assert.match(recentContributionModal, /formatDate\(contribution\.date\)/);
 
 assert.match(newGoal, /<DateField/);

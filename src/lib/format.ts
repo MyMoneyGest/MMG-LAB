@@ -1,5 +1,8 @@
 // Formatage manuel fr-FR pour ne pas dépendre du support Intl de Hermes.
 
+import { CURRENCIES, DEFAULT_CURRENCY } from './currency';
+import type { CurrencyCode } from './currency';
+
 export function formatEuro(amount: number): string {
   const rounded = Math.round(amount * 100) / 100;
   const sign = rounded < 0 ? '-' : '';
@@ -73,11 +76,22 @@ export function parseDateInput(value: string): Date | null {
   return d;
 }
 
-/** Parse une saisie de montant ("1 250,50" ou "1250.5"). Retourne null si invalide. */
-export function parseAmountInput(value: string): number | null {
-  const cleaned = value.replace(/[\s  €]/g, '').replace(',', '.');
+/**
+ * Parse une saisie de montant ("1 250,50", "2 500 FCFA" ou "$1250.5").
+ * Le résultat respecte la précision de la devise : aucun centime en XAF/XOF.
+ */
+export function parseAmountInput(
+  value: string,
+  code: CurrencyCode = DEFAULT_CURRENCY
+): number | null {
+  const cleaned = value
+    .replace(/FCFA|XAF|XOF|EUR|USD/gi, '')
+    .replace(/[\s  €$]/g, '')
+    .replace(',', '.');
   if (!cleaned) return null;
   const n = Number(cleaned);
   if (!Number.isFinite(n) || n < 0) return null;
-  return Math.round(n * 100) / 100;
+  const decimals = CURRENCIES[code]?.decimals ?? CURRENCIES[DEFAULT_CURRENCY].decimals;
+  const factor = 10 ** decimals;
+  return Math.round(n * factor) / factor;
 }

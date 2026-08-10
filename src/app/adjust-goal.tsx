@@ -7,7 +7,7 @@ import { AppHeader } from '@/components/app-header';
 import { Button, Card, DateField, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { changeReminderDay } from '@/lib/actions';
-import { formatDate, formatEuro, parseAmountInput, parseDateInput } from '@/lib/format';
+import { formatDate, parseAmountInput, parseDateInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
   nextReminderFromCycles,
@@ -19,6 +19,7 @@ import { scheduleGoalReminders } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
 import { waitForMinimumLoading } from '@/lib/timing';
 import type { Goal, SavingsRhythm } from '@/lib/types';
+import { useMoney } from '@/lib/use-money';
 
 const RHYTHMS: { key: SavingsRhythm; label: string }[] = [
   { key: 'stable', label: 'Stable' },
@@ -27,6 +28,7 @@ const RHYTHMS: { key: SavingsRhythm; label: string }[] = [
 ];
 
 export default function AdjustGoalScreen() {
+  const { currency, currencyCode, money } = useMoney();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const goal = useStore((state) => state.goals.find((candidate) => candidate.id === id));
@@ -43,7 +45,7 @@ export default function AdjustGoalScreen() {
 
   const now = new Date();
   const saved = savedTotal(goal);
-  const parsedTarget = parseAmountInput(target);
+  const parsedTarget = parseAmountInput(target, currencyCode);
   const parsedDate = parseDateInput(dateText);
   const reminderDay = Number(reminderDayText);
   const reminderDayValid = Number.isInteger(reminderDay) && reminderDay >= 1 && reminderDay <= 28;
@@ -86,8 +88,8 @@ export default function AdjustGoalScreen() {
   const comparisons = [
     {
       label: 'Montant cible',
-      before: formatEuro(goal.targetAmount),
-      after: parsedTarget === null ? 'À compléter' : formatEuro(parsedTarget),
+      before: money(goal.targetAmount),
+      after: parsedTarget === null ? 'À compléter' : money(parsedTarget),
     },
     {
       label: 'Date cible',
@@ -101,20 +103,20 @@ export default function AdjustGoalScreen() {
     },
     {
       label: 'Versement conseillé',
-      before: formatEuro(currentSuggested),
-      after: nextSuggested === null ? 'À calculer' : formatEuro(nextSuggested),
+      before: money(currentSuggested),
+      after: nextSuggested === null ? 'À calculer' : money(nextSuggested),
     },
     {
       label: 'Mois le plus élevé',
-      before: formatEuro(currentPeak),
-      after: nextPeak === null ? 'À calculer' : formatEuro(nextPeak),
+      before: money(currentPeak),
+      after: nextPeak === null ? 'À calculer' : money(nextPeak),
     },
   ];
 
   const validate = (): string | null => {
     if (parsedTarget === null || parsedTarget <= 0) return 'Indique un montant cible valide.';
     if (parsedTarget < saved) {
-      return `La cible ne peut pas être inférieure aux ${formatEuro(saved)} déjà mis de côté.`;
+      return `La cible ne peut pas être inférieure aux ${money(saved)} déjà mis de côté.`;
     }
     if (!parsedDate) return 'Date cible invalide. Format attendu : JJ/MM/AAAA.';
     if (parsedDate <= now) return 'Choisis une date cible à venir.';
@@ -167,7 +169,7 @@ export default function AdjustGoalScreen() {
         </Text>
         <View style={styles.savedRow}>
           <Text style={styles.savedLabel}>Déjà mis de côté</Text>
-          <Text style={styles.savedValue}>{formatEuro(saved)}</Text>
+          <Text style={styles.savedValue}>{money(saved)}</Text>
         </View>
 
         <Field
@@ -178,7 +180,7 @@ export default function AdjustGoalScreen() {
             setError(null);
           }}
           keyboardType="decimal-pad"
-          suffix="EUR"
+          suffix={currency.symbol}
           error={error?.startsWith('Indique un montant') || error?.startsWith('La cible') ? error : null}
         />
         <DateField

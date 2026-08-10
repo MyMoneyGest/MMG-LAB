@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 
 import { colors, radius } from '@/constants/theme';
-import { formatEuro, parseAmountInput } from '@/lib/format';
+import { parseAmountInput } from '@/lib/format';
+import { useMoney } from '@/lib/use-money';
 import { Button, Field, KeyboardSafeScrollView } from './ui';
 
 export function AmountModal({
@@ -30,6 +31,7 @@ export function AmountModal({
   onConfirm: (amount: number) => void;
   onClose: () => void;
 }) {
+  const { currency, currencyCode, money } = useMoney();
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -41,13 +43,13 @@ export function AmountModal({
   }, [visible]);
 
   const submit = () => {
-    const amount = parseAmountInput(value);
+    const amount = parseAmountInput(value, currencyCode);
     if (amount === null || amount <= 0) {
       setError('Entre un montant valide.');
       return;
     }
     if (maxAmount !== undefined && amount > maxAmount) {
-      setError(`Maximum possible : ${formatEuro(maxAmount)}.`);
+      setError(`Maximum possible : ${money(maxAmount)}.`);
       return;
     }
     onConfirm(amount);
@@ -74,7 +76,7 @@ export function AmountModal({
                 }}
                 keyboardType="decimal-pad"
                 placeholder="0"
-                suffix="EUR"
+                suffix={currency.symbol}
                 autoFocus
                 error={error}
               />

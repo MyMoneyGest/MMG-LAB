@@ -14,6 +14,39 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 40 : Lot A, câblage multi-devises terminé
+
+### Fait
+- Reprise sur la branche **`v2`**, sans modification de `main` ni de la V1 taguée.
+- Corrigé la compatibilité typographique de `formatMoney()` : l'euro reproduit maintenant
+  réellement la V1 (espaces fines insécables pour les milliers, espace insécable avant le
+  symbole). Le même rendu lisible est appliqué à EUR, XAF, XOF et USD.
+- Branché la devise active sur **toutes les surfaces monétaires** : budget, création et
+  ajustement d'un plan, écran projet, historique, menus, versements, solde réel,
+  rééquilibrage, confirmation, exemple pédagogique et notifications normales/de test.
+- Ajouté `useMoney()` comme point d'accès réactif commun au code de devise, au symbole de
+  saisie et au formateur. Les libellés figés `EUR` ont disparu des champs.
+- Généralisé `parseAmountInput()` : accepte `€`, `FCFA`, `$`, EUR/XAF/XOF/USD et respecte la
+  précision de la devise (aucun centime XAF/XOF).
+- Étendu les tests de format pour couvrir les espaces Unicode, les symboles et l'arrondi FCFA.
+
+### Vérifications
+- `npx tsc --noEmit` : OK.
+- 8 suites fonctionnelles : devises, formats, notifications, surfaces de saisie, cycles/report,
+  solde, analytics et design — **toutes OK**.
+- `git diff --check` : OK.
+- `expo lint` n'est pas disponible dans ce dépôt (aucune configuration ESLint installée) ;
+  Expo a tenté de proposer l'installation hors ligne, sans modifier `package.json`.
+
+### Ensuite
+1. Ajouter le sélecteur de pays minimal au premier lancement, prérempli depuis la locale de
+   l'appareil, puis rendre ce choix modifiable depuis les réglages.
+2. Ajouter le pays aux événements `app_open` et `goal_created`, puis adapter les requêtes de
+   lecture de rétention et la documentation.
+3. Terminer le vocabulaire générique multi-pays et le petit polish du Lot B.
+
+---
+
 ## 2026-08-XX — Claude Code — Session 39 : ouverture V2 + fondation devises (Lot A démarré)
 
 ### Contexte / décisions

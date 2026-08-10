@@ -161,7 +161,7 @@ assert.doesNotMatch(adjustGoal, /<StepIndicator|Quel projet veux-tu préparer/);
 
 assert.match(goal, /<Screen footer=\{tabBar\}>/);
 assert.match(goal, /schedule\.slice\(0, 2\)/);
-assert.match(goal, /label=\{`Versement fait \(\$\{formatEuro\(suggested\)\}\)`\}/);
+assert.match(goal, /label=\{`Versement fait \(\$\{money\(suggested\)\}\)`\}/);
 assert.match(goal, /loading=\{actionLoading\}/);
 assert.match(goal, /loadingLabel="Enregistrement…"/);
 assert.match(goal, /<ActionLoadingOverlay/);

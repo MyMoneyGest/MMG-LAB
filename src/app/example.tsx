@@ -6,10 +6,12 @@ import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, Eyebrow, Screen } from '@/components/ui';
 import { colors } from '@/constants/theme';
 import { useStore } from '@/lib/store';
+import { useMoney } from '@/lib/use-money';
 
 // Exemple statique de plan, pour montrer la méthode sans rien saisir.
 
 export default function ExampleScreen() {
+  const { money } = useMoney();
   const router = useRouter();
   const budget = useStore((s) => s.budget);
 
@@ -20,17 +22,17 @@ export default function ExampleScreen() {
         <Eyebrow>Exemple</Eyebrow>
         <Text style={styles.title}>Un fonds d'urgence, concrètement</Text>
         <Text style={styles.body}>
-          Objectif : 3 500 €, dont 1 600 € déjà de côté. Voici le plan que MMG proposerait avec une
-          capacité prudente de 480 € / mois.
+          Objectif : {money(3500)}, dont {money(1600)} déjà de côté. Voici le plan que MMG
+          proposerait avec une capacité prudente de {money(480)} / mois.
         </Text>
       </Card>
 
       <PlanSummaryDark
         description="Avoir une marge de sécurité."
-        monthly="380 € / mois"
+        monthly={`${money(380)} / mois`}
         targetDate="31/12/2026"
         months="5 mois"
-        remaining="1 900 €"
+        remaining={money(1900)}
         diagnostic="Confortable"
         reminderDay={1}
       />

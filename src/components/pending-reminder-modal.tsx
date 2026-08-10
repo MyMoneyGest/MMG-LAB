@@ -4,7 +4,7 @@ import { colors, radius } from '@/constants/theme';
 import type { PendingReminder, ReminderNotificationAction } from '@/lib/notification-model';
 import { suggestedAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
-import { formatEuro } from '@/lib/format';
+import { useMoney } from '@/lib/use-money';
 import { Button } from './ui';
 
 export type PendingReminderChoice = Exclude<ReminderNotificationAction, 'open'> | 'ignore';
@@ -16,6 +16,7 @@ export function PendingReminderModal({
   reminder: PendingReminder | null;
   onChoice: (choice: PendingReminderChoice) => void;
 }) {
+  const { money } = useMoney();
   const goal = useStore((state) =>
     reminder ? state.goals.find((candidate) => candidate.id === reminder.goalId) : undefined
   );
@@ -37,7 +38,7 @@ export function PendingReminderModal({
             La notification a été retirée du téléphone. Que veux-tu faire pour ce projet ?
           </Text>
 
-          <Button label={`Fait (${formatEuro(amount)})`} onPress={() => onChoice('done')} />
+          <Button label={`Fait (${money(amount)})`} onPress={() => onChoice('done')} />
           <View style={styles.secondaryActions}>
             <Button
               label="Modifier"

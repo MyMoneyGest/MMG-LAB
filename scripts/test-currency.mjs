@@ -13,23 +13,23 @@ new Function('exports', 'module', compiled)(loaded.exports, loaded);
 const { formatMoney, defaultCurrencyForCountry, CURRENCIES } = loaded.exports;
 
 // EUR : rendu IDENTIQUE à la V1 (formatEuro) — pas de « ,00 » sur un entier.
-assert.equal(formatMoney(300, 'EUR'), '300 €');
-assert.equal(formatMoney(204.42, 'EUR'), '204,42 €');
-assert.equal(formatMoney(1350, 'EUR'), '1 350 €');
-assert.equal(formatMoney(1234567.5, 'EUR'), '1 234 567,50 €');
-assert.equal(formatMoney(0, 'EUR'), '0 €');
+assert.equal(formatMoney(300, 'EUR'), '300\u00a0€');
+assert.equal(formatMoney(204.42, 'EUR'), '204,42\u00a0€');
+assert.equal(formatMoney(1350, 'EUR'), '1\u202f350\u00a0€');
+assert.equal(formatMoney(1234567.5, 'EUR'), '1\u202f234\u202f567,50\u00a0€');
+assert.equal(formatMoney(0, 'EUR'), '0\u00a0€');
 
 // XAF / XOF (FCFA) : AUCUNE décimale, symbole « FCFA » après.
-assert.equal(formatMoney(2500, 'XAF'), '2 500 FCFA');
-assert.equal(formatMoney(2500.9, 'XAF'), '2 501 FCFA'); // arrondi à l'entier
-assert.equal(formatMoney(1000000, 'XOF'), '1 000 000 FCFA');
-assert.equal(formatMoney(0, 'XAF'), '0 FCFA');
+assert.equal(formatMoney(2500, 'XAF'), '2\u202f500\u00a0FCFA');
+assert.equal(formatMoney(2500.9, 'XAF'), '2\u202f501\u00a0FCFA'); // arrondi à l'entier
+assert.equal(formatMoney(1000000, 'XOF'), '1\u202f000\u202f000\u00a0FCFA');
+assert.equal(formatMoney(0, 'XAF'), '0\u00a0FCFA');
 
 // USD : 2 décimales, toujours affichées (réglage provisoire).
-assert.equal(formatMoney(2500, 'USD'), '2 500,00 $');
+assert.equal(formatMoney(2500, 'USD'), '2\u202f500,00\u00a0$');
 
 // Devise inconnue → repli EUR.
-assert.equal(formatMoney(10, 'ZZZ'), '10 €');
+assert.equal(formatMoney(10, 'ZZZ'), '10\u00a0€');
 
 // Pays → devise par défaut (pré-remplissage du sélecteur).
 assert.equal(defaultCurrencyForCountry('GA'), 'XAF'); // Gabon

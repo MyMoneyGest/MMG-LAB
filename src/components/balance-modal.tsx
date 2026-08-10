@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius } from '@/constants/theme';
-import { formatDate, formatEuro, parseAmountInput } from '@/lib/format';
+import { formatDate, parseAmountInput } from '@/lib/format';
+import { useMoney } from '@/lib/use-money';
 import { Button, Field, KeyboardSafeScrollView } from './ui';
 
 export function BalanceModal({
@@ -18,6 +19,7 @@ export function BalanceModal({
   onConfirm: (amount: number) => Promise<void> | void;
   onClose: () => void;
 }) {
+  const { currency, currencyCode, money } = useMoney();
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -30,9 +32,9 @@ export function BalanceModal({
   }, [visible]);
 
   const submit = async () => {
-    const amount = parseAmountInput(value);
+    const amount = parseAmountInput(value, currencyCode);
     if (amount === null || amount < 0) {
-      setError('Entre un solde valide, même s’il est de 0 €.');
+      setError(`Entre un solde valide, même s’il est de ${money(0)}.`);
       return;
     }
     setSaving(true);
@@ -61,7 +63,7 @@ export function BalanceModal({
               </Text>
               <View style={styles.estimateCard}>
                 <Text style={styles.estimateLabel}>Estimation actuelle</Text>
-                <Text style={styles.estimateValue}>{formatEuro(estimatedBalance)}</Text>
+                <Text style={styles.estimateValue}>{money(estimatedBalance)}</Text>
                 {lastConfirmedAt ? (
                   <Text style={styles.estimateDate}>
                     Dernière confirmation : {formatDate(lastConfirmedAt)}
@@ -77,7 +79,7 @@ export function BalanceModal({
                 }}
                 keyboardType="decimal-pad"
                 placeholder="0"
-                suffix="EUR"
+                suffix={currency.symbol}
                 autoFocus
                 error={error}
               />

@@ -1,7 +1,7 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
-import { formatEuro } from './format';
+import { DEFAULT_CURRENCY, formatMoney } from './currency';
 import {
   currentUpcomingCycle,
   nextReminderFromCycles,
@@ -20,6 +20,7 @@ import type {
   ReminderKind,
   ReminderNotificationAction,
 } from './notification-model';
+import { useStore } from './store';
 import { Goal, ReminderCycle } from './types';
 
 // Des rappels datés par cycle, programmés à 9h : un éventuel report ponctuel
@@ -190,6 +191,7 @@ export async function scheduleGoalReminders(
     }
     await ensureAndroidChannel(N);
     await ensureReminderActions(N);
+    const currencyCode = useStore.getState().currencyCode ?? DEFAULT_CURRENCY;
     const scheduleCycle = async (cycle: ReminderCycle): Promise<ReminderCycle> => {
       if (cycle.settledAt) return cycle;
       const when = reminderAtForCycle(cycle);
@@ -198,8 +200,8 @@ export async function scheduleGoalReminders(
       const surplus = isPostponed ? 0 : surplusForCycle(goal, cycle);
       const body =
         surplus > 0
-          ? `Tu as déjà mis ${formatEuro(surplus)} ce mois-ci. Ton versement prévu (${formatEuro(suggestedAmount)}) — fait, ou tu ajustes ?`
-          : `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
+          ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci. Ton versement prévu (${formatMoney(suggestedAmount, currencyCode)}) — fait, ou tu ajustes ?`
+          : `Mets ${formatMoney(suggestedAmount, currencyCode)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
       const notificationId = await N.scheduleNotificationAsync({
         content: {
           title: 'MMG — ton rituel du mois',
@@ -251,10 +253,11 @@ export async function scheduleTestReminder(
     await ensureReminderActions(N);
     const cycle = oldestUnsettledDebt(goal) ?? currentUpcomingCycle(goal);
     const surplus = cycle ? surplusForCycle(goal, cycle) : 0;
+    const currencyCode = useStore.getState().currencyCode ?? DEFAULT_CURRENCY;
     const body =
       surplus > 0
-        ? `Tu as déjà mis ${formatEuro(surplus)} ce mois-ci. Ton versement prévu (${formatEuro(suggestedAmount)}) — fait, ou tu ajustes ?`
-        : `Mets ${formatEuro(suggestedAmount)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
+        ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci. Ton versement prévu (${formatMoney(suggestedAmount, currencyCode)}) — fait, ou tu ajustes ?`
+        : `Mets ${formatMoney(suggestedAmount, currencyCode)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
     if (lastTestNotificationId) {
       await N.cancelScheduledNotificationAsync(lastTestNotificationId).catch(() => {});
     }

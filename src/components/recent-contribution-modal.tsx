@@ -1,8 +1,9 @@
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius } from '@/constants/theme';
-import { formatDate, formatEuro } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import type { Contribution } from '@/lib/types';
+import { useMoney } from '@/lib/use-money';
 import { Button } from './ui';
 
 export function RecentContributionModal({
@@ -18,6 +19,7 @@ export function RecentContributionModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const { money } = useMoney();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
@@ -25,14 +27,14 @@ export function RecentContributionModal({
           <Text style={styles.eyebrow}>Vérification</Text>
           <Text style={styles.title}>Deux versements sont très proches</Text>
           <Text style={styles.body}>
-            Tu vas ajouter {formatEuro(amount)}. Voici les versements enregistrés ces trois
+            Tu vas ajouter {money(amount)}. Voici les versements enregistrés ces trois
             derniers jours :
           </Text>
           <View style={styles.list}>
             {contributions.map((contribution) => (
               <View key={contribution.id} style={styles.row}>
                 <Text style={styles.date}>{formatDate(contribution.date)}</Text>
-                <Text style={styles.amount}>{formatEuro(contribution.amount)}</Text>
+                <Text style={styles.amount}>{money(contribution.amount)}</Text>
               </View>
             ))}
           </View>

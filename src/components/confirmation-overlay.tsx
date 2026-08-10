@@ -2,7 +2,8 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, ReduceMotion, ZoomIn } from 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
-import { formatDate, formatEuro, formatMonth } from '@/lib/format';
+import { formatDate, formatMonth } from '@/lib/format';
+import { useMoney } from '@/lib/use-money';
 import { Button } from './ui';
 
 // Le « moment marquant » : écran sombre réservé à la confirmation d'un
@@ -28,6 +29,7 @@ export function ConfirmationOverlay({
   cycleAnchorAt?: string;
   onClose: () => void;
 }) {
+  const { money } = useMoney();
   return (
     <Modal visible={visible} animationType="fade" onRequestClose={onClose}>
       <View style={styles.container}>
@@ -47,7 +49,7 @@ export function ConfirmationOverlay({
           entering={FadeInUp.delay(320).duration(320).reduceMotion(ReduceMotion.System)}
           style={styles.copy}>
           <Text style={styles.eyebrow}>{done ? 'Félicitations' : "C'est noté"}</Text>
-          <Text style={styles.amount}>{formatEuro(amount)}</Text>
+          <Text style={styles.amount}>{money(amount)}</Text>
           <Text style={styles.message}>
             {done
               ? `« ${goalName} » est financé. Tu viens d'atteindre ton objectif 🎉`
@@ -67,7 +69,7 @@ export function ConfirmationOverlay({
             style={styles.nextCard}>
             <Text style={styles.nextLabel}>Prochain rappel</Text>
             <Text style={styles.nextValue}>
-              {formatDate(nextReminderAt)} · {formatEuro(nextAmount)} conseillés
+              {formatDate(nextReminderAt)} · {money(nextAmount)} conseillés
             </Text>
           </Animated.View>
         ) : null}

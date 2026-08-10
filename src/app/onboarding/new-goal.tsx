@@ -10,7 +10,6 @@ import { colors, radius } from '@/constants/theme';
 import { createGoal } from '@/lib/actions';
 import {
   formatDate,
-  formatEuro,
   parseAmountInput,
   parseDateInput,
 } from '@/lib/format';
@@ -31,6 +30,7 @@ import {
   GoalCategory,
   SavingsRhythm,
 } from '@/lib/types';
+import { useMoney } from '@/lib/use-money';
 
 const CATEGORIES: GoalCategory[] = ['emergency', 'car', 'moving', 'travel', 'other'];
 const RHYTHMS: {
@@ -44,6 +44,7 @@ const RHYTHMS: {
 ];
 
 export default function NewGoalScreen() {
+  const { currency, currencyCode, money } = useMoney();
   const router = useRouter();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
@@ -62,8 +63,8 @@ export default function NewGoalScreen() {
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
-  const parsedTarget = parseAmountInput(target);
-  const parsedAvailable = parseAmountInput(available) ?? 0;
+  const parsedTarget = parseAmountInput(target, currencyCode);
+  const parsedAvailable = parseAmountInput(available, currencyCode) ?? 0;
   const parsedDate = parseDateInput(dateText);
   const reminderDay = Math.min(28, Math.max(1, Number(reminderDayText) || 1));
 
@@ -214,7 +215,7 @@ export default function NewGoalScreen() {
             }}
             keyboardType="decimal-pad"
             placeholder="3 500"
-            suffix="EUR"
+            suffix={currency.symbol}
           />
           <Field
             label="Déjà disponible"
@@ -225,7 +226,7 @@ export default function NewGoalScreen() {
             }}
             keyboardType="decimal-pad"
             placeholder="0"
-            suffix="EUR"
+            suffix={currency.symbol}
           />
           <DateField
             label="Date cible"
@@ -254,22 +255,22 @@ export default function NewGoalScreen() {
               </View>
               <View style={styles.budgetRow}>
                 <Text style={styles.budgetLabel}>Revenus</Text>
-                <Text style={styles.budgetValue}>{formatEuro(budget.income)}</Text>
+                <Text style={styles.budgetValue}>{money(budget.income)}</Text>
               </View>
               <View style={styles.budgetRow}>
                 <Text style={styles.budgetLabel}>Charges fixes</Text>
-                <Text style={styles.budgetValue}>− {formatEuro(budget.fixedCharges)}</Text>
+                <Text style={styles.budgetValue}>− {money(budget.fixedCharges)}</Text>
               </View>
               <View style={styles.budgetRow}>
                 <Text style={styles.budgetLabel}>Dépenses</Text>
-                <Text style={styles.budgetValue}>− {formatEuro(budget.variableExpenses)}</Text>
+                <Text style={styles.budgetValue}>− {money(budget.variableExpenses)}</Text>
               </View>
               {activeExistingGoals.length ? (
                 <View style={styles.budgetRow}>
                   <Text style={styles.budgetLabel}>
                     Projets en cours ({activeExistingGoals.length})
                   </Text>
-                  <Text style={styles.budgetValue}>− {formatEuro(existingEffort)}</Text>
+                  <Text style={styles.budgetValue}>− {money(existingEffort)}</Text>
                 </View>
               ) : null}
               <View style={[styles.budgetRow, styles.budgetResult]}>
@@ -279,15 +280,15 @@ export default function NewGoalScreen() {
                     styles.budgetResultValue,
                     remainingAfterExistingGoals < 0 && styles.budgetResultWarning,
                   ]}>
-                  {formatEuro(remainingAfterExistingGoals)}
+                  {money(remainingAfterExistingGoals)}
                 </Text>
               </View>
               <Text style={styles.capacityChipMain}>
-                Capacité prudente encore disponible : {formatEuro(availablePrudentCapacity)} / mois
+                Capacité prudente encore disponible : {money(availablePrudentCapacity)} / mois
               </Text>
               {preview ? (
                 <Text style={styles.capacityChipDetail}>
-                  Effort total avec tes autres projets : {formatEuro(globalPeak)} au mois le plus élevé
+                  Effort total avec tes autres projets : {money(globalPeak)} au mois le plus élevé
                 </Text>
               ) : null}
             </View>
@@ -340,7 +341,7 @@ export default function NewGoalScreen() {
                 </View>
                 {preview ? (
                   <Text style={[styles.rhythmAmount, selected && styles.rhythmTextSelected]}>
-                    {formatEuro(preview.average)} moy. · pic {formatEuro(optionPeak)}
+                    {money(preview.average)} moy. · pic {money(optionPeak)}
                   </Text>
                 ) : null}
                 <Text style={[styles.rhythmBody, selected && styles.rhythmBodySelected]}>
@@ -358,12 +359,12 @@ export default function NewGoalScreen() {
                 description={CATEGORY_DESCRIPTIONS[category]}
                 monthly={
                   rhythm === 'stable'
-                    ? `${formatEuro(preview.average)} / mois`
-                    : `${formatEuro(preview.first)} → ${formatEuro(preview.last)}`
+                    ? `${money(preview.average)} / mois`
+                    : `${money(preview.first)} → ${money(preview.last)}`
                 }
                 targetDate={formatDate(parsedDate!)}
                 months={`${preview.months} mois`}
-                remaining={formatEuro(previewRemaining)}
+                remaining={money(previewRemaining)}
                 diagnostic={previewDiagnostic}
                 reminderDay={reminderDay}
                 rhythm={RHYTHMS.find((option) => option.key === rhythm)!.title}
@@ -372,8 +373,8 @@ export default function NewGoalScreen() {
                 <View style={styles.compatCard}>
                   <Text style={styles.compatTitle}>Plan compatible avec ton budget</Text>
                   <Text style={styles.compatBody}>
-                    Avec tes autres projets, le mois le plus haut reste à {formatEuro(globalPeak)},
-                    pour une capacité prudente globale de {formatEuro(prudentCapacity(budget))}.
+                    Avec tes autres projets, le mois le plus haut reste à {money(globalPeak)},
+                    pour une capacité prudente globale de {money(prudentCapacity(budget))}.
                   </Text>
                 </View>
               ) : null}

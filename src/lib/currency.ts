@@ -3,8 +3,8 @@
 //
 // Fichier VOLONTAIREMENT autonome (aucun import) : les tests (.mjs) transpilent
 // chaque fichier isolément, donc `currency.ts` doit se suffire à lui-même.
-// `formatEuro` reste dans format.ts inchangé ; les écrans migreront
-// progressivement vers `formatMoney(montant, currencyCode)`.
+// `formatEuro` reste dans format.ts pour la compatibilité des anciens tests ;
+// les écrans V2 utilisent `formatMoney(montant, currencyCode)` via useMoney.
 
 export type CurrencyCode = 'EUR' | 'XAF' | 'XOF' | 'USD';
 
@@ -66,15 +66,16 @@ function groupThousands(intStr: string): string {
   let grouped = '';
   let rest = intStr;
   while (rest.length > 3) {
-    grouped = ' ' + rest.slice(-3) + grouped;
+    grouped = '\u202f' + rest.slice(-3) + grouped;
     rest = rest.slice(0, -3);
   }
   return rest + grouped;
 }
 
 /**
- * Formate un montant dans la devise donnée (fr-FR : espace pour les milliers,
- * virgule pour les décimales). L'euro reproduit exactement le rendu V1.
+ * Formate un montant dans la devise donnée (fr-FR : espace fine insécable pour
+ * les milliers, virgule pour les décimales). L'euro reproduit exactement le
+ * rendu V1, y compris l'espace insécable avant le symbole.
  */
 export function formatMoney(amount: number, code: CurrencyCode = DEFAULT_CURRENCY): string {
   const def = CURRENCIES[code] ?? CURRENCIES[DEFAULT_CURRENCY];
@@ -94,7 +95,7 @@ export function formatMoney(amount: number, code: CurrencyCode = DEFAULT_CURRENC
   }
 
   const number = `${sign}${grouped}${decStr}`;
-  return def.symbolAfter ? `${number} ${def.symbol}` : `${def.symbol}${number}`;
+  return def.symbolAfter ? `${number}\u00a0${def.symbol}` : `${def.symbol}${number}`;
 }
 
 /** Pays proposés au premier lancement (starter — Codex peut étendre). */

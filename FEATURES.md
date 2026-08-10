@@ -4,7 +4,28 @@ Description technique de toutes les fonctionnalités : ce qu'elles font, comment
 fonctionnent, où elles vivent dans le code. **Mis à jour à chaque fonctionnalité ajoutée ou
 modifiée**, pas après coup.
 
-Dernière mise à jour : 2026-07-14 (Codex).
+Dernière mise à jour : 2026-08-10 (Codex).
+
+---
+
+## 0. Pays et devise (V2)
+
+- **Quoi** : MMG sait afficher et saisir les montants en euro (`EUR`), franc CFA d'Afrique
+  centrale (`XAF`), franc CFA d'Afrique de l'Ouest (`XOF`) et dollar américain (`USD`). Le
+  store local conserve le pays ISO et la devise choisis ; les utilisateurs V1 restent en euro
+  par défaut sans migration destructive.
+- **Affichage** : tous les écrans monétaires, les fenêtres d'action, l'exemple pédagogique et
+  les notifications utilisent la devise active. Le rendu français conserve la virgule
+  décimale, l'espace fine insécable entre les milliers et l'espace insécable avant le symbole.
+  L'euro reste ainsi strictement identique à la V1. Le FCFA ne montre jamais de centimes.
+- **Saisie** : les champs affichent le symbole de la devise active et acceptent les montants
+  avec ou sans symbole (`€`, `FCFA`, `$`) ainsi que les codes de devise. La précision est
+  normalisée selon la devise : deux décimales pour EUR/USD, aucune pour XAF/XOF.
+- **Pays disponibles (starter)** : Gabon, Cameroun, Congo, Tchad, République centrafricaine,
+  Guinée équatoriale, Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Bénin, Togo, Niger, France,
+  Belgique et États-Unis. Une locale inconnue retombe sur l'euro.
+- **Où** : `src/lib/currency.ts`, `src/lib/format.ts`, `src/lib/use-money.ts`,
+  `src/lib/store.ts` et l'ensemble des surfaces monétaires sous `src/app` / `src/components`.
 
 ---
 

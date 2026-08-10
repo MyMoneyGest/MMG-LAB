@@ -5,11 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
 import { removeGoal } from '@/lib/actions';
-import { formatEuro } from '@/lib/format';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { waitForMinimumLoading } from '@/lib/timing';
 import type { Goal } from '@/lib/types';
+import { useMoney } from '@/lib/use-money';
 import { AppDialog } from './app-dialog';
 import { Button } from './ui';
 
@@ -24,6 +24,7 @@ export function MenuModal({
   onClose: () => void;
   currentGoalId?: string;
 }) {
+  const { money } = useMoney();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
@@ -123,7 +124,7 @@ export function MenuModal({
                   <View style={{ flex: 1 }}>
                     <Text style={styles.goalName}>{g.name}</Text>
                     <Text style={styles.goalMeta}>
-                      {progressPct(g)} % atteint · {formatEuro(remainingAmount(g))} restants
+                      {progressPct(g)} % atteint · {money(remainingAmount(g))} restants
                     </Text>
                   </View>
                   <View style={styles.goalActions}>

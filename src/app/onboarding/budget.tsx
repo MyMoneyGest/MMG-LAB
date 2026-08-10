@@ -11,7 +11,7 @@ import {
   clearGlobalRebalanceReview,
   deferGlobalRebalance,
 } from '@/lib/actions';
-import { formatEuro, parseAmountInput } from '@/lib/format';
+import { parseAmountInput } from '@/lib/format';
 import {
   buildGlobalRebalanceProposal,
   prudentCapacity,
@@ -21,8 +21,10 @@ import {
 import type { GlobalRebalanceProposal } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { MIN_INLINE_LOADING_MS, waitForMinimumLoading } from '@/lib/timing';
+import { useMoney } from '@/lib/use-money';
 
 export default function BudgetScreen() {
+  const { currency, currencyCode, money } = useMoney();
   const router = useRouter();
   const { returnToGoal, standalone } = useLocalSearchParams<{
     returnToGoal?: string;
@@ -40,9 +42,9 @@ export default function BudgetScreen() {
     useState<GlobalRebalanceProposal | null>(null);
 
   const parsed = {
-    income: parseAmountInput(income),
-    fixedCharges: parseAmountInput(fixed),
-    variableExpenses: parseAmountInput(variable),
+    income: parseAmountInput(income, currencyCode),
+    fixedCharges: parseAmountInput(fixed, currencyCode),
+    variableExpenses: parseAmountInput(variable, currencyCode),
   };
   const complete =
     parsed.income !== null && parsed.fixedCharges !== null && parsed.variableExpenses !== null;
@@ -90,7 +92,7 @@ export default function BudgetScreen() {
           }}
           keyboardType="decimal-pad"
           placeholder="2 000"
-          suffix="EUR"
+          suffix={currency.symbol}
         />
         <Field
           label="Charges fixes (loyer, abonnements, crédits…)"
@@ -101,7 +103,7 @@ export default function BudgetScreen() {
           }}
           keyboardType="decimal-pad"
           placeholder="900"
-          suffix="EUR"
+          suffix={currency.symbol}
         />
         <Field
           label="Dépenses variables (courses, sorties…)"
@@ -112,15 +114,15 @@ export default function BudgetScreen() {
           }}
           keyboardType="decimal-pad"
           placeholder="500"
-          suffix="EUR"
+          suffix={currency.symbol}
         />
 
         {draft ? (
-          <Text style={styles.capacity}>Capacité prudente : {formatEuro(prudentCapacity(draft))} / mois</Text>
+          <Text style={styles.capacity}>Capacité prudente : {money(prudentCapacity(draft))} / mois</Text>
         ) : null}
         {draft ? (
           <Text style={styles.capacityNote}>
-            Reste à vivre {formatEuro(resteAVivre(draft))}, moins une marge de sécurité de{' '}
+            Reste à vivre {money(resteAVivre(draft))}, moins une marge de sécurité de{' '}
             {Math.round(SAFETY_MARGIN * 100)} % pour éviter un plan trop serré.
           </Text>
         ) : null}

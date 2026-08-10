@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius } from '@/constants/theme';
-import { formatDate, formatEuro } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import type { GlobalRebalanceProposal } from '@/lib/plan';
+import { useMoney } from '@/lib/use-money';
 import { Button, KeyboardSafeScrollView } from './ui';
 
 export function RebalanceModal({
@@ -17,6 +18,7 @@ export function RebalanceModal({
   onApply: () => Promise<void> | void;
   onKeep: () => void;
 }) {
+  const { money } = useMoney();
   const [saving, setSaving] = useState(false);
   useEffect(() => setSaving(false), [proposal]);
   if (!proposal) return null;
@@ -52,8 +54,8 @@ export function RebalanceModal({
                 : reason === 'balance'
                   ? 'Ton solde réel est enregistré et les enveloppes sont recalées.'
                   : 'Tu avais choisi de conserver ton ancien échéancier.'}{' '}
-              Effort cumulé au mois le plus exigeant : {formatEuro(proposal.currentEffort)}.
-              Capacité prudente globale : {formatEuro(proposal.capacity)}.
+              Effort cumulé au mois le plus exigeant : {money(proposal.currentEffort)}.
+              Capacité prudente globale : {money(proposal.capacity)}.
             </Text>
             {!proposal.possible ? (
               <View style={styles.warning}>
@@ -72,7 +74,7 @@ export function RebalanceModal({
                       {formatDate(goal.proposedTargetDate)}
                     </Text>
                     <Text style={styles.monthly}>
-                      Environ {formatEuro(goal.proposedMonthly)} au prochain rappel
+                      Environ {money(goal.proposedMonthly)} au prochain rappel
                     </Text>
                   </View>
                 ))}
