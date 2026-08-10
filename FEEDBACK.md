@@ -15,6 +15,13 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ## Cosmétique — à grouper sur le prochain build
 
+- ~~**2026-08-10 (Patrick)** : les très gros montants FCFA (> 100 000 000) étaient mal affichés —
+  « FCFA » cassait sur deux lignes, et l'en-tête « Mis de côté / restants » se décalait /
+  tronquait dès que le montant mis de côté était lui aussi élevé (deux gros nombres côte à
+  côte).~~ **✅ CORRIGÉ (Claude Code, Session 43)** : helper déterministe `fitFontSize`
+  (`format.ts`) + en-tête projet passé en disposition verticale (gros montant pleine largeur).
+  Vérifié à l'écran (150 000 000 / 12 187 500 FCFA), non-régression euro OK, tests + tsc verts.
+
 - **2026-07-24 (n=1)** : les points de « Un projet. Un geste par mois. » (accueil) trouvés un
   peu secs. Ponctuation volontaire (rythme slogan). Alternative si on change : virgule
   (« Un projet, un geste par mois. »), plus douce. Fichier : `src/app/home.tsx`. Ne changer

@@ -1,5 +1,18 @@
 // Formatage manuel fr-FR pour ne pas dépendre du support Intl de Hermes.
 
+/**
+ * Taille de police adaptée à la longueur d'un montant affiché en gros.
+ * Les montants FCFA sont ~655× plus longs que l'euro (« 12 187 500 FCFA ») et
+ * débordaient / coupaient le symbole. Modèle : si ~10 caractères tiennent à la
+ * taille de base, N caractères tiennent à base×10/N. Déterministe (web ET natif),
+ * contrairement à `adjustsFontSizeToFit` qui est ignoré sur le web.
+ */
+export function fitFontSize(text: string, base: number): number {
+  const len = text.length;
+  if (len <= 10) return base;
+  return Math.max(Math.round(base * 0.5), Math.floor((base * 10) / len));
+}
+
 import { CURRENCIES, DEFAULT_CURRENCY } from './currency';
 import type { CurrencyCode } from './currency';
 

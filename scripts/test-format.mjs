@@ -26,12 +26,22 @@ new Function('exports', 'module', 'require', compile('src/lib/format.ts'))(
 );
 
 const {
+  fitFontSize,
   formatAmountInput,
   formatDateInput,
   formatReminderDay,
   parseDateInput,
   parseAmountInput,
 } = loaded.exports;
+
+// fitFontSize : les montants courts (euro) gardent la taille de base ; les gros
+// montants FCFA rétrécissent pour tenir sur une ligne, avec un plancher à 50 %.
+assert.equal(fitFontSize('300 €', 36), 36); // 5 caractères → intact
+assert.equal(fitFontSize('123 456 €', 36), 36); // 9 caractères → intact (sous la limite)
+assert.equal(fitFontSize('1 234 567 €', 36), 32); // 11 caractères → léger rétrécissement
+assert.equal(fitFontSize('12 187 500 FCFA', 36), 24); // 15 car. → floor(360/15)
+assert.equal(fitFontSize('137 812 500 FCFA', 36), 22); // 16 car. → floor(360/16)
+assert.equal(fitFontSize('123 456 789 012 345 FCFA', 36), 18); // très long → plancher base×0.5
 
 assert.equal(formatDateInput(''), '');
 assert.equal(formatDateInput('1'), '1');

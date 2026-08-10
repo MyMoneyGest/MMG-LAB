@@ -14,6 +14,41 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Claude Code — Session 43 : affichage des très gros montants FCFA
+
+### Contexte
+Patrick a signalé que les montants > 100 000 000 FCFA étaient mal gérés à l'affichage, et
+plus précisément que **l'en-tête « Mis de côté / restants » se décalait** dès qu'on renseignait
+un montant mis de côté lui-même élevé (deux gros nombres côte à côte).
+
+### Fait
+- **Helper `fitFontSize(text, base)`** ajouté dans `src/lib/format.ts` : taille de police
+  déterministe fonction de la longueur (≤10 car. = base ; sinon `base×10/len`, plancher à 50 %).
+  Nécessaire car `adjustsFontSizeToFit` est **ignoré sur react-native-web** (il tronquait avec
+  « … » au lieu de rétrécir). Déterministe web ET natif.
+- **Écran projet `goal/[id].tsx`** : le bloc d'en-tête passe d'une **disposition à deux colonnes**
+  (montant à gauche / restant-cible à droite) à une **disposition verticale** — le gros montant
+  « mis de côté » occupe toute la largeur (avec `fitFontSize`, base 36, une ligne), les infos
+  secondaires (« X restants · sur Y ») passent en petit en dessous. Cause racine : deux gros
+  nombres ne tiennent jamais côte à côte sur 375 px.
+- **Carte « Montant conseillé »** et **overlay de confirmation** : `fitFontSize` appliqué
+  (bases 38 et 52) pour éviter que « FCFA » ne casse sur deux lignes.
+- **Test** : couverture `fitFontSize` ajoutée à `scripts/test-format.mjs` (cas euro intacts,
+  rétrécissement FCFA, plancher). 9 suites vertes, `tsc --noEmit` OK.
+
+### Vérifié à l'écran (web, store Gabon/FCFA, objectif 150 000 000, mis de côté 12 187 500)
+- « Mis de côté » → **« 12 187 500 FCFA » sur une seule ligne**, pleine largeur, plus aucune
+  troncature ; « 137 812 500 FCFA restants · sur 150 000 000 FCFA » lisible en dessous.
+- « Montant conseillé » → **« 11 197 266 FCFA » sur une ligne**. Décalage disparu.
+- **Non-régression euro** vérifiée (objectif 3 500 €) : disposition verticale propre, même
+  plus lisible.
+
+### Ensuite
+- Validation native de Patrick (le rétrécissement natif via `adjustsFontSizeToFit` est en plus).
+- Lot C : mode épargne libre ⭐⭐, écran d'estimation des dépenses, date de début différée ⭐.
+
+---
+
 ## 2026-08-XX — Claude Code — Session 42 : vérification indépendante du Lot A (Codex)
 
 ### Vérifié (lecture seule pendant l'intervention de Codex, puis contrôle complet après)

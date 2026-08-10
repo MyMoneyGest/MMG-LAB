@@ -26,7 +26,7 @@ import {
   reconcileGlobalBalance,
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
-import { formatDate, formatReminderDay } from '@/lib/format';
+import { fitFontSize, formatDate, formatReminderDay } from '@/lib/format';
 import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
 import {
   hasPendingAction,
@@ -349,16 +349,21 @@ export default function GoalScreen() {
       ) : null}
 
       <Card>
-        <View style={styles.amountRow}>
-          <View>
-            <Text style={styles.summaryLabel}>Mis de côté</Text>
-            <Text style={styles.savedAmount}>{money(saved)}</Text>
-          </View>
-          <View style={styles.amountAside}>
-            <Text style={styles.remainingAmount}>{money(remaining)} restants</Text>
-            <Text style={styles.targetAmount}>sur {money(goal.targetAmount)}</Text>
-          </View>
-        </View>
+        {/* Disposition verticale : le gros montant « mis de côté » prend toute la
+            largeur (avec fitFontSize pour tenir sur une ligne, y compris en FCFA),
+            et les informations secondaires (restant, cible) passent en dessous.
+            Deux gros montants côte à côte ne tiennent pas sur un écran étroit. */}
+        <Text style={styles.summaryLabel}>Mis de côté</Text>
+        <Text
+          style={[styles.savedAmount, { fontSize: fitFontSize(money(saved), 36) }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.5}>
+          {money(saved)}
+        </Text>
+        <Text style={styles.savedMeta}>
+          {money(remaining)} restants · sur {money(goal.targetAmount)}
+        </Text>
         <ProgressBar pct={pct} label={`${pct} % atteint`} />
         <View style={styles.progressFooter}>
           <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
@@ -379,7 +384,13 @@ export default function GoalScreen() {
             <>
               <View style={styles.adviceCard}>
                 <Text style={styles.adviceLabel}>Montant conseillé</Text>
-                <Text style={styles.adviceAmount}>{money(suggested)}</Text>
+                <Text
+                  style={[styles.adviceAmount, { fontSize: fitFontSize(money(suggested), 38) }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.4}>
+                  {money(suggested)}
+                </Text>
                 <Text style={styles.adviceReminder}>
                   {pending ? 'Rappel en cours : ' : 'Rappel prévu : '}
                   {formatDate(goal.nextReminderAt)}
@@ -688,9 +699,11 @@ const styles = StyleSheet.create({
   },
   bannerText: { color: colors.accent, fontSize: 15, fontWeight: '600', lineHeight: 21 },
   amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12 },
+  amountMain: { flex: 1, minWidth: 0 },
   summaryLabel: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: 2 },
+  savedMeta: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginTop: 2, marginBottom: 6 },
   savedAmount: { fontSize: 30, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  amountAside: { alignItems: 'flex-end', paddingBottom: 3 },
+  amountAside: { alignItems: 'flex-end', paddingBottom: 3, flexShrink: 1, minWidth: 0, maxWidth: '55%' },
   remainingAmount: { fontSize: 14, fontWeight: '800', color: colors.text },
   targetAmount: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 2 },
   progressFooter: { alignItems: 'center', gap: 3 },

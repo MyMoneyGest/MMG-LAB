@@ -2,7 +2,7 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, ReduceMotion, ZoomIn } from 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
-import { formatDate, formatMonth } from '@/lib/format';
+import { fitFontSize, formatDate, formatMonth } from '@/lib/format';
 import { useMoney } from '@/lib/use-money';
 import { Button } from './ui';
 
@@ -49,7 +49,13 @@ export function ConfirmationOverlay({
           entering={FadeInUp.delay(320).duration(320).reduceMotion(ReduceMotion.System)}
           style={styles.copy}>
           <Text style={styles.eyebrow}>{done ? 'Félicitations' : "C'est noté"}</Text>
-          <Text style={styles.amount}>{money(amount)}</Text>
+          <Text
+            style={[styles.amount, { fontSize: fitFontSize(money(amount), 52) }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.4}>
+            {money(amount)}
+          </Text>
           <Text style={styles.message}>
             {done
               ? `« ${goalName} » est financé. Tu viens d'atteindre ton objectif 🎉`
