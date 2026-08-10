@@ -23,8 +23,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
   normalisée selon la devise : deux décimales pour EUR/USD, aucune pour XAF/XOF. Cette
   normalisation est aussi réappliquée à l'enregistrement d'un versement rapide afin qu'un
   montant de plan calculé en interne ne crée jamais de centimes invisibles en FCFA. Pendant la
-  frappe en FCFA, les milliers sont regroupés en direct (`2500000` → `2 500 000`) sur toutes
-  les surfaces monétaires afin de réduire les erreurs de lecture.
+  frappe, les milliers sont regroupés en direct dans toutes les devises (`2500` → `2 500`,
+  `2500,50` → `2 500,50`) sur toutes les surfaces monétaires afin de réduire les erreurs de
+  lecture.
 - **Pays disponibles (starter)** : Gabon, Cameroun, Congo, Tchad, République centrafricaine,
   Guinée équatoriale, Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Bénin, Togo, Niger, France,
   Belgique et États-Unis. Une locale inconnue retombe sur l'euro.

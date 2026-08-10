@@ -69,6 +69,13 @@ assert.equal(parseAmountInput('montant', 'EUR'), null);
 assert.equal(formatAmountInput('2500000', 'XAF'), '2 500 000');
 assert.equal(formatAmountInput('2 500 000 FCFA', 'XOF'), '2 500 000');
 assert.equal(formatAmountInput('0002500', 'XAF'), '2 500');
-assert.equal(formatAmountInput('2500000', 'EUR'), '2500000');
+assert.equal(formatAmountInput('2500', 'EUR'), '2 500');
+assert.equal(formatAmountInput('2500,', 'EUR'), '2 500,');
+assert.equal(formatAmountInput('2500,5', 'EUR'), '2 500,5');
+assert.equal(formatAmountInput('2 500,50 €', 'EUR'), '2 500,50');
+assert.equal(formatAmountInput('2500.50', 'USD'), '2 500,50');
+assert.equal(formatAmountInput('0002500,567', 'EUR'), '2 500,56');
+assert.equal(formatAmountInput(',5', 'EUR'), '0,5');
+assert.equal(parseAmountInput(formatAmountInput('2500,50', 'EUR'), 'EUR'), 2500.5);
 
 console.log('Tests format : dates et saisies EUR/FCFA/USD validées.');

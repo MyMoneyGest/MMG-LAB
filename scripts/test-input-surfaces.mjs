@@ -72,7 +72,7 @@ for (const [name, source] of [
   ['amount-modal', amountModal],
   ['balance-modal', balanceModal],
 ]) {
-  assert.match(source, /amountInput/, `${name} doit grouper les grandes saisies FCFA`);
+  assert.match(source, /amountInput/, `${name} doit grouper les grandes saisies monétaires`);
 }
 assert.match(rebalanceModal, /Garder mes plans/);
 assert.match(rebalanceModal, /Appliquer/);

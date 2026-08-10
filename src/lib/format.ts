@@ -75,18 +75,40 @@ export function formatReminderDay(day: number): string {
 }
 
 /**
- * Rend les grands montants lisibles pendant la frappe dans les devises sans
- * centimes. Les espaces sont purement visuels et parseAmountInput les ignore.
+ * Rend les grands montants lisibles pendant la frappe, quelle que soit la
+ * devise. Les espaces sont purement visuels et parseAmountInput les ignore.
+ * Pour les devises à centimes, la virgule et les décimales déjà saisies sont
+ * conservées : « 2500,50 » devient « 2 500,50 ».
  */
 export function formatAmountInput(
   value: string,
   code: CurrencyCode = DEFAULT_CURRENCY
 ): string {
-  if ((CURRENCIES[code]?.decimals ?? 2) > 0) return value;
-  const digits = value.replace(/\D/g, '');
-  if (!digits) return '';
-  const normalized = digits.replace(/^0+(?=\d)/, '');
-  return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const decimals = CURRENCIES[code]?.decimals ?? CURRENCIES[DEFAULT_CURRENCY].decimals;
+
+  if (decimals === 0) {
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return '';
+    const normalized = digits.replace(/^0+(?=\d)/, '');
+    return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  const sanitized = value.replace(/[^\d.,]/g, '').replace('.', ',');
+  if (!sanitized) return '';
+
+  const separatorIndex = sanitized.indexOf(',');
+  const integerSource = separatorIndex >= 0 ? sanitized.slice(0, separatorIndex) : sanitized;
+  const integerDigits = integerSource.replace(/\D/g, '');
+  const normalizedInteger = (integerDigits || '0').replace(/^0+(?=\d)/, '');
+  const groupedInteger = normalizedInteger.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  if (separatorIndex < 0) return groupedInteger;
+
+  const decimalDigits = sanitized
+    .slice(separatorIndex + 1)
+    .replace(/\D/g, '')
+    .slice(0, decimals);
+  return `${groupedInteger},${decimalDigits}`;
 }
 
 /** Insère automatiquement les séparateurs d'une saisie JJ/MM/AAAA. */

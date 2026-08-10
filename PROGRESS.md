@@ -14,6 +14,25 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 45 : milliers lisibles pendant la saisie en euros
+
+### Fait
+- Étendu le regroupement visuel des milliers à **toutes les devises**, et plus seulement aux
+  monnaies sans centimes : une saisie euro `2500` s'affiche désormais `2 500` immédiatement.
+- Préservé la saisie décimale en français : `2500,50` devient `2 500,50`. Le point produit par
+  certains claviers est accepté et affiché comme une virgule, sans changer la valeur enregistrée.
+- Le même formateur partagé couvre budget, création et ajustement de projet, versement libre et
+  confirmation du solde réel. Aucun écran monétaire n'a de logique divergente.
+
+### Vérifications
+- Tests unitaires ajoutés pour EUR/USD : milliers, virgule en cours de frappe, point du clavier,
+  limite à deux décimales, zéros initiaux et montant commençant par une virgule.
+- **9 suites fonctionnelles vertes**, `npx tsc --noEmit` et `git diff --check` réussis.
+
+### Ensuite
+1. Validation visuelle native lors du prochain build V2.
+2. Reprendre le Lot C : estimation optionnelle des dépenses, puis date de début différée.
+
 ## 2026-08-10 — Codex — Session 44 : accueil lisible + mode épargne libre
 
 ### Fait
