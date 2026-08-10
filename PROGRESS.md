@@ -14,6 +14,36 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-XX — Claude Code — Session 42 : vérification indépendante du Lot A (Codex)
+
+### Vérifié (lecture seule pendant l'intervention de Codex, puis contrôle complet après)
+- **9 suites de tests vertes**, `tsc --noEmit` OK, `git diff --check` propre.
+- **Parcours à l'écran (web, store vierge)** :
+  - Premier lancement → écran **« Dans quel pays épargnes-tu ? »** : pré-rempli depuis la
+    locale (🇫🇷 France · Euro), **1 tap Continuer**, **Changer** ouvre la liste groupée par
+    région. Conforme à la décision « premier lancement minimal ».
+  - Choix **Gabon → Franc CFA** → tout s'affiche en **FCFA sans décimales** (« 3 500 FCFA »,
+    « 480 FCFA / mois »…). ✓
+  - Cosmétique embarquée : **« Le 1er du mois »** ✓, accueil **« Un projet, un geste par
+    mois. »** (virgule) ✓.
+  - Vocabulaire générique : **« mets cette somme de côté avec ton moyen habituel »** ✓.
+  - **Aucune erreur console.**
+- **Architecture saine** : hook `use-money.ts` (formateur réactif via le store), gating pays
+  dans `index.tsx` (redirection `/onboarding/country` si pays absent), `convertMoney`/
+  `normalizeMoney` + flux de conversion (parité CFA hors-ligne, taux EUR/USD via API sans
+  envoi de montant).
+
+### Constat (polish, non bloquant — noté dans FEEDBACK.md)
+- L'écran **Exemple** réutilise les chiffres euro relabellés en FCFA (« 3 500 FCFA » ≈ 5 €),
+  magnitude irréaliste pour un public gabonais. À localiser (chiffres adaptés par devise)
+  pour la crédibilité. Cosmétique, à grouper.
+
+### Verdict
+Lot A **conforme et propre**. Reste : validation native de Patrick sur téléphone
+(1er lancement + conversion de devise) et vidéos une fois le FCFA en main.
+
+---
+
 ## 2026-08-10 — Codex — Session 41 : saisie FCFA sécurisée + conversion explicite
 
 ### Fait
