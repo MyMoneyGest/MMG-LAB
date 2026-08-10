@@ -52,7 +52,7 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
   `goal_deleted`. Le pays et la devise choisis sont joints aux ouvertures/créations afin de
   lire la rétention par marché, sans transmettre de montant exact.
 - `src/lib/store.ts` — état persistant local (zustand + AsyncStorage), seule source de vérité
-  des données utilisateur.
+  des données utilisateur, y compris le repère facultatif indiquant où chaque épargne est gardée.
 - `src/lib/exchange-rate.ts` — taux de conversion proposé lors d'un changement de devise :
   parité EUR/FCFA locale et, uniquement si USD intervient, référence EUR/USD de la BCE via
   Frankfurter. Le taux reste modifiable et aucun montant utilisateur n'est envoyé.

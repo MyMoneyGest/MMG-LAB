@@ -76,6 +76,11 @@ export interface Goal {
    * Absente sur les anciens projets et les démarrages immédiats.
    */
   startDate?: string;
+  /**
+   * Repère facultatif indiquant où l'épargne du projet est conservée.
+   * Cette valeur libre reste locale et n'est jamais envoyée aux analytics.
+   */
+  savingsLocation?: string;
   /** ISO datetime de la prochaine action attendue (rappel à 9h) */
   nextReminderAt: string;
   /** Identifiant de la notification locale programmée */

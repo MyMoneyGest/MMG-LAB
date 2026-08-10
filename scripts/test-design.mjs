@@ -34,6 +34,8 @@ const theme = read('src/constants/theme.ts');
 const planSummary = read('src/components/plan-summary.tsx');
 const iconGenerator = read('scripts/generate-app-icons.swift');
 const actions = read('src/lib/actions.ts');
+const goalTypes = read('src/lib/types.ts');
+const savingsLocationModal = read('src/components/savings-location-modal.tsx');
 
 assert.match(newGoal, /La date cible doit permettre le premier rappel prévu/);
 
@@ -232,6 +234,16 @@ assert.match(goal, /tabActive: \{ backgroundColor: colors\.accent/);
 assert.match(goal, /<ProgressBar pct=\{pct\} label=\{`\$\{pct\} % atteint`\}/);
 assert.match(goal, /styles\.progressFooter/);
 assert.match(goal, /Cible \{formatDate\(goal\.targetDate\)\}/);
+assert.match(goal, />Où \?</);
+assert.match(goal, /goal\.savingsLocation \?\? 'Ajouter'/);
+assert.match(goal, /<SavingsLocationModal/);
+assert.match(goal, /hitSlop=\{5\}/);
+assert.match(goalTypes, /savingsLocation\?: string/);
+assert.match(savingsLocationModal, /Où gardes-tu cette épargne/);
+assert.match(savingsLocationModal, /Compte ou support/);
+assert.match(savingsLocationModal, /uniquement\s+sur ton téléphone/);
+assert.doesNotMatch(newGoal, /SavingsLocationModal|savingsLocation/);
+assert.doesNotMatch(actions, /savingsLocation/);
 assert.doesNotMatch(goal, /Solde global (?:pas encore )?confirmé/);
 assert.match(goal, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)\} · Modifier/);
 assert.match(planSummary, /Le \$\{formatReminderDay\(reminderDay\)\} du mois/);

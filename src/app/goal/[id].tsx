@@ -15,6 +15,7 @@ import { ReportModal } from '@/components/report-modal';
 import { RecentContributionModal } from '@/components/recent-contribution-modal';
 import { RebalanceModal } from '@/components/rebalance-modal';
 import { ReminderDayModal } from '@/components/reminder-day-modal';
+import { SavingsLocationModal } from '@/components/savings-location-modal';
 import { Button, Card, Eyebrow, ProgressBar, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import {
@@ -105,6 +106,7 @@ export default function GoalScreen() {
     useState<RebalanceReason | 'review'>('balance');
   const [reportOpen, setReportOpen] = useState(false);
   const [reminderDayOpen, setReminderDayOpen] = useState(false);
+  const [savingsLocationOpen, setSavingsLocationOpen] = useState(false);
   const [modalFromTest, setModalFromTest] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -384,6 +386,25 @@ export default function GoalScreen() {
         <Text style={styles.savedMeta}>
           {money(remaining)} restants · sur {money(goal.targetAmount)}
         </Text>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={5}
+          accessibilityLabel={
+            goal.savingsLocation
+              ? `Lieu de l'épargne : ${goal.savingsLocation}. Modifier`
+              : "Indiquer où l'épargne de ce projet est conservée"
+          }
+          onPress={() => setSavingsLocationOpen(true)}
+          style={({ pressed }) => [
+            styles.savingsLocation,
+            pressed && styles.savingsLocationPressed,
+          ]}>
+          <Text style={styles.savingsLocationLabel}>Où ?</Text>
+          <Text numberOfLines={1} style={styles.savingsLocationValue}>
+            {goal.savingsLocation ?? 'Ajouter'}
+          </Text>
+          <Text style={styles.savingsLocationArrow}>›</Text>
+        </Pressable>
         <ProgressBar pct={pct} label={`${pct} % atteint`} />
         <View style={styles.progressFooter}>
           <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
@@ -680,6 +701,21 @@ export default function GoalScreen() {
           showFeedback('Jour de rappel modifié', `Le rappel mensuel est maintenant prévu le ${day}.`);
         }}
       />
+      <SavingsLocationModal
+        visible={savingsLocationOpen}
+        currentLocation={goal.savingsLocation}
+        onClose={() => setSavingsLocationOpen(false)}
+        onConfirm={(location) => {
+          useStore.getState().updateGoal(goal.id, { savingsLocation: location });
+          setSavingsLocationOpen(false);
+          showFeedback(
+            location ? 'Repère enregistré' : 'Repère retiré',
+            location
+              ? `Tu retrouveras « ${location} » sur la fiche de ce projet.`
+              : "Ce projet n'affiche plus de lieu d'épargne."
+          );
+        }}
+      />
       <ReportModal
         visible={reportOpen}
         goal={goal}
@@ -771,6 +807,30 @@ const styles = StyleSheet.create({
   summaryLabel: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: 2 },
   savedMeta: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginTop: 2, marginBottom: 6 },
   savedAmount: { fontSize: 30, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  savingsLocation: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    minHeight: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: colors.cardSoft,
+    borderWidth: 1,
+    borderColor: colors.cardSoftBorder,
+    borderRadius: 17,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    marginBottom: 8,
+  },
+  savingsLocationPressed: { opacity: 0.72 },
+  savingsLocationLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  savingsLocationValue: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '800',
+    flexShrink: 1,
+  },
+  savingsLocationArrow: { color: colors.accent, fontSize: 18, lineHeight: 18, fontWeight: '700' },
   amountAside: { alignItems: 'flex-end', paddingBottom: 3, flexShrink: 1, minWidth: 0, maxWidth: '55%' },
   remainingAmount: { fontSize: 14, fontWeight: '800', color: colors.text },
   targetAmount: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 2 },

@@ -14,6 +14,36 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 48 : repère facultatif du lieu d'épargne
+
+### Fait
+- Ajouté sous **Mis de côté** le bouton compact **Où ? Ajouter**, remplacé ensuite par le texte
+  choisi par l'utilisateur. Cette information aide à distinguer plusieurs projets sans alourdir
+  la carte de progression.
+- Ajouté une fenêtre MMG à un seul champ, protégée du clavier, acceptant librement un compte,
+  un support mobile money ou des espèces. Une valeur vide retire le repère.
+- Le champ facultatif `savingsLocation` est persisté sur le projet existant, sans modifier le
+  parcours de création, le plan, les rappels ou les anciens projets.
+- Choisi la saisie libre pour rester compatible avec tous les pays sans entretenir une liste
+  incomplète de banques et d'opérateurs.
+- Confidentialité protégée : le repère reste dans AsyncStorage et aucun événement analytics ne
+  le contient. FEATURES, FEEDBACK, EXCHANGES, README et la page Confidentialité sont alignés.
+
+### Vérifications
+- **9 suites fonctionnelles**, TypeScript et `git diff --check` : OK.
+- Export Expo web complet : **12 routes statiques générées** — OK.
+- Tests ajoutés : absence du champ dans la création, affichage **Où ?**, persistance typée,
+  fenêtre à champ unique, protection clavier et mention locale.
+- Le serveur web a compilé sans erreur. L'inspection visuelle 375 px n'a pas pu être achevée :
+  le navigateur intégré n'a pas chargé l'URL locale depuis son onglet de contrôle. À confirmer
+  dans le navigateur ou sur le prochain build natif avant livraison publique.
+
+### Ensuite
+1. Validation visuelle du repère **Où ?** sur une fiche projet étroite, puis sur Android/iOS.
+2. Validation native groupée du reste de la V2 lors du prochain build neuf.
+
+---
+
 ## 2026-08-10 — Codex — Session 47 : Lot C, date de démarrage différée
 
 ### Fait

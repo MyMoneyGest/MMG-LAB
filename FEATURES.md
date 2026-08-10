@@ -166,7 +166,10 @@ Dernière mise à jour : 2026-08-10 (Codex).
   puis barre avec une étiquette de pourcentage placée sous le remplissage. Son repère reste
   contenu dans la carte aux extrêmes 0 % et 100 %. Seule la date cible reste centrée sous la
   barre ; l'ancien statut de confirmation du solde global a été retiré car il n'offrait aucune
-  action à cet endroit. Les 3 onglets restent fixés en bas de l'écran :
+  action à cet endroit. Sous le montant, le repère facultatif **Où ?** permet d'indiquer librement
+  le compte ou le moyen utilisé (compte épargne, mobile money, espèces…). Il se modifie dans une
+  petite fenêtre à un seul champ et n'ajoute aucune étape à la création. La saisie libre évite
+  d'imposer une liste incomplète ou propre à un pays. Les 3 onglets restent fixés en bas de l'écran :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
     **Versement fait (montant dans la devise active)** (1 tap), Montant différent, Reporter, puis
     **Mettre à jour le solde réel** accompagné d'un bouton d'information. Celui-ci explique
@@ -375,8 +378,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 ## 12. Persistance locale
 
-- **Quoi** : budget, projets (dont leur mode guidé/libre, éventuelle date de démarrage, rythme,
-  cycles et enveloppe confirmée), versements,
+- **Quoi** : budget, projets (dont leur mode guidé/libre, éventuelle date de démarrage, repère
+  facultatif du lieu d'épargne, rythme, cycles et enveloppe confirmée), versements,
   snapshots du solde global et part non affectée, éventuelle relance de réajustement différée,
   pays, devise, dernier projet consulté, installId — tout survit au redémarrage, uniquement
   sur le téléphone.
@@ -404,6 +407,7 @@ Dernière mise à jour : 2026-08-10 (Codex).
   Pour un projet différé, les cohortes commencent au démarrage choisi et non à la création.
   Seul le nombre de jours d'attente est transmis, jamais la date exacte ; un ancien événement
   sans ce champ garde un délai nul.
+  Le lieu d'épargne saisi sur un projet n'est inclus dans aucun événement : il reste local.
   Les notifications marquées `isTest` et les gestes déclenchés depuis leurs actions sont
   volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
 - **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.

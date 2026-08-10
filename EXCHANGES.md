@@ -9,6 +9,19 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-08-10 — Codex — [DÉCISION] Repère libre du lieu d'épargne
+
+Le besoin est traité comme une information facultative de la fiche projet, pas comme un paramètre
+du plan : aucun champ supplémentaire à la création, aucun effet sur les cycles, les rappels ou la
+rétention. L'interface affiche le libellé compact **Où ?** sous « Mis de côté » ; un appui ouvre
+une fenêtre à un seul champ.
+
+La saisie reste libre afin de couvrir les supports propres à chaque pays sans maintenir une liste
+fragile de banques, livrets et opérateurs. Le champ `Goal.savingsLocation` reste exclusivement
+dans AsyncStorage et n'est jamais envoyé à Supabase.
+
+---
+
 ## 2026-08-10 — Codex — [DÉCISION] Contrat du mode épargne libre
 
 Le mode libre est ajouté comme **second cadre de projet**, pas comme remplacement du plan

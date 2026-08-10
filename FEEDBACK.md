@@ -13,6 +13,22 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 2026-08-10 — Patrick : retrouver où l'épargne de chaque projet est gardée
+
+**Statut V2 — implémenté le 2026-08-10** : un repère **Où ?** apparaît discrètement sous le
+montant de la fiche projet. Il ouvre une petite fenêtre à un seul champ libre et reste entièrement
+facultatif ; aucune étape n'a été ajoutée à la création.
+
+- *Besoin* : lorsqu'une personne suit plusieurs projets, elle peut oublier si l'argent se trouve
+  sur un compte épargne, un portefeuille mobile, un autre compte ou en espèces.
+- *Décision* : saisie libre plutôt qu'une liste figée. Une liste réellement fiable devrait être
+  adaptée et maintenue par pays, banque et opérateur ; le champ libre couvre immédiatement
+  « Livret A », « Airtel Money », « Orange Money », « espèces » ou tout autre support.
+- *Confidentialité* : cette indication reste dans le stockage local du projet et n'est jamais
+  jointe aux événements Supabase.
+
+---
+
 ## Cosmétique — à grouper sur le prochain build
 
 - ~~**2026-08-10 (Patrick)** : les très gros montants FCFA (> 100 000 000) étaient mal affichés —

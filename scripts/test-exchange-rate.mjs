@@ -78,6 +78,7 @@ const converted = conversionLoaded.exports.convertFinancialData(
         id: 'goal-1',
         name: 'Test',
         category: 'other',
+        savingsLocation: 'Airtel Money',
         targetAmount: 3500,
         alreadyAvailable: 100,
         confirmedBalance: 125,
@@ -109,6 +110,7 @@ assert.deepEqual(converted.budget, {
 assert.equal(converted.goals[0].targetAmount, 2295850);
 assert.equal(converted.goals[0].alreadyAvailable, 65596);
 assert.equal(converted.goals[0].confirmedBalance, 81995);
+assert.equal(converted.goals[0].savingsLocation, 'Airtel Money');
 assert.equal(converted.goals[0].contributions[0].amount, 16399);
 assert.equal(converted.balanceSnapshots[0].amount, 91834);
 assert.equal(converted.balanceSnapshots[0].allocations['goal-1'], 81995);

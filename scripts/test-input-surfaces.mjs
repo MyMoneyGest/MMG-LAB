@@ -17,6 +17,7 @@ const balanceModal = read('src/components/balance-modal.tsx');
 const rebalanceModal = read('src/components/rebalance-modal.tsx');
 const budgetScreen = read('src/app/onboarding/budget.tsx');
 const expenseEstimateModal = read('src/components/expense-estimate-modal.tsx');
+const savingsLocationModal = read('src/components/savings-location-modal.tsx');
 
 assert.match(ui, /<KeyboardAvoidingView/);
 assert.match(ui, /keyboardDismissMode=/);
@@ -76,6 +77,9 @@ for (const [name, source] of [
 ]) {
   assert.match(source, /amountInput/, `${name} doit grouper les grandes saisies monétaires`);
 }
+assert.match(savingsLocationModal, /<KeyboardAvoidingView/);
+assert.match(savingsLocationModal, /<KeyboardSafeScrollView/);
+assert.match(savingsLocationModal, /Compte ou support/);
 assert.match(budgetScreen, /M’aider à estimer mes dépenses/);
 assert.match(budgetScreen, /<ExpenseEstimateModal/);
 assert.match(expenseEstimateModal, /Estime tes dépenses du mois/);
