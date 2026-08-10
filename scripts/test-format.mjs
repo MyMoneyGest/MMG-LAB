@@ -25,7 +25,7 @@ new Function('exports', 'module', 'require', compile('src/lib/format.ts'))(
   }
 );
 
-const { formatDateInput, parseDateInput, parseAmountInput } = loaded.exports;
+const { formatDateInput, formatReminderDay, parseDateInput, parseAmountInput } = loaded.exports;
 
 assert.equal(formatDateInput(''), '');
 assert.equal(formatDateInput('1'), '1');
@@ -39,6 +39,9 @@ assert.equal(formatDateInput('120720271234'), '12/07/2027');
 assert.ok(parseDateInput('29/02/2028'));
 assert.equal(parseDateInput('29/02/2027'), null);
 assert.equal(parseDateInput('31/04/2027'), null);
+assert.equal(formatReminderDay(1), '1er');
+assert.equal(formatReminderDay(2), '2');
+assert.equal(formatReminderDay(28), '28');
 
 assert.equal(parseAmountInput('1 250,50', 'EUR'), 1250.5);
 assert.equal(parseAmountInput('1\u202f250,50\u00a0€', 'EUR'), 1250.5);

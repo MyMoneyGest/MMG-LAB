@@ -43,6 +43,12 @@ ce qui vient ensuite.
 - `scripts/retention-queries.sql` ajoute la répartition des installations et la rétention à
   90 jours **par pays**, en conservant `legacy_inconnu` pour les événements V1. La page
   Confidentialité, FEATURES, README et le guide de maintenance décrivent cette donnée.
+- Le vocabulaire d'action est désormais multi-pays : l'exemple et les textes utilisateur
+  parlent de mise de côté avec le moyen habituel, sans supposer un virement bancaire. Les
+  mentions de banque restent seulement pour la réassurance et le cadre juridique.
+- Lot B terminé : `formatReminderDay()` affiche **1er** uniquement le premier jour du mois sur
+  le récapitulatif, l'écran projet et l'ajustement ; l'accueil devient « Un projet, un geste
+  par mois. ».
 
 ### Vérifications
 - `npx tsc --noEmit` : OK.
@@ -56,9 +62,9 @@ ce qui vient ensuite.
   Expo a tenté de proposer l'installation hors ligne, sans modifier `package.json`.
 
 ### Ensuite
-1. Terminer le vocabulaire générique multi-pays.
-2. Appliquer le petit polish du Lot B (« le 1er » et ponctuation accueil), puis refaire une
-   vérification complète du Lot A avant de préparer les builds V2.
+1. Refaire une vérification complète du Lot A + Lot B, y compris le parcours réel Android.
+2. Préparer les builds V2 seulement après validation de Patrick ; le Lot C reste différé
+   jusqu'aux retours de vrais utilisateurs inconnus, conformément à la roadmap.
 
 ---
 

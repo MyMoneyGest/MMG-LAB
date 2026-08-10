@@ -40,7 +40,7 @@ export default function ExampleScreen() {
       <Card>
         <Text style={styles.how}>Ensuite, chaque mois :</Text>
         <Text style={styles.step}>1. Un rappel arrive le jour choisi, avec le montant conseillé.</Text>
-        <Text style={styles.step}>2. Tu fais le virement toi-même, depuis ta banque habituelle.</Text>
+        <Text style={styles.step}>2. Tu mets cette somme de côté avec ton moyen habituel.</Text>
         <Text style={styles.step}>3. Un tap pour confirmer — même moins que prévu, c'est déjà bien.</Text>
         <Text style={styles.step}>4. Le plan se recalcule tout seul, sans pénalité.</Text>
       </Card>

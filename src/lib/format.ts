@@ -56,6 +56,11 @@ export function formatMonth(date: Date | string): string {
   return MONTHS[d.getMonth()];
 }
 
+/** En français, seul le premier jour du mois prend l'ordinal « 1er ». */
+export function formatReminderDay(day: number): string {
+  return Math.round(day) === 1 ? '1er' : String(Math.round(day));
+}
+
 /** Insère automatiquement les séparateurs d'une saisie JJ/MM/AAAA. */
 export function formatDateInput(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 8);

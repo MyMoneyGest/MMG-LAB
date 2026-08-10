@@ -46,11 +46,14 @@ fragile (cf. notif de test, date de début différée).
   `goal_created` (+ `currencyCode`). `app_open` attend la confirmation du pays et reste unique.
   Requêtes Supabase ajoutées pour le volume et la rétention à 90 jours par pays ; page
   Confidentialité et documentation mises en cohérence.
-- ⏳ **Vocabulaire générique / par pays** : « mets de côté » plutôt que « vire depuis ta
-  banque » ; adaptable selon le pays.
+- ✅ *(Codex, session 40)* **Vocabulaire générique multi-pays** : les parcours d'usage parlent
+  de « mettre de côté avec ton moyen habituel » plutôt que de virement bancaire. Les mentions
+  de banque sont conservées uniquement lorsqu'elles rassurent sur l'absence de connexion ou
+  décrivent juridiquement ce que MMG n'est pas.
 
 **Lot B — Quick wins cosmétiques (à embarquer avec le Lot A, cf. FEEDBACK.md)**
-- « le 1 » → « le **1er** » (jour de rappel ; seul le 1 prend l'ordinal). Ponctuation accueil.
+- ✅ *(Codex, session 40)* « le 1 » → « le **1er** » sur toutes les surfaces de rappel ;
+  accueil adouci en « Un projet, un geste par mois. ».
 
 **Lot C — Cœur produit (à prioriser après validation du Lot A auprès de vrais inconnus)**
 - Écran d'estimation des dépenses (optionnel, éducation financière).

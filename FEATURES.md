@@ -49,7 +49,7 @@ Dernière mise à jour : 2026-08-10 (Codex).
 ## 2. Accueil « Avant le projet »
 
 - **Quoi** : premier lancement volontairement minimal — grand M terracotta, promesse
-  « Un projet. Un geste par mois. », CTA principal adaptatif, lien exemple et courte
+  « Un projet, un geste par mois. », CTA principal adaptatif, lien exemple et courte
   réassurance. L'espace autour de la marque est intentionnel et l'écran ne comporte plus la
   checklist pédagogique ni un header de type site.
 - **Comment** : variantes selon `budget` et `goals.length` du store. La pédagogie sur la
@@ -58,8 +58,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 ## 3. Budget et capacité d'épargne
 
-- **Quoi** : 3 saisies globales (revenus nets, charges fixes, dépenses variables) → « Capacité
-  prudente : X €/mois » en direct. Les revenus représentent le total mensuel que l'utilisateur
+- **Quoi** : 3 saisies globales (revenus nets, charges fixes, dépenses variables) → capacité
+  prudente mensuelle affichée dans la devise active. Les revenus représentent le total mensuel que l'utilisateur
   considère comme disponible, pas les entrées d'un compte bancaire particulier.
 - **Comment** : reste à vivre = revenus − charges − variables ; capacité prudente =
   reste à vivre × (1 − marge de sécurité 20 %) (`SAFETY_MARGIN`). Après une modification du
@@ -105,7 +105,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
   toujours visibles. Chaque bloc utilise le clavier numérique et passe automatiquement au
   suivant. L'écran reste défilable et remonte son contenu lorsque le clavier est affiché.
 - **Comment** : les rythmes progressif et régressif utilisent des poids linéaires bornés de
-  0,7 à 1,3, dont la moyenne vaut 1. La répartition conserve le total exact au centime.
+  0,7 à 1,3, dont la moyenne vaut 1. La répartition interne conserve le total exact ; la saisie
+  et l'affichage respectent la précision de la devise (aucun centime en FCFA).
   `createGoal()` orchestre : store + première demande de permission notifications (uniquement
   ici, jamais à l'ouverture) + programmation du rappel + événement `goal_created`.
 - **Retour d'action** : la création et l'ajustement affichent après 40 ms une fenêtre de
@@ -125,7 +126,7 @@ Dernière mise à jour : 2026-08-10 (Codex).
   barre ; l'ancien statut de confirmation du solde global a été retiré car il n'offrait aucune
   action à cet endroit. Les 3 onglets restent fixés en bas de l'écran :
   - **Aujourd'hui** : « Action du mois » (montant conseillé + date de rappel), boutons
-    **Versement fait (X €)** (1 tap), Montant différent, Reporter, puis
+    **Versement fait (montant dans la devise active)** (1 tap), Montant différent, Reporter, puis
     **Mettre à jour le solde réel** accompagné d'un bouton d'information. Celui-ci explique
     dans une petite fenêtre MMG qu'il s'agit du montant réellement présent sur le compte,
     tous projets confondus, déclaré sans connexion bancaire. Les deux prochaines échéances sont reprises
@@ -240,7 +241,7 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 - **Quoi** : des rappels locaux datés et rattachés à leurs cycles (report ponctuel et ancres
   mensuelles distinctes), à 9h, avec le montant de
-  la prochaine échéance calculé selon le rythme choisi (« Mets X € de côté pour “Nom”. Même
+  la prochaine échéance calculé selon le rythme choisi (« Mets X de côté pour “Nom”. Même
   moins, c'est déjà bien. »). Le tap ouvre l'app directement sur le bon projet. La notification
   propose aussi trois actions : **Fait**, **Modifier**, **Reporter**.
 - **Actions** : Fait exécute la même confirmation en un tap et affiche l'écran de confirmation ;

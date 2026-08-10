@@ -19,9 +19,13 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
   peu secs. Ponctuation volontaire (rythme slogan). Alternative si on change : virgule
   (« Un projet, un geste par mois. »), plus douce. Fichier : `src/app/home.tsx`. Ne changer
   que si le retour se répète. Cosmétique, sans effet sur la mesure.
+  - **Intégré V2 — 2026-08-10** : formulation adoucie dans le Lot B groupé avec le
+    multi-devises.
 - **2026-07-24 (Patrick)** : jour de rappel « le 1 » → « le **1er** » (règle FR : seul le
   jour 1 prend l'ordinal ; les jours 2-31 restent cardinaux « le 2 », « le 3 »…). Fichiers :
   `src/components/plan-summary.tsx` et `src/app/goal/[id].tsx`. À inclure au prochain build.
+  - **Intégré V2 — 2026-08-10** : helper commun `formatReminderDay()` appliqué au
+    récapitulatif, à l'écran projet et à la comparaison Avant → après.
 
 ---
 

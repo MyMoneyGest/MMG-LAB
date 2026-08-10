@@ -7,7 +7,7 @@ import { AppHeader } from '@/components/app-header';
 import { Button, Card, DateField, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { changeReminderDay } from '@/lib/actions';
-import { formatDate, parseAmountInput, parseDateInput } from '@/lib/format';
+import { formatDate, formatReminderDay, parseAmountInput, parseDateInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
   nextReminderFromCycles,
@@ -98,8 +98,8 @@ export default function AdjustGoalScreen() {
     },
     {
       label: 'Jour de rappel',
-      before: `Le ${goal.reminderDay}`,
-      after: reminderDayValid ? `Le ${reminderDay}` : 'À compléter',
+      before: `Le ${formatReminderDay(goal.reminderDay)}`,
+      after: reminderDayValid ? `Le ${formatReminderDay(reminderDay)}` : 'À compléter',
     },
     {
       label: 'Versement conseillé',

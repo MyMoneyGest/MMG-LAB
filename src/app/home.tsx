@@ -44,7 +44,7 @@ export default function Home() {
       <View style={styles.brandMoment}>
         <View style={styles.logo}><Text style={styles.logoLetter}>M</Text></View>
         <View style={styles.copy}>
-          <Text style={styles.hero}>Un projet.{`\n`}Un geste par mois.</Text>
+          <Text style={styles.hero}>Un projet,{`\n`}un geste par mois.</Text>
           <Text style={styles.body}>MMG transforme ton objectif en un rythme réaliste.</Text>
         </View>
       </View>
@@ -61,7 +61,7 @@ export default function Home() {
           }
         />
         <Button label="Voir un exemple" variant="secondary" onPress={() => router.push('/example')} />
-        <Text style={styles.trust}>Aucun compte bancaire connecté</Text>
+        <Text style={styles.trust}>Aucune banque ni aucun compte connecté</Text>
       </View>
     </Screen>
   );

@@ -26,7 +26,7 @@ import {
   reconcileGlobalBalance,
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatReminderDay } from '@/lib/format';
 import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
 import {
   hasPendingAction,
@@ -389,7 +389,7 @@ export default function GoalScreen() {
                   onPress={() => setReminderDayOpen(true)}
                   style={styles.reminderDayLink}>
                   <Text style={styles.reminderDayLinkText}>
-                    Jour de rappel : le {goal.reminderDay} · Modifier
+                    Jour de rappel : le {formatReminderDay(goal.reminderDay)} · Modifier
                   </Text>
                 </Pressable>
               </View>
@@ -539,7 +539,7 @@ export default function GoalScreen() {
         visible={balanceInfoOpen}
         eyebrow="Solde réel"
         title="À quoi sert le solde réel ?"
-        message="C’est ce que tu as réellement sur le compte où tu épargnes, tous projets confondus. MMG l’utilise pour recaler ta progression. Rien n’est connecté à ta banque : c’est toi qui indiques ce montant."
+        message="C’est le total que tu as réellement mis de côté, tous projets confondus. MMG l’utilise pour recaler ta progression. Rien n’est connecté à ta banque : c’est toi qui indiques ce montant."
         onClose={() => setBalanceInfoOpen(false)}
       />
       <BalanceModal

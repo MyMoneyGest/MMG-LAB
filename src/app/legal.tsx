@@ -26,8 +26,8 @@ export default function LegalScreen() {
         <Text style={styles.paragraph}>
           MMG est un outil de méthode pour préparer et suivre des projets d'épargne manuels.
           MMG n'est pas une banque, n'est pas connectée à ta banque, ne détient aucun fonds et
-          ne demande aucun compte à créer. Les virements restent toujours réalisés par toi,
-          depuis ta banque habituelle.
+          ne demande aucun compte à créer. Tes mises de côté restent toujours réalisées par
+          toi, avec le moyen que tu utilises habituellement.
         </Text>
       </Card>
 
@@ -98,7 +98,7 @@ export default function LegalScreen() {
           Les plans et diagnostics sont des estimations fondées sur les informations que tu
           saisis. Ils ne constituent pas un conseil financier, fiscal ou juridique. Tu restes
           responsable de vérifier les montants et dates, puis d'effectuer toi-même les
-          opérations auprès de ta banque.
+          opérations nécessaires avec ton moyen d'épargne habituel.
         </Text>
         <Text style={styles.paragraph}>
           Utilise MMG uniquement à des fins personnelles et licites. L'équipe MyMoneyGest

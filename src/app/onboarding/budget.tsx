@@ -80,7 +80,7 @@ export default function BudgetScreen() {
         <Text style={styles.title}>Combien peux-tu mettre de côté sans te serrer ?</Text>
         <Text style={styles.body}>
           Trois ordres de grandeur suffisent. Les revenus correspondent au total mensuel que
-          tu considères comme disponible, pas aux entrées d'un compte bancaire particulier.
+          tu considères comme disponible, pas aux entrées d'un compte ou portefeuille particulier.
         </Text>
 
         <Field

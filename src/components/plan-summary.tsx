@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius } from '@/constants/theme';
+import { formatReminderDay } from '@/lib/format';
 import { Diagnostic } from '@/lib/plan';
 
 // Récap de plan sur fond sombre : la couleur contrastée est réservée à ce
@@ -39,7 +40,7 @@ export function PlanSummaryDark({
       valueColor: diagnostic === 'Confortable' ? '#7ED6A2' : diagnostic === 'Juste' ? '#E8C36A' : '#F08A72',
     });
   }
-  rows.push({ label: 'Rappel', value: `Le ${reminderDay} du mois` });
+  rows.push({ label: 'Rappel', value: `Le ${formatReminderDay(reminderDay)} du mois` });
 
   return (
     <View style={styles.card}>
