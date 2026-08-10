@@ -21,11 +21,12 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
   que si le retour se répète. Cosmétique, sans effet sur la mesure.
   - **Intégré V2 — 2026-08-10** : formulation adoucie dans le Lot B groupé avec le
     multi-devises.
-- **2026-08-XX (Claude Code — vérif Lot A)** : l'écran **Exemple** (`src/app/example.tsx`)
-  réutilise les chiffres euro relabellés en FCFA (« 3 500 FCFA » ≈ 5 €) — magnitude
-  irréaliste pour un public gabonais, risque de « pas fait pour moi ». À localiser : chiffres
-  d'exemple adaptés par devise (× ~655 pour le FCFA, ou jeu de valeurs par devise). Cosmétique,
-  sans effet sur la mesure, à grouper.
+- ~~**2026-08-XX (Claude Code — vérif Lot A)** : l'écran Exemple réutilisait les chiffres euro
+  relabellés en FCFA (« 3 500 FCFA » ≈ 5 €), magnitude irréaliste pour un public gabonais.~~
+  **✅ CORRIGÉ (Claude Code)** : `example.tsx` a désormais un jeu de figures par devise —
+  FCFA réaliste (objectif 2 000 000, 220 000/mois, reste 1 100 000, cohérent : cible − déjà =
+  reste, mensualité × 5 = reste, mensualité ≤ capacité → Confortable). EUR inchangé, tsc OK,
+  vérifié à l'écran (Gabon → FCFA, France → EUR), zéro erreur console.
 - **2026-07-24 (Patrick)** : jour de rappel « le 1 » → « le **1er** » (règle FR : seul le
   jour 1 prend l'ordinal ; les jours 2-31 restent cardinaux « le 2 », « le 3 »…). Fichiers :
   `src/components/plan-summary.tsx` et `src/app/goal/[id].tsx`. À inclure au prochain build.

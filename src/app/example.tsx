@@ -5,15 +5,53 @@ import { AppHeader } from '@/components/app-header';
 import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, Eyebrow, Screen } from '@/components/ui';
 import { colors } from '@/constants/theme';
+import { CurrencyCode } from '@/lib/currency';
 import { useStore } from '@/lib/store';
 import { useMoney } from '@/lib/use-money';
 
 // Exemple statique de plan, pour montrer la méthode sans rien saisir.
+// Les montants sont adaptés à la devise active : des chiffres en euros
+// relabellés en FCFA (« 3 500 FCFA » ≈ 5 €) paraîtraient irréalistes pour un
+// public d'Afrique centrale/de l'Ouest. Chaque jeu reste cohérent :
+// cible − déjà = restant ; mensualité × 5 mois = restant ; mensualité ≤ capacité.
+
+interface ExampleFigures {
+  target: number;
+  available: number;
+  capacity: number;
+  monthly: number;
+  remaining: number;
+}
+
+const EUR_FIGURES: ExampleFigures = {
+  target: 3500,
+  available: 1600,
+  capacity: 480,
+  monthly: 380,
+  remaining: 1900,
+};
+
+// FCFA (parité fixe ~655,957/€) : mêmes proportions, chiffres ronds réalistes.
+const FCFA_FIGURES: ExampleFigures = {
+  target: 2000000,
+  available: 900000,
+  capacity: 280000,
+  monthly: 220000,
+  remaining: 1100000,
+};
+
+const EXAMPLE_FIGURES: Record<CurrencyCode, ExampleFigures> = {
+  EUR: EUR_FIGURES,
+  USD: EUR_FIGURES,
+  XAF: FCFA_FIGURES,
+  XOF: FCFA_FIGURES,
+};
 
 export default function ExampleScreen() {
-  const { money } = useMoney();
+  const { money, currencyCode } = useMoney();
   const router = useRouter();
   const budget = useStore((s) => s.budget);
+  const ex = EXAMPLE_FIGURES[currencyCode] ?? EUR_FIGURES;
 
   return (
     <Screen>
@@ -22,17 +60,17 @@ export default function ExampleScreen() {
         <Eyebrow>Exemple</Eyebrow>
         <Text style={styles.title}>Un fonds d'urgence, concrètement</Text>
         <Text style={styles.body}>
-          Objectif : {money(3500)}, dont {money(1600)} déjà de côté. Voici le plan que MMG
-          proposerait avec une capacité prudente de {money(480)} / mois.
+          Objectif : {money(ex.target)}, dont {money(ex.available)} déjà de côté. Voici le plan
+          que MMG proposerait avec une capacité prudente de {money(ex.capacity)} / mois.
         </Text>
       </Card>
 
       <PlanSummaryDark
         description="Avoir une marge de sécurité."
-        monthly={`${money(380)} / mois`}
+        monthly={`${money(ex.monthly)} / mois`}
         targetDate="31/12/2026"
         months="5 mois"
-        remaining={money(1900)}
+        remaining={money(ex.remaining)}
         diagnostic="Confortable"
         reminderDay={1}
       />
