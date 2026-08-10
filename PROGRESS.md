@@ -14,6 +14,22 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 49 : validation produit du repère « Où ? »
+
+### Fait
+- Patrick valide l'emplacement du repère **Où ?** entre les montants et la progression : il
+  suit naturellement la lecture **combien → où → avancement**.
+- Aucun ajustement d'interface demandé avant la seconde lecture de Claude Code.
+- Vérification native tentée, mais aucun appareil Android n'était visible par `adb` dans cette
+  session. La validation technique sur téléphone reste donc groupée avec le prochain build V2.
+
+### Ensuite
+1. Recueillir la seconde lecture de Claude Code sur l'emplacement, sans bloquer la V2.
+2. Cadrer avec Patrick le dernier item du Lot C avant de coder : rappel de milieu de mois
+   activé par défaut ou non, date d'envoi et réglage global ou par projet.
+
+---
+
 ## 2026-08-10 — Codex — Session 48 : repère facultatif du lieu d'épargne
 
 ### Fait
