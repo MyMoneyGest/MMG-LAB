@@ -162,6 +162,12 @@ export function MenuModal({
                   })
                 )}
                 {action('Voir un exemple', () => router.push('/example'))}
+                {action('Pays et devise', () =>
+                  router.push({
+                    pathname: '/onboarding/country',
+                    params: { settings: '1' },
+                  })
+                )}
                 {action('Confidentialité · CGU', () => router.push('/legal'))}
               </View>
             </View>

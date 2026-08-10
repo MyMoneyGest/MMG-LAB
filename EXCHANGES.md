@@ -34,15 +34,14 @@ fragile (cf. notif de test, date de début différée).
 - ✅ *(Claude Code, session 39)* Fondation devises : `src/lib/currency.ts` (EUR/XAF/XOF/USD,
   décimales par devise, `formatMoney`, `COUNTRIES`, `defaultCurrencyForCountry`) ;
   store `country`/`currencyCode`/`setLocale` ; test `test:currency`. `formatEuro` intact.
-- ⏳ **Câblage `formatMoney(x, currencyCode)`** partout où `formatEuro` est appelé (grep
-  `formatEuro` : goal/[id].tsx, plan-summary.tsx, notifications.ts, amount/report/…-modal,
-  new-goal.tsx…). Lire `currencyCode` depuis le store. Généraliser `parseAmountInput`
-  (retirer aussi « FCFA » / « $ » ; pour une devise à 0 décimale, ne pas imposer de centimes).
-- ⏳ **Sélecteur de pays au 1er lancement** : nouvel écran (ou étape avant l'accueil si aucun
+- ✅ *(Codex, session 40)* **Câblage `formatMoney(x, currencyCode)`** sur toutes les surfaces
+  monétaires, y compris les notifications et l'exemple ; `parseAmountInput` accepte € / FCFA /
+  $ et respecte les devises sans décimales. Compatibilité typographique euro V1 corrigée.
+- ✅ *(Codex, session 40)* **Sélecteur de pays au 1er lancement** : nouvel écran avant l'accueil si aucun
   pays choisi), **pré-rempli depuis la locale de l'appareil** (`expo-localization` /
-  `Localization.region`), **1 tap pour confirmer** — garder le premier lancement minimal
-  (décision design actée). Appelle `setLocale({ country, currencyCode: defaultCurrencyForCountry(country) })`.
-  Modifiable ensuite depuis le menu.
+  `getLocales()[0].regionCode`), **1 tap pour confirmer** — premier lancement minimal.
+  Modifiable ensuite depuis le menu ; les notifications sont reprogrammées dans la nouvelle
+  devise et un avertissement précise que les montants existants ne sont pas convertis.
 - ⏳ **`country` dans les métadonnées analytics** (`app_open` et `goal_created` au moins) →
   rétention lisible par pays (donnée grossière, non personnelle, conforme à la page Confidentialité).
   Mettre à jour `scripts/retention-queries.sql` (group by pays) + FEATURES.md.

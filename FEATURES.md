@@ -12,8 +12,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 - **Quoi** : MMG sait afficher et saisir les montants en euro (`EUR`), franc CFA d'Afrique
   centrale (`XAF`), franc CFA d'Afrique de l'Ouest (`XOF`) et dollar américain (`USD`). Le
-  store local conserve le pays ISO et la devise choisis ; les utilisateurs V1 restent en euro
-  par défaut sans migration destructive.
+  store local conserve le pays ISO et la devise choisis ; les données des utilisateurs V1
+  restent intactes et l'euro sert de repli avant leur premier choix V2.
 - **Affichage** : tous les écrans monétaires, les fenêtres d'action, l'exemple pédagogique et
   les notifications utilisent la devise active. Le rendu français conserve la virgule
   décimale, l'espace fine insécable entre les milliers et l'espace insécable avant le symbole.
@@ -24,8 +24,15 @@ Dernière mise à jour : 2026-08-10 (Codex).
 - **Pays disponibles (starter)** : Gabon, Cameroun, Congo, Tchad, République centrafricaine,
   Guinée équatoriale, Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Bénin, Togo, Niger, France,
   Belgique et États-Unis. Une locale inconnue retombe sur l'euro.
+- **Premier lancement et réglages** : après hydratation du store, l'absence de pays dirige vers
+  un écran minimal prérempli avec `expo-localization` (`regionCode`). Un appui confirme le pays
+  et sa devise avant l'accueil. Le menu **Pays et devise** permet de changer ensuite ce choix.
+  MMG ne convertit jamais silencieusement les montants existants : un avertissement le précise
+  lorsqu'un changement d'unité concerne déjà un budget ou un projet. Les rappels locaux sont
+  reprogrammés pour utiliser immédiatement le bon symbole.
 - **Où** : `src/lib/currency.ts`, `src/lib/format.ts`, `src/lib/use-money.ts`,
-  `src/lib/store.ts` et l'ensemble des surfaces monétaires sous `src/app` / `src/components`.
+  `src/lib/store.ts`, `src/app/onboarding/country.tsx`, `src/lib/actions.ts` (`changeLocale`)
+  et l'ensemble des surfaces monétaires sous `src/app` / `src/components`.
 
 ---
 
@@ -34,8 +41,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
 - **Quoi** : à l'ouverture, l'app répond à « qu'est-ce qui a besoin de moi maintenant ? » —
   elle ouvre le projet ayant un versement dû ou en retard (échéance la plus urgente d'abord) ;
   sinon le dernier projet consulté ; sinon le premier projet ; sinon l'accueil.
-- **Comment** : `hasPendingAction()` (échéance passée + reste à financer > 0), tri par
-  `nextReminderAt` croissant, `<Redirect>` expo-router. Attend l'hydratation du store.
+- **Comment** : après hydratation, l'absence de pays ouvre d'abord le choix V2. Sinon,
+  `hasPendingAction()` (échéance passée + reste à financer > 0), tri par `nextReminderAt`
+  croissant, puis `<Redirect>` expo-router.
 - **Où** : `src/app/index.tsx`, `src/lib/plan.ts` (`hasPendingAction`).
 
 ## 2. Accueil « Avant le projet »

@@ -13,10 +13,12 @@ export default function Index() {
   const [hydrated, setHydrated] = useState(useStore.persist.hasHydrated());
   const goals = useStore((s) => s.goals);
   const lastViewedGoalId = useStore((s) => s.lastViewedGoalId);
+  const country = useStore((s) => s.country);
 
   useEffect(() => useStore.persist.onFinishHydration(() => setHydrated(true)), []);
 
   if (!hydrated) return null;
+  if (!country) return <Redirect href="/onboarding/country" />;
 
   const now = new Date();
   const pending = goals

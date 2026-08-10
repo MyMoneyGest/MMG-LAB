@@ -14,7 +14,7 @@ ce qui vient ensuite.
 
 ---
 
-## 2026-08-10 — Codex — Session 40 : Lot A, câblage multi-devises terminé
+## 2026-08-10 — Codex — Session 40 : Lot A, devises câblées + choix du pays
 
 ### Fait
 - Reprise sur la branche **`v2`**, sans modification de `main` ni de la V1 taguée.
@@ -29,21 +29,30 @@ ce qui vient ensuite.
 - Généralisé `parseAmountInput()` : accepte `€`, `FCFA`, `$`, EUR/XAF/XOF/USD et respecte la
   précision de la devise (aucun centime XAF/XOF).
 - Étendu les tests de format pour couvrir les espaces Unicode, les symboles et l'arrondi FCFA.
+- Ajouté `expo-localization ~57.0.1` (module officiel SDK 57 + config plugin) et l'écran
+  `onboarding/country` : pays prérempli depuis `getLocales()[0].regionCode`, liste accessible
+  organisée par devise, confirmation en un appui puis entrée dans l'accueil.
+- L'absence de pays après hydratation déclenche ce choix avant l'aiguillage habituel. Le menu
+  propose ensuite **Pays et devise** pour le modifier.
+- Un changement après création de données avertit qu'il ne convertit pas les montants. Il
+  reprogramme les rappels locaux afin que leurs textes utilisent immédiatement la devise
+  choisie.
 
 ### Vérifications
 - `npx tsc --noEmit` : OK.
 - 8 suites fonctionnelles : devises, formats, notifications, surfaces de saisie, cycles/report,
   solde, analytics et design — **toutes OK**.
+- Export Expo web complet : **11 routes générées**, dont `/onboarding/country`.
+- Parcours rejoué dans le navigateur en viewport téléphone : détection initiale, sélection
+  **Gabon / XAF**, récapitulatif FCFA, validation puis redirection vers l'accueil — **OK**.
 - `git diff --check` : OK.
 - `expo lint` n'est pas disponible dans ce dépôt (aucune configuration ESLint installée) ;
   Expo a tenté de proposer l'installation hors ligne, sans modifier `package.json`.
 
 ### Ensuite
-1. Ajouter le sélecteur de pays minimal au premier lancement, prérempli depuis la locale de
-   l'appareil, puis rendre ce choix modifiable depuis les réglages.
-2. Ajouter le pays aux événements `app_open` et `goal_created`, puis adapter les requêtes de
+1. Ajouter le pays aux événements `app_open` et `goal_created`, puis adapter les requêtes de
    lecture de rétention et la documentation.
-3. Terminer le vocabulaire générique multi-pays et le petit polish du Lot B.
+2. Terminer le vocabulaire générique multi-pays et le petit polish du Lot B.
 
 ---
 

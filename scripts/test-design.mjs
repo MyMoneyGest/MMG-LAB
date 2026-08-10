@@ -13,7 +13,9 @@ const appConfig = JSON.parse(read('app.json'));
 const ui = read('src/components/ui.tsx');
 const header = read('src/components/app-header.tsx');
 const home = read('src/app/home.tsx');
+const index = read('src/app/index.tsx');
 const budget = read('src/app/onboarding/budget.tsx');
+const country = read('src/app/onboarding/country.tsx');
 const newGoal = read('src/app/onboarding/new-goal.tsx');
 const adjustGoal = read('src/app/adjust-goal.tsx');
 const goal = read('src/app/goal/[id].tsx');
@@ -30,6 +32,7 @@ const timing = read('src/lib/timing.ts');
 const theme = read('src/constants/theme.ts');
 const planSummary = read('src/components/plan-summary.tsx');
 const iconGenerator = read('scripts/generate-app-icons.swift');
+const actions = read('src/lib/actions.ts');
 
 assert.equal(appConfig.expo.icon, './assets/images/icon.png');
 assert.equal(appConfig.expo.ios.icon, './assets/images/icon.png');
@@ -43,6 +46,7 @@ assert.equal(
 );
 assert.equal(appConfig.expo.android.adaptiveIcon.backgroundColor, '#B5432A');
 assert.equal(appConfig.expo.android.adaptiveIcon.backgroundImage, undefined);
+assert.ok(appConfig.expo.plugins.includes('expo-localization'));
 assert.deepEqual(pngSize('assets/images/icon.png'), [1024, 1024]);
 assert.deepEqual(pngSize('assets/images/android-icon-foreground.png'), [1024, 1024]);
 assert.deepEqual(pngSize('assets/images/android-icon-monochrome.png'), [1024, 1024]);
@@ -57,6 +61,18 @@ assert.doesNotMatch(home, /CHECKLIST/);
 assert.doesNotMatch(home, /<AppHeader/);
 assert.match(home, /<FeedbackBanner/);
 assert.match(home, /feedback !== 'deleted'/);
+
+assert.match(index, /if \(!country\) return <Redirect href="\/onboarding\/country"/);
+assert.match(country, /getLocales\(\)\[0\]\?\.regionCode/);
+assert.match(country, /accessibilityRole="radio"/);
+assert.match(country, /accessibilityState=\{\{ checked: selected \}\}/);
+assert.match(country, /Dans quel pays épargnes-tu/);
+assert.match(country, /MMG changera l'unité affichée, mais ne convertira pas les montants/);
+assert.match(country, /await changeLocale\(selectedCountry\.code, selectedCountry\.currency\)/);
+assert.match(menu, /Pays et devise/);
+assert.match(menu, /pathname: '\/onboarding\/country'/);
+assert.match(actions, /state\.setLocale\(\{ country, currencyCode \}\)/);
+assert.match(actions, /scheduleGoalReminders\(goal, suggestedAmount\(goal\)\)/);
 
 assert.match(ui, /footer\?: ReactNode/);
 assert.match(ui, /styles\.screenFooter/);

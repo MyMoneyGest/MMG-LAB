@@ -27,6 +27,7 @@ import {
 import { newGoalId, useStore } from './store';
 import { Goal, GoalCategory, SavingsRhythm } from './types';
 import type { RebalanceReason } from './types';
+import type { CurrencyCode } from './currency';
 
 // Orchestration store + notifications + tracking, partagée entre les écrans.
 
@@ -41,6 +42,19 @@ export interface NewGoalInput {
 }
 
 export type ContributionSource = 'one_tap' | 'custom_amount' | 'test_notification';
+
+/**
+ * Change le pays/la devise sans convertir les données locales, puis recrée les
+ * notifications pour que leurs montants utilisent immédiatement le bon symbole.
+ */
+export async function changeLocale(country: string, currencyCode: CurrencyCode): Promise<void> {
+  const state = useStore.getState();
+  state.setLocale({ country, currencyCode });
+  for (const goal of state.goals) {
+    const scheduled = await scheduleGoalReminders(goal, suggestedAmount(goal));
+    useStore.getState().updateGoal(goal.id, scheduled);
+  }
+}
 
 export async function createGoal(input: NewGoalInput): Promise<Goal> {
   const state = useStore.getState();
