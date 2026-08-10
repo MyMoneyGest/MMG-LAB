@@ -28,10 +28,13 @@ ce qui vient ensuite.
   saisie et au formateur. Les libellés figés `EUR` ont disparu des champs.
 - Généralisé `parseAmountInput()` : accepte `€`, `FCFA`, `$`, EUR/XAF/XOF/USD et respecte la
   précision de la devise (aucun centime XAF/XOF).
+- Normalisé aussi les versements rapides au moment de leur enregistrement : un montant de plan
+  calculé avec des décimales ne peut pas créer de centimes invisibles en FCFA.
 - Étendu les tests de format pour couvrir les espaces Unicode, les symboles et l'arrondi FCFA.
 - Ajouté `expo-localization ~57.0.1` (module officiel SDK 57 + config plugin) et l'écran
-  `onboarding/country` : pays prérempli depuis `getLocales()[0].regionCode`, liste accessible
-  organisée par devise, confirmation en un appui puis entrée dans l'accueil.
+  `onboarding/country` : pays prérempli depuis `getLocales()[0].regionCode`, proposition
+  compacte confirmable en un appui, et liste accessible organisée par devise seulement après
+  un appui sur **Changer**.
 - L'absence de pays après hydratation déclenche ce choix avant l'aiguillage habituel. Le menu
   propose ensuite **Pays et devise** pour le modifier.
 - Un changement après création de données avertit qu'il ne convertit pas les montants. Il
@@ -60,9 +63,11 @@ ce qui vient ensuite.
 - `git diff --check` : OK.
 - `expo lint` n'est pas disponible dans ce dépôt (aucune configuration ESLint installée) ;
   Expo a tenté de proposer l'installation hors ligne, sans modifier `package.json`.
+- Le contrôle natif Android reste à confirmer : ADB est disponible sur le Mac, mais aucun
+  appareil n'était connecté au moment de cette session. Aucun build EAS V2 n'a été lancé.
 
 ### Ensuite
-1. Refaire une vérification complète du Lot A + Lot B, y compris le parcours réel Android.
+1. Confirmer le parcours réel Android dès qu'un appareil est connecté.
 2. Préparer les builds V2 seulement après validation de Patrick ; le Lot C reste différé
    jusqu'aux retours de vrais utilisateurs inconnus, conformément à la roadmap.
 

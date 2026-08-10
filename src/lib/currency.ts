@@ -62,6 +62,16 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyDef> = {
 
 export const DEFAULT_CURRENCY: CurrencyCode = 'EUR';
 
+/** Normalise un montant à la plus petite unité réellement disponible dans la devise. */
+export function normalizeMoney(
+  amount: number,
+  code: CurrencyCode = DEFAULT_CURRENCY
+): number {
+  const def = CURRENCIES[code] ?? CURRENCIES[DEFAULT_CURRENCY];
+  const factor = Math.pow(10, def.decimals);
+  return Math.round(amount * factor) / factor;
+}
+
 function groupThousands(intStr: string): string {
   let grouped = '';
   let rest = intStr;
@@ -80,7 +90,7 @@ function groupThousands(intStr: string): string {
 export function formatMoney(amount: number, code: CurrencyCode = DEFAULT_CURRENCY): string {
   const def = CURRENCIES[code] ?? CURRENCIES[DEFAULT_CURRENCY];
   const factor = Math.pow(10, def.decimals);
-  const rounded = Math.round(amount * factor) / factor;
+  const rounded = normalizeMoney(amount, code);
   const sign = rounded < 0 ? '-' : '';
   const abs = Math.abs(rounded);
   const int = Math.trunc(abs);

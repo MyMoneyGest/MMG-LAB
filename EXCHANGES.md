@@ -30,7 +30,7 @@ fragile (cf. notif de test, date de début différée).
 
 ### Roadmap V2 (séquencée)
 
-**Lot A — Déblocage multi-marchés (EN COURS)**
+**Lot A — Déblocage multi-marchés (TERMINÉ — validation native à confirmer)**
 - ✅ *(Claude Code, session 39)* Fondation devises : `src/lib/currency.ts` (EUR/XAF/XOF/USD,
   décimales par devise, `formatMoney`, `COUNTRIES`, `defaultCurrencyForCountry`) ;
   store `country`/`currencyCode`/`setLocale` ; test `test:currency`. `formatEuro` intact.
@@ -39,7 +39,8 @@ fragile (cf. notif de test, date de début différée).
   $ et respecte les devises sans décimales. Compatibilité typographique euro V1 corrigée.
 - ✅ *(Codex, session 40)* **Sélecteur de pays au 1er lancement** : nouvel écran avant l'accueil si aucun
   pays choisi), **pré-rempli depuis la locale de l'appareil** (`expo-localization` /
-  `getLocales()[0].regionCode`), **1 tap pour confirmer** — premier lancement minimal.
+  `getLocales()[0].regionCode`), **1 tap pour confirmer** — premier lancement minimal. La
+  liste complète reste repliée et ne s'ouvre que via **Changer**.
   Modifiable ensuite depuis le menu ; les notifications sont reprogrammées dans la nouvelle
   devise et un avertissement précise que les montants existants ne sont pas convertis.
 - ✅ *(Codex, session 40)* **`country` dans les métadonnées analytics** de `app_open` et

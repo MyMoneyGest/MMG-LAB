@@ -10,7 +10,7 @@ const compiled = ts.transpileModule(source, {
 const loaded = { exports: {} };
 new Function('exports', 'module', compiled)(loaded.exports, loaded);
 
-const { formatMoney, defaultCurrencyForCountry, CURRENCIES } = loaded.exports;
+const { formatMoney, normalizeMoney, defaultCurrencyForCountry, CURRENCIES } = loaded.exports;
 
 // EUR : rendu IDENTIQUE à la V1 (formatEuro) — pas de « ,00 » sur un entier.
 assert.equal(formatMoney(300, 'EUR'), '300\u00a0€');
@@ -24,6 +24,8 @@ assert.equal(formatMoney(2500, 'XAF'), '2\u202f500\u00a0FCFA');
 assert.equal(formatMoney(2500.9, 'XAF'), '2\u202f501\u00a0FCFA'); // arrondi à l'entier
 assert.equal(formatMoney(1000000, 'XOF'), '1\u202f000\u202f000\u00a0FCFA');
 assert.equal(formatMoney(0, 'XAF'), '0\u00a0FCFA');
+assert.equal(normalizeMoney(2500.9, 'XAF'), 2501);
+assert.equal(normalizeMoney(12.345, 'EUR'), 12.35);
 
 // USD : 2 décimales, toujours affichées (réglage provisoire).
 assert.equal(formatMoney(2500, 'USD'), '2\u202f500,00\u00a0$');

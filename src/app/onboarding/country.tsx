@@ -35,6 +35,7 @@ export default function CountryScreen() {
     (state) => Boolean(state.budget) || state.goals.length > 0
   );
   const [selectedCode, setSelectedCode] = useState(() => suggestedCountryCode(savedCountry));
+  const [listOpen, setListOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const selectedCountry = useMemo(
     () => COUNTRIES.find((country) => country.code === selectedCode) ?? COUNTRIES[0],
@@ -76,50 +77,65 @@ export default function CountryScreen() {
           téléphone et tu peux le modifier.
         </Text>
 
-        {COUNTRY_GROUPS.map((group) => {
-          const countries = COUNTRIES.filter((country) => country.currency === group.currency);
-          return (
-            <View key={group.currency} style={styles.group}>
-              <Text style={styles.groupLabel}>{group.label}</Text>
-              <View style={styles.countryList}>
-                {countries.map((country) => {
-                  const selected = country.code === selectedCode;
-                  return (
-                    <Pressable
-                      key={country.code}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: selected }}
-                      accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
-                      onPress={() => setSelectedCode(country.code)}
-                      style={({ pressed }) => [
-                        styles.countryRow,
-                        selected && styles.countryRowSelected,
-                        pressed && styles.countryRowPressed,
-                      ]}>
-                      <Text style={styles.flag}>{country.flag}</Text>
-                      <View style={styles.countryCopy}>
-                        <Text style={styles.countryName}>{country.name}</Text>
-                        <Text style={styles.currencyName}>
-                          {CURRENCIES[country.currency].symbol}
-                        </Text>
-                      </View>
-                      <View style={[styles.radio, selected && styles.radioSelected]}>
-                        {selected ? <View style={styles.radioDot} /> : null}
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          );
-        })}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Changer le pays, actuellement ${selectedCountry.name}`}
+          accessibilityState={{ expanded: listOpen }}
+          onPress={() => setListOpen((open) => !open)}
+          style={({ pressed }) => [styles.selectionSummary, pressed && styles.countryRowPressed]}>
+          <View style={styles.selectionCopy}>
+            <Text style={styles.selectionLabel}>Pays et devise proposés</Text>
+            <Text style={styles.selectionValue}>
+              {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].name}
+            </Text>
+          </View>
+          <Text style={styles.changeLabel}>{listOpen ? 'Fermer' : 'Changer'}</Text>
+        </Pressable>
 
-        <View style={styles.selectionSummary}>
-          <Text style={styles.selectionLabel}>Devise retenue</Text>
-          <Text style={styles.selectionValue}>
-            {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].name}
-          </Text>
-        </View>
+        {listOpen
+          ? COUNTRY_GROUPS.map((group) => {
+              const countries = COUNTRIES.filter(
+                (country) => country.currency === group.currency
+              );
+              return (
+                <View key={group.currency} style={styles.group}>
+                  <Text style={styles.groupLabel}>{group.label}</Text>
+                  <View style={styles.countryList}>
+                    {countries.map((country) => {
+                      const selected = country.code === selectedCode;
+                      return (
+                        <Pressable
+                          key={country.code}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: selected }}
+                          accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
+                          onPress={() => {
+                            setSelectedCode(country.code);
+                            setListOpen(false);
+                          }}
+                          style={({ pressed }) => [
+                            styles.countryRow,
+                            selected && styles.countryRowSelected,
+                            pressed && styles.countryRowPressed,
+                          ]}>
+                          <Text style={styles.flag}>{country.flag}</Text>
+                          <View style={styles.countryCopy}>
+                            <Text style={styles.countryName}>{country.name}</Text>
+                            <Text style={styles.currencyName}>
+                              {CURRENCIES[country.currency].symbol}
+                            </Text>
+                          </View>
+                          <View style={[styles.radio, selected && styles.radioSelected]}>
+                            {selected ? <View style={styles.radioDot} /> : null}
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              );
+            })
+          : null}
 
         {changingExistingCurrency ? (
           <Text selectable style={styles.warning}>
@@ -211,13 +227,18 @@ const styles = StyleSheet.create({
   radioSelected: { borderColor: colors.accent },
   radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.accent },
   selectionSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     backgroundColor: colors.cardSoft,
     borderRadius: radius.field,
     padding: 13,
     marginTop: 18,
   },
+  selectionCopy: { flex: 1 },
   selectionLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
   selectionValue: { color: colors.text, fontSize: 14, fontWeight: '800', marginTop: 3 },
+  changeLabel: { color: colors.accent, fontSize: 13, fontWeight: '800' },
   warning: {
     color: colors.accent,
     fontSize: 13,

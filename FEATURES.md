@@ -20,13 +20,16 @@ Dernière mise à jour : 2026-08-10 (Codex).
   L'euro reste ainsi strictement identique à la V1. Le FCFA ne montre jamais de centimes.
 - **Saisie** : les champs affichent le symbole de la devise active et acceptent les montants
   avec ou sans symbole (`€`, `FCFA`, `$`) ainsi que les codes de devise. La précision est
-  normalisée selon la devise : deux décimales pour EUR/USD, aucune pour XAF/XOF.
+  normalisée selon la devise : deux décimales pour EUR/USD, aucune pour XAF/XOF. Cette
+  normalisation est aussi réappliquée à l'enregistrement d'un versement rapide afin qu'un
+  montant de plan calculé en interne ne crée jamais de centimes invisibles en FCFA.
 - **Pays disponibles (starter)** : Gabon, Cameroun, Congo, Tchad, République centrafricaine,
   Guinée équatoriale, Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Bénin, Togo, Niger, France,
   Belgique et États-Unis. Une locale inconnue retombe sur l'euro.
 - **Premier lancement et réglages** : après hydratation du store, l'absence de pays dirige vers
-  un écran minimal prérempli avec `expo-localization` (`regionCode`). Un appui confirme le pays
-  et sa devise avant l'accueil. Le menu **Pays et devise** permet de changer ensuite ce choix.
+  un écran minimal prérempli avec `expo-localization` (`regionCode`). Seule la proposition
+  détectée est affichée au départ : un appui la confirme, tandis que **Changer** déplie la liste
+  accessible des autres pays. Le menu **Pays et devise** permet de modifier ensuite ce choix.
   MMG ne convertit jamais silencieusement les montants existants : un avertissement le précise
   lorsqu'un changement d'unité concerne déjà un budget ou un projet. Les rappels locaux sont
   reprogrammés pour utiliser immédiatement le bon symbole.

@@ -27,6 +27,7 @@ import {
 import { newGoalId, useStore } from './store';
 import { Goal, GoalCategory, SavingsRhythm } from './types';
 import type { RebalanceReason } from './types';
+import { normalizeMoney } from './currency';
 import type { CurrencyCode } from './currency';
 
 // Orchestration store + notifications + tracking, partagée entre les écrans.
@@ -112,13 +113,14 @@ export async function confirmContribution(
   intent: ContributionIntent = 'surplus'
 ): Promise<ContributionPlan> {
   const state = useStore.getState();
+  const normalizedAmount = normalizeMoney(amount, state.currencyCode);
   const now = new Date();
   const cycles = normalizedReminderCycles(goal, now);
   const plan = contributionPlan({ ...goal, reminderCycles: cycles }, intent, now);
   const contribution = state.logContribution(
     goal.id,
     'deposit',
-    amount,
+    normalizedAmount,
     plan.allocation,
     plan.cycleId
   );
@@ -140,7 +142,12 @@ export async function confirmContribution(
   if (source !== 'test_notification') {
     track('contribution_logged', {
       goalId: goal.id,
-      metadata: { type: 'deposit', goalId: goal.id, amountBucket: bucketAmount(amount), source },
+      metadata: {
+        type: 'deposit',
+        goalId: goal.id,
+        amountBucket: bucketAmount(normalizedAmount),
+        source,
+      },
     });
   }
   return plan;

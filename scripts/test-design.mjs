@@ -64,6 +64,10 @@ assert.match(home, /feedback !== 'deleted'/);
 
 assert.match(index, /if \(!country\) return <Redirect href="\/onboarding\/country"/);
 assert.match(country, /getLocales\(\)\[0\]\?\.regionCode/);
+assert.match(country, /useState\(false\)/);
+assert.match(country, /listOpen\s*\? COUNTRY_GROUPS\.map/);
+assert.match(country, /setListOpen\(false\)/);
+assert.match(country, /\{listOpen \? 'Fermer' : 'Changer'\}/);
 assert.match(country, /accessibilityRole="radio"/);
 assert.match(country, /accessibilityState=\{\{ checked: selected \}\}/);
 assert.match(country, /Dans quel pays épargnes-tu/);
