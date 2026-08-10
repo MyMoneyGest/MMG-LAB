@@ -14,6 +14,7 @@ const {
   formatMoney,
   normalizeMoney,
   convertMoney,
+  amountInEurReference,
   defaultCurrencyForCountry,
   CURRENCIES,
 } = loaded.exports;
@@ -53,4 +54,13 @@ assert.equal(defaultCurrencyForCountry('XX'), 'EUR'); // pays inconnu → fallba
 assert.equal(CURRENCIES.XAF.decimals, 0);
 assert.equal(CURRENCIES.EUR.decimals, 2);
 
-console.log('Tests devises : EUR (rendu V1), FCFA sans centimes, repli et pays→devise validés.');
+// amountInEurReference : base euro commune pour les buckets analytics.
+// L'euro passe tel quel ; le FCFA est ramené par la parité fixe 655,957.
+assert.equal(amountInEurReference(300, 'EUR'), 300);
+assert.equal(Math.round(amountInEurReference(30000, 'XAF')), 46); // ~46 € → bucket 0_50
+assert.equal(Math.round(amountInEurReference(65000, 'XOF')), 99); // ~99 € → bucket 50_100
+assert.equal(Math.round(amountInEurReference(220000, 'XAF')), 335); // ~335 € → bucket 250_plus
+assert.equal(Math.round(amountInEurReference(110, 'USD')), 100); // dollar ramené (~1,1)
+assert.equal(amountInEurReference(500, 'ZZZ'), 500); // devise inconnue → repli EUR (÷1)
+
+console.log('Tests devises : EUR (rendu V1), FCFA sans centimes, repli, pays→devise et base euro validés.');

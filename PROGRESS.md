@@ -14,6 +14,37 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Claude Code — Session 52 : buckets analytics ramenés à une base euro
+
+Suite de l'audit (Session 51) : correction du point signalé sur `bucketAmount`, sur décision de
+Patrick.
+
+### Problème
+`bucketAmount` a des seuils à l'échelle euro (0_50 / 50_100 / 100_250 / 250_plus) et
+`normalizeMoney` ne convertit pas → tout versement FCFA réaliste tombait dans `250_plus`, rendant
+la métadonnée `amountBucket` muette pour le marché FCFA/XOF (celui qui motive la V2).
+
+### Fait
+- `currency.ts` : `EUR_REFERENCE_RATE` (parité CFA fixe 655,957 ; USD ~1,1 ; EUR 1) +
+  `amountInEurReference(amount, code)`. Taux **fixe et hors-ligne**, réservé au bucketing anonyme
+  (jamais un affichage ni une conversion réelle).
+- `actions.ts` : les deux `bucketAmount` (dépôt dans `confirmContribution`, retrait dans
+  `withdraw`) bucketisent sur la valeur ramenée en euro (`withdraw` capture désormais la devise).
+- `retention-queries.sql` : note explicative sur `amountBucket` (base euro commune, comparable
+  entre devises). **Labels inchangés → aucune migration.**
+- Tests : `test-currency` (base euro : FCFA/USD ramenés, repli devise inconnue) ; `test-balance`
+  (seuils de `bucketAmount` verrouillés + normalisation devise vérifiée dans la source d'actions).
+
+### Vérifié
+`tsc --noEmit` OK, **9 suites de tests vertes**, `git diff --check` propre. Changement analytics
+(métadonnée Supabase) non observable dans le navigateur → pas de vérif écran.
+
+### Ensuite
+- Décision de Patrick restante : canal Android du coup de pouce (importance HIGH vs canal dédié).
+- Validation native (Android).
+
+---
+
 ## 2026-08-10 — Claude Code — Session 51 : audit indépendant du Lot C (Codex)
 
 Audit complet du travail de Codex sur le Lot C (`80349c7..abbd4e1`, ~1900 insertions,

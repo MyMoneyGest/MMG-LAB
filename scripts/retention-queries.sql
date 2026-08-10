@@ -16,6 +16,9 @@
 --    goal_created         → category, rhythm, savingsMode, activationDelayDays,
 --                           country, currencyCode
 --    contribution_logged  → type ('deposit'/'withdrawal'), amountBucket, source
+--       (amountBucket : montant ramené à une base euro commune avant bucketing,
+--        pour rester comparable entre devises — un versement FCFA n'atterrit donc
+--        plus systématiquement dans « 250_plus ». Buckets : 0_50/50_100/100_250/250_plus.)
 --    rebalance_decided    → choice ('applied'/'kept'/'deferred')
 --
 --  Principe de mesure (brief §5) : rétention au 3e rappel mensuel.

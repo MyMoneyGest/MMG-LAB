@@ -13,6 +13,7 @@ new Function('exports', 'module', 'require', compiled)(loaded.exports, loaded, (
 const {
   allocateGlobalBalance,
   balanceCheckDue,
+  bucketAmount,
   buildGlobalRebalanceProposal,
   cyclesAfterReminderDayChange,
   estimatedGlobalBalance,
@@ -26,6 +27,16 @@ const {
   savedTotal,
   upcomingSchedule,
 } = loaded.exports;
+
+// Buckets de montant : seuils sur une base euro (les appelants normalisent la devise).
+assert.equal(bucketAmount(0), '0_50');
+assert.equal(bucketAmount(49.99), '0_50');
+assert.equal(bucketAmount(50), '50_100');
+assert.equal(bucketAmount(99.99), '50_100');
+assert.equal(bucketAmount(100), '100_250');
+assert.equal(bucketAmount(249.99), '100_250');
+assert.equal(bucketAmount(250), '250_plus');
+assert.equal(bucketAmount(335), '250_plus');
 
 const at = (year, month, day, hour = 9) => new Date(year, month - 1, day, hour).toISOString();
 const makeGoal = (id, available, target = 1000) => ({
@@ -173,5 +184,8 @@ assert.match(actionsSource, /nextRebalanceReviewAt\(now\)/);
 assert.match(actionsSource, /clearGlobalRebalanceReview\(\)/);
 assert.match(actionsSource, /startDate: startDate\?\.toISOString\(\)/);
 assert.match(actionsSource, /nextReminderAfter\(scheduleReference, input\.reminderDay\)/);
+// Le bucketing des versements passe par la base euro commune (sinon muet en FCFA).
+assert.match(actionsSource, /bucketAmount\(amountInEurReference\(normalizedAmount, state\.currencyCode\)\)/);
+assert.match(actionsSource, /bucketAmount\(amountInEurReference\(amount, currencyCode\)\)/);
 
 console.log('Tests solde : réconciliation, trimestre, capacité globale et relance douce validés.');

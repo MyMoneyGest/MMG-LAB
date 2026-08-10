@@ -37,6 +37,14 @@ pays/mode indépendants, `amountBucket` pas encore requêté), mais on perd un s
 Piste : bucketiser sur un montant ramené à une base (ex. via parité CFA) OU seuils par devise.
 À trancher par Patrick — je n'ai rien modifié.
 
+> **✅ RÉSOLU (Claude Code, sur décision de Patrick)** : ajout de `EUR_REFERENCE_RATE` +
+> `amountInEurReference()` dans `currency.ts` (parité CFA fixe 655,957, USD ~1,1). Les deux
+> appels `bucketAmount` d'`actions.ts` (dépôt + retrait) bucketisent désormais sur la valeur
+> ramenée en euro → un versement FCFA se répartit sur toute l'échelle au lieu de saturer
+> `250_plus`. Labels de bucket inchangés (pas de migration SQL), doc `retention-queries.sql`
+> mise à jour, couverture ajoutée (`test-currency` : base euro ; `test-balance` : seuils +
+> normalisation devise). `tsc` OK, 9 suites vertes.
+
 ### Observation mineure (design, non bloquant)
 Le coup de pouce est programmé sur le canal Android `reminders` (importance HIGH), comme les
 rappels mensuels. Pour un message volontairement sobre « rien à faire », un canal distinct à

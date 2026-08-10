@@ -28,7 +28,7 @@ import {
 import { newGoalId, useStore } from './store';
 import { Goal, GoalCategory, SavingsMode, SavingsRhythm } from './types';
 import type { RebalanceReason } from './types';
-import { normalizeMoney } from './currency';
+import { amountInEurReference, normalizeMoney } from './currency';
 import type { CurrencyCode } from './currency';
 
 // Orchestration store + notifications + tracking, partagée entre les écrans.
@@ -159,7 +159,9 @@ export async function confirmContribution(
       metadata: {
         type: 'deposit',
         goalId: goal.id,
-        amountBucket: bucketAmount(normalizedAmount),
+        // Bucket sur une base euro commune : sans normalisation, tout versement
+        // FCFA tomberait dans « 250_plus » et la métrique serait muette.
+        amountBucket: bucketAmount(amountInEurReference(normalizedAmount, state.currencyCode)),
         source,
       },
     });
@@ -168,11 +170,16 @@ export async function confirmContribution(
 }
 
 export async function withdraw(goal: Goal, amount: number): Promise<void> {
+  const currencyCode = useStore.getState().currencyCode;
   useStore.getState().logContribution(goal.id, 'withdrawal', amount);
   await reschedule(goal.id);
   track('contribution_logged', {
     goalId: goal.id,
-    metadata: { type: 'withdrawal', goalId: goal.id, amountBucket: bucketAmount(amount) },
+    metadata: {
+      type: 'withdrawal',
+      goalId: goal.id,
+      amountBucket: bucketAmount(amountInEurReference(amount, currencyCode)),
+    },
   });
 }
 

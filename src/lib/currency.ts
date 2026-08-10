@@ -81,6 +81,34 @@ export function convertMoney(
   return normalizeMoney(amount * rate, targetCode);
 }
 
+/**
+ * Taux de référence FIXE (unités de la devise pour 1 €) servant UNIQUEMENT à
+ * ramener un montant à une base euro commune pour les buckets analytics anonymes.
+ * Jamais utilisé pour un affichage ni une conversion réelle : une valeur
+ * approximative suffit et évite toute dépendance à un taux en ligne. La parité
+ * CFA est officielle et fixe ; le dollar est une estimation stable (devise
+ * « plus tard » selon la roadmap).
+ */
+export const EUR_REFERENCE_RATE: Record<CurrencyCode, number> = {
+  EUR: 1,
+  XAF: 655.957,
+  XOF: 655.957,
+  USD: 1.1,
+};
+
+/**
+ * Ramène un montant à sa valeur approximative en euro. Sert à bucketiser les
+ * versements sur une échelle commune : sans cela, tout versement FCFA tombe dans
+ * le plus grand bucket et la métrique perd tout signal pour le marché FCFA.
+ */
+export function amountInEurReference(
+  amount: number,
+  code: CurrencyCode = DEFAULT_CURRENCY
+): number {
+  const rate = EUR_REFERENCE_RATE[code] ?? EUR_REFERENCE_RATE[DEFAULT_CURRENCY];
+  return amount / rate;
+}
+
 function groupThousands(intStr: string): string {
   let grouped = '';
   let rest = intStr;
