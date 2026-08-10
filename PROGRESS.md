@@ -20,8 +20,8 @@ ce qui vient ensuite.
 - Patrick valide l'emplacement du repère **Où ?** entre les montants et la progression : il
   suit naturellement la lecture **combien → où → avancement**.
 - Aucun ajustement d'interface demandé avant la seconde lecture de Claude Code.
-- Vérification native tentée, mais aucun appareil Android n'était visible par `adb` dans cette
-  session. La validation technique sur téléphone reste donc groupée avec le prochain build V2.
+- Patrick a ensuite vérifié lui-même le rendu et l'interaction sur son téléphone Android :
+  **conformes**. La validation native du repère est donc close.
 
 ### Ensuite
 1. Recueillir la seconde lecture de Claude Code sur l'emplacement, sans bloquer la V2.

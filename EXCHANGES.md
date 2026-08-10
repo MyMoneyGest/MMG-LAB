@@ -16,9 +16,9 @@ du plan : aucun champ supplémentaire à la création, aucun effet sur les cycle
 rétention. L'interface affiche le libellé compact **Où ?** sous « Mis de côté » ; un appui ouvre
 une fenêtre à un seul champ.
 
-**Validation Patrick (2026-08-10)** : emplacement approuvé, car il suit la lecture naturelle
-des montants avant la barre de progression. Claude Code pourra apporter une seconde lecture sans
-bloquer cette décision.
+**Validation Patrick sur téléphone Android (2026-08-10)** : rendu et interaction approuvés ;
+l'emplacement suit la lecture naturelle des montants avant la barre de progression. Claude Code
+pourra apporter une seconde lecture sans bloquer cette décision.
 
 La saisie reste libre afin de couvrir les supports propres à chaque pays sans maintenir une liste
 fragile de banques, livrets et opérateurs. Le champ `Goal.savingsLocation` reste exclusivement
