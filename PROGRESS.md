@@ -14,6 +14,35 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Claude Code — Session 53 : coup de pouce sur canal dédié discret
+
+Suite de l'audit : second point signalé, sur décision de Patrick.
+
+### Problème
+Le coup de pouce à mi-cycle était programmé sur le canal Android `reminders` (importance HIGH),
+comme les vrais rappels — trop appuyé pour un message sobre « rien à faire ».
+
+### Fait
+- `notifications.ts` : nouveau canal `NUDGE_CHANNEL_ID = 'mid_cycle_nudges'` en
+  `AndroidImportance.LOW` via `ensureAndroidNudgeChannel` (assuré uniquement si le projet a le
+  coup de pouce activé). Le coup de pouce est programmé sur ce canal et reçoit
+  `interruptionLevel: 'passive'` (iOS : livraison discrète, sans son ni réveil d'écran).
+- Les rappels mensuels et les tests restent sur leurs canaux HIGH respectifs.
+- API vérifiée contre **expo-notifications 57.0.3** (types installés : `AndroidImportance.LOW`,
+  `InterruptionLevel = 'passive'` sur `NotificationContentInput`).
+- Tests : `test-notifications` couvre le canal dédié, l'importance basse, le niveau passif, et
+  vérifie que le rappel mensuel reste sur `CHANNEL_ID`.
+
+### Vérifié
+`tsc --noEmit` OK, **9 suites de tests vertes**. Canaux de notification non observables sur web
+→ pas de vérif écran (à confirmer en validation native Android/iOS).
+
+### Ensuite
+- Les deux points de l'audit sont clos. Reste la validation native de Patrick (Android/iOS) :
+  démarrage différé, mode libre, coup de pouce discret, gros montants FCFA, buckets.
+
+---
+
 ## 2026-08-10 — Claude Code — Session 52 : buckets analytics ramenés à une base euro
 
 Suite de l'audit (Session 51) : correction du point signalé sur `bucketAmount`, sur décision de

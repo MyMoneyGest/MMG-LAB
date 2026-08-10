@@ -108,7 +108,7 @@ assert.match(notificationsSource, /reminderKind: 'mid_cycle_nudge'/);
 assert.match(notificationsSource, /midCycleNotificationId/);
 assert.match(notificationsSource, /reminder\.reminderKind !== 'mid_cycle_nudge'/);
 const nudgeSchedule = notificationsSource.match(
-  /if \(goal\.midCycleNudgeEnabled\)[\s\S]*?return scheduledCycle;/,
+  /if \(goal\.midCycleNudgeEnabled\) \{[\s\S]*?return scheduledCycle;/,
 )?.[0];
 assert.ok(nudgeSchedule, 'le bloc de programmation du coup de pouce doit exister');
 assert.doesNotMatch(
@@ -116,5 +116,20 @@ assert.doesNotMatch(
   /categoryIdentifier/,
   'le coup de pouce ne doit proposer aucune action native',
 );
+// Canal dédié à importance basse + niveau iOS passif : message sobre « rien à faire ».
+assert.match(nudgeSchedule, /channelId: NUDGE_CHANNEL_ID/, 'le coup de pouce utilise son canal dédié');
+assert.match(nudgeSchedule, /interruptionLevel: 'passive'/, 'le coup de pouce est passif sur iOS');
+assert.match(notificationsSource, /NUDGE_CHANNEL_ID = 'mid_cycle_nudges'/);
+assert.match(
+  notificationsSource,
+  /ensureAndroidNudgeChannel[\s\S]*?importance: N\.AndroidImportance\.LOW/,
+  'le canal du coup de pouce doit être en importance basse',
+);
+assert.match(
+  notificationsSource,
+  /if \(goal\.midCycleNudgeEnabled\) await ensureAndroidNudgeChannel\(N\)/,
+);
+// Le rappel mensuel, lui, reste sur le canal HIGH des vrais rappels.
+assert.match(notificationsSource, /channelId: CHANNEL_ID/);
 
 console.log('Tests notifications : routage, déduplication, retrait et configuration sonore validés.');

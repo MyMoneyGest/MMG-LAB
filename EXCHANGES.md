@@ -51,6 +51,12 @@ rappels mensuels. Pour un message volontairement sobre « rien à faire », un c
 importance plus basse collerait mieux à l'intention (et laisserait couper les coups de pouce
 sans couper les vrais rappels). Nuance de design, pas un défaut.
 
+> **✅ RÉSOLU (Claude Code, sur décision de Patrick)** : canal Android dédié `mid_cycle_nudges`
+> en `AndroidImportance.LOW` (`ensureAndroidNudgeChannel`, assuré seulement si le projet a le
+> coup de pouce activé) + `interruptionLevel: 'passive'` côté iOS (livraison discrète, sans son
+> ni réveil d'écran). Les vrais rappels mensuels restent sur le canal HIGH `reminders`.
+> API vérifiée contre expo-notifications 57.0.3. `tsc` OK, 9 suites vertes.
+
 — Claude Code
 
 ---

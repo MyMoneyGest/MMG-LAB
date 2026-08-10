@@ -64,6 +64,10 @@ function getNotifications(): NotificationsModule | null {
 
 const CHANNEL_ID = 'reminders';
 const TEST_CHANNEL_ID = 'reminder_tests_v2';
+// Canal distinct, importance basse : le coup de pouce est un message sobre
+// « rien à faire ». Il arrive sans son ni bannière intrusive, et l'utilisateur
+// peut le couper sans toucher au canal des vrais rappels mensuels.
+const NUDGE_CHANNEL_ID = 'mid_cycle_nudges';
 const ACTION_CATEGORY_ID = 'mmg_reminder_actions';
 
 export interface ReminderNotificationResponse {
@@ -117,6 +121,14 @@ async function ensureAndroidTestChannel(N: NotificationsModule): Promise<void> {
   await N.setNotificationChannelAsync(TEST_CHANNEL_ID, {
     name: 'Tests de rappels',
     importance: N.AndroidImportance.HIGH,
+  });
+}
+
+async function ensureAndroidNudgeChannel(N: NotificationsModule): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await N.setNotificationChannelAsync(NUDGE_CHANNEL_ID, {
+    name: 'Coups de pouce (facultatifs)',
+    importance: N.AndroidImportance.LOW,
   });
 }
 
@@ -207,6 +219,7 @@ export async function scheduleGoalReminders(
     }
     await ensureAndroidChannel(N);
     await ensureReminderActions(N);
+    if (goal.midCycleNudgeEnabled) await ensureAndroidNudgeChannel(N);
     const currencyCode = useStore.getState().currencyCode ?? DEFAULT_CURRENCY;
     const scheduleCycle = async (cycle: ReminderCycle): Promise<ReminderCycle> => {
       if (cycle.settledAt) return cycle;
@@ -259,6 +272,9 @@ export async function scheduleGoalReminders(
               content: {
                 title: 'MMG — un petit point',
                 body: `Ton projet « ${goal.name} » est toujours là. Tu avances à ton rythme — rien à faire maintenant.`,
+                // iOS : livraison discrète au centre de notifications, sans réveiller
+                // l'écran ni sonner ; côté Android : canal dédié à importance basse.
+                interruptionLevel: 'passive',
                 data: {
                   goalId: goal.id,
                   cycleId: cycle.id,
@@ -269,7 +285,7 @@ export async function scheduleGoalReminders(
               trigger: {
                 type: N.SchedulableTriggerInputTypes.DATE,
                 date: nudgeAt,
-                channelId: CHANNEL_ID,
+                channelId: NUDGE_CHANNEL_ID,
               },
             });
             scheduledCycle = { ...scheduledCycle, midCycleNotificationId };
