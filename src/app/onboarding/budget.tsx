@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
+import { ExpenseEstimateModal } from '@/components/expense-estimate-modal';
 import { RebalanceModal } from '@/components/rebalance-modal';
 import { Button, Card, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
@@ -42,6 +43,7 @@ export default function BudgetScreen() {
     budget ? amountInput(String(budget.variableExpenses)) : ''
   );
   const [error, setError] = useState<string | null>(null);
+  const [expenseEstimateOpen, setExpenseEstimateOpen] = useState(false);
   const [rebalanceProposal, setRebalanceProposal] =
     useState<GlobalRebalanceProposal | null>(null);
 
@@ -125,6 +127,12 @@ export default function BudgetScreen() {
           placeholder="500"
           suffix={currency.symbol}
         />
+        <Button
+          label="M’aider à estimer mes dépenses"
+          variant="secondary"
+          onPress={() => setExpenseEstimateOpen(true)}
+          style={styles.estimateButton}
+        />
 
         {draft ? (
           <Text style={styles.capacity}>Capacité prudente : {money(prudentCapacity(draft))} / mois</Text>
@@ -144,6 +152,15 @@ export default function BudgetScreen() {
 
         <Button label="Continuer" onPress={save} style={{ marginTop: 16 }} />
       </Card>
+      <ExpenseEstimateModal
+        visible={expenseEstimateOpen}
+        onClose={() => setExpenseEstimateOpen(false)}
+        onApply={(total) => {
+          setVariable(amountInput(String(total)));
+          setError(null);
+          setExpenseEstimateOpen(false);
+        }}
+      />
       <RebalanceModal
         proposal={rebalanceProposal}
         reason="budget"
@@ -185,4 +202,5 @@ const styles = StyleSheet.create({
   checks: { gap: 7, marginTop: 18, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   check: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   error: { color: colors.accent, fontSize: 15, fontWeight: '600', marginTop: 10 },
+  estimateButton: { marginTop: -4, marginBottom: 8 },
 });

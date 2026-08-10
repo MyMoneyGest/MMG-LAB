@@ -84,6 +84,11 @@ Dernière mise à jour : 2026-08-10 (Codex).
   budget, MMG compare cette capacité à la somme des efforts de tous les plans actifs. Un nouvel
   échéancier global est proposé, jamais appliqué sans accord. Si le reste à vivre est nul ou
   insuffisant, l'impossibilité est signalée et aucun plan irréaliste n'est appliqué.
+- **Aide facultative** : sous les dépenses variables, **M'aider à estimer mes dépenses** ouvre
+  une fenêtre MMG avec cinq moyennes mensuelles (alimentation, transport, santé, loisirs et
+  autres). Le total est affiché en direct dans la devise active puis recopié dans le budget
+  uniquement si l'utilisateur le valide. Le détail n'est ni persisté ni transmis ; l'aide
+  rappelle de ne pas recompter les charges fixes.
 - **Refus non oublié** : si l'utilisateur conserve ses anciens plans, MMG mémorise ce choix et
   attend 14 jours. Une bannière non bloquante propose alors **Revoir** ou **Dans 14 jours**.
   Aucune notification système n'est envoyée. Appliquer le réajustement efface la relance.
@@ -99,7 +104,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
   capacité prudente encore disponible pour un nouveau plan ; un résultat négatif est signalé
   en terracotta et n'est pas artificiellement borné à zéro. Le lien **Ajuster** ouvre l'écran
   Budget puis revient au projet en conservant le formulaire.
-- **Où** : `src/app/onboarding/budget.tsx`, `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
+- **Où** : `src/app/onboarding/budget.tsx`, `src/components/expense-estimate-modal.tsx`,
+  `src/lib/plan.ts` (`resteAVivre`, `prudentCapacity`).
 
 ## 4. Création et ajustement d'un plan
 

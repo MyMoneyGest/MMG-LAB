@@ -100,7 +100,8 @@ fragile (cf. notif de test, date de début différée).
   accueil adouci en « Un projet, un geste par mois. ».
 
 **Lot C — Cœur produit (à prioriser après validation du Lot A auprès de vrais inconnus)**
-- Écran d'estimation des dépenses (optionnel, éducation financière).
+- ✅ *(Codex, session 46)* Écran d'estimation des dépenses : aide facultative en cinq moyennes,
+  seul le total validé rejoint le budget ; aucun détail supplémentaire n'est persisté.
 - ✅ *(Codex, session 44)* Mode épargne libre (revenus irréguliers, sans budget imposé,
   rappel mensuel conservé, mesure séparée). ⭐⭐
 - Date de début différée (⚠️ ancrer l'activation sur la date de début, pas la création). ⭐

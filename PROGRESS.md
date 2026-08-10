@@ -14,6 +14,26 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 46 : Lot C, estimation facultative des dépenses
+
+### Fait
+- Ajouté sous **Dépenses variables** une aide facultative, sans nouvelle étape obligatoire.
+- La fenêtre décompose une moyenne mensuelle en alimentation, transport, santé, loisirs et
+  autres dépenses variables. Elle rappelle de ne pas recompter les charges fixes.
+- Le total se calcule en direct dans la devise active et ne remplace la dépense variable qu'au
+  clic sur **Utiliser ce total**. Les catégories servent uniquement au calcul à l'écran : seul
+  le total rejoint le budget existant, sans nouveau stockage ni donnée analytics.
+- Réutilisé le formatage monétaire partagé et la protection clavier de MMG.
+
+### Vérifications
+- TypeScript, **9 suites fonctionnelles** et `git diff --check` : OK.
+- Parcours web mobile 375 px : ouverture de la fenêtre, total `1 500 €`, saisie `1 350` avec
+  groupement des milliers, validation et retour au budget avec `1 500` — OK.
+
+### Ensuite
+1. Lot C : date de démarrage différée, avec compatibilité des anciens projets.
+2. Ancrer sa lecture de rétention sur la date d'activation choisie, jamais sur `goal_created`.
+
 ## 2026-08-10 — Codex — Session 45 : milliers lisibles pendant la saisie en euros
 
 ### Fait

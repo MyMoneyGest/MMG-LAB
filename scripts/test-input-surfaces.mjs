@@ -16,6 +16,7 @@ const reminderDayModal = read('src/components/reminder-day-modal.tsx');
 const balanceModal = read('src/components/balance-modal.tsx');
 const rebalanceModal = read('src/components/rebalance-modal.tsx');
 const budgetScreen = read('src/app/onboarding/budget.tsx');
+const expenseEstimateModal = read('src/components/expense-estimate-modal.tsx');
 
 assert.match(ui, /<KeyboardAvoidingView/);
 assert.match(ui, /keyboardDismissMode=/);
@@ -71,9 +72,22 @@ for (const [name, source] of [
   ['adjust-goal', adjustGoal],
   ['amount-modal', amountModal],
   ['balance-modal', balanceModal],
+  ['expense-estimate-modal', expenseEstimateModal],
 ]) {
   assert.match(source, /amountInput/, `${name} doit grouper les grandes saisies monétaires`);
 }
+assert.match(budgetScreen, /M’aider à estimer mes dépenses/);
+assert.match(budgetScreen, /<ExpenseEstimateModal/);
+assert.match(expenseEstimateModal, /Estime tes dépenses du mois/);
+assert.match(expenseEstimateModal, /Alimentation et courses/);
+assert.match(expenseEstimateModal, /Transport/);
+assert.match(expenseEstimateModal, /Santé et soins/);
+assert.match(expenseEstimateModal, /Loisirs et sorties/);
+assert.match(expenseEstimateModal, /Autres dépenses variables/);
+assert.match(expenseEstimateModal, /Ne recompte pas le loyer/);
+assert.match(expenseEstimateModal, /<KeyboardAvoidingView/);
+assert.match(expenseEstimateModal, /<KeyboardSafeScrollView/);
+assert.match(expenseEstimateModal, /onApply\(total\)/);
 assert.match(rebalanceModal, /Garder mes plans/);
 assert.match(rebalanceModal, /Appliquer/);
 assert.match(rebalanceModal, /conserver ton ancien échéancier/);
