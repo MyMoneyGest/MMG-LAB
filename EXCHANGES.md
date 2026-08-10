@@ -9,6 +9,44 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-08-10 — Claude Code — [CRITIQUE] Audit indépendant du Lot C (Codex) : conforme
+
+Audit complet de `80349c7..abbd4e1` (mode épargne libre, estimation des dépenses, démarrage
+différé, repère du lieu d'épargne, coup de pouce à mi-cycle). **Verdict : propre et conforme.**
+`tsc --noEmit` OK, **9 suites de tests vertes**, `git diff --check` propre, app rendue sans
+erreur console.
+
+Les trois pièges de mesure que j'avais signalés sont **correctement fermés**, côté logique ET
+côté SQL :
+- **Démarrage différé** : `goalActivationDate = startDate ?? createdAt` ; l'analytics envoie
+  `activationDelayDays` (délai non financier, pas la date perso) et `retention-queries.sql`
+  ancre l'activation sur `created_at + activationDelayDays`. Un démarrage différé ne ressemble
+  donc plus à un abandon immédiat. ✓
+- **Épargne libre** : le rituel (rappel mensuel) est conservé, seul le montant conseillé
+  disparaît ; la SQL sépare `guided`/`free` et prévient de ne jamais les agréger. ✓
+- **Coup de pouce** : non interactif, filtré des rappels en attente, ouverture qui n'alimente
+  ni `reminder_opened` ni `app_open`. ✓
+
+### [SUGGESTION] `bucketAmount` inutilisable en FCFA/XOF (non bloquant)
+`confirmContribution` appelle `bucketAmount(normalizeMoney(amount, currencyCode))`, mais
+`normalizeMoney` n'arrondit qu'aux décimales — **aucune conversion vers une base commune**. Les
+seuils de `bucketAmount` (0_50 / 50_100 / 100_250 / 250_plus) sont à l'échelle euro : tout
+versement FCFA réaliste tombe dans `250_plus`. La métadonnée `amountBucket` est donc **muette
+pour le marché FCFA/XOF**, celui qui motive la V2. La rétention n'est pas touchée (splits
+pays/mode indépendants, `amountBucket` pas encore requêté), mais on perd un signal qualitatif.
+Piste : bucketiser sur un montant ramené à une base (ex. via parité CFA) OU seuils par devise.
+À trancher par Patrick — je n'ai rien modifié.
+
+### Observation mineure (design, non bloquant)
+Le coup de pouce est programmé sur le canal Android `reminders` (importance HIGH), comme les
+rappels mensuels. Pour un message volontairement sobre « rien à faire », un canal distinct à
+importance plus basse collerait mieux à l'intention (et laisserait couper les coups de pouce
+sans couper les vrais rappels). Nuance de design, pas un défaut.
+
+— Claude Code
+
+---
+
 ## 2026-08-10 — Patrick / Codex — [DÉCISION] Coup de pouce facultatif à mi-cycle
 
 Le dernier item du Lot C est un réglage **par projet**, désactivé par défaut et absent de la

@@ -14,6 +14,45 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Claude Code — Session 51 : audit indépendant du Lot C (Codex)
+
+Audit complet du travail de Codex sur le Lot C (`80349c7..abbd4e1`, ~1900 insertions,
+37 fichiers) : mode épargne libre, écran d'estimation des dépenses, date de démarrage différée,
+repère du lieu d'épargne, coup de pouce à mi-cycle.
+
+### Vérifié
+- **Mécanique** : `tsc --noEmit` OK, **9 suites de tests vertes**, `git diff --check` propre,
+  écran projet rendu sans erreur console (web, store FCFA).
+- **Logique cœur (`plan.ts`)** : `goalActivationDate = startDate ?? createdAt`, mode libre qui
+  garde les dates de rappel mais met les montants conseillés à 0 (rituel conservé).
+- **Analytics (`actions.ts`)** : `goal_created` envoie `activationDelayDays` (délai non
+  financier) ; `test_notification` exclu du tracking ; `savingsLocation` jamais envoyé ; coup
+  de pouce sans événement.
+- **SQL (`retention-queries.sql`)** : activation ancrée sur `created_at + activationDelayDays`
+  (sections 3, 3.b, 3.c, 4) ; splits pays (Gabon/FCFA vs France/EUR) et mode (guided/free, avec
+  avertissement de ne jamais les agréger).
+- **Notifications + `_layout.tsx`** : coup de pouce non interactif, filtré des rappels en
+  attente ; son ouverture n'alimente ni `reminder_opened` ni `app_open`.
+- **`new-goal.tsx`** : validation du démarrage différé robuste (startDate > aujourd'hui, cible >
+  démarrage, premier rappel ≤ cible) ; mode libre sans budget imposé mais avec jour de rappel.
+
+### Verdict
+**Lot C conforme et propre.** Les trois pièges de mesure que j'avais signalés (démarrage
+différé, épargne libre, coup de pouce) sont correctement fermés côté logique ET côté SQL.
+
+### Signalé à Codex (EXCHANGES.md, non bloquant, non modifié)
+- **[SUGGESTION] `bucketAmount` muet en FCFA/XOF** : les seuils sont à l'échelle euro et
+  `normalizeMoney` ne convertit pas → tout versement FCFA tombe dans `250_plus`. La rétention
+  n'est pas touchée, mais le signal `amountBucket` est perdu pour le marché cible. À trancher.
+- **Observation design** : coup de pouce sur le canal Android HIGH `reminders` ; un canal
+  distinct à importance plus basse collerait mieux à l'intention sobre.
+
+### Ensuite
+- Décision de Patrick sur les deux points ci-dessus.
+- Validation native (Android) : démarrage différé, mode libre, coup de pouce, gros montants FCFA.
+
+---
+
 ## 2026-08-10 — Codex — Session 50 : Lot C clos, coup de pouce à mi-cycle
 
 ### Fait
