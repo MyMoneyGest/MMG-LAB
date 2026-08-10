@@ -37,6 +37,12 @@ ce qui vient ensuite.
 - Un changement après création de données avertit qu'il ne convertit pas les montants. Il
   reprogramme les rappels locaux afin que leurs textes utilisent immédiatement la devise
   choisie.
+- `app_open` attend désormais la confirmation du pays et n'est envoyé qu'une fois par
+  lancement ; `app_open` et `goal_created` portent `country` + `currencyCode` sans montant
+  financier ni donnée identifiante.
+- `scripts/retention-queries.sql` ajoute la répartition des installations et la rétention à
+  90 jours **par pays**, en conservant `legacy_inconnu` pour les événements V1. La page
+  Confidentialité, FEATURES, README et le guide de maintenance décrivent cette donnée.
 
 ### Vérifications
 - `npx tsc --noEmit` : OK.
@@ -50,9 +56,9 @@ ce qui vient ensuite.
   Expo a tenté de proposer l'installation hors ligne, sans modifier `package.json`.
 
 ### Ensuite
-1. Ajouter le pays aux événements `app_open` et `goal_created`, puis adapter les requêtes de
-   lecture de rétention et la documentation.
-2. Terminer le vocabulaire générique multi-pays et le petit polish du Lot B.
+1. Terminer le vocabulaire générique multi-pays.
+2. Appliquer le petit polish du Lot B (« le 1er » et ponctuation accueil), puis refaire une
+   vérification complète du Lot A avant de préparer les builds V2.
 
 ---
 

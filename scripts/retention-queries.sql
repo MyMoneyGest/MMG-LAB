@@ -12,7 +12,8 @@
 --  Colonnes utiles : install_id (qui), event_type (quoi), created_at (quand),
 --    platform, app_version, metadata (détails en JSON).
 --  Clés metadata connues :
---    goal_created         → category, rhythm
+--    app_open             → country, currencyCode
+--    goal_created         → category, rhythm, country, currencyCode
 --    contribution_logged  → type ('deposit'/'withdrawal'), amountBucket, source
 --    rebalance_decided    → choice ('applied'/'kept'/'deferred')
 --
@@ -97,6 +98,29 @@ from events
 group by platform
 order by personnes desc;
 
+-- 1.d  Répartition des installations par pays choisi dans MMG.
+--      « legacy_inconnu » correspond aux événements V1, antérieurs au sélecteur V2.
+with installations as (
+  select distinct install_id
+  from events_reels
+  where event_type in ('app_open', 'goal_created')
+),
+premier_pays as (
+  select distinct on (install_id)
+         install_id,
+         metadata->>'country' as country
+  from events_reels
+  where event_type in ('app_open', 'goal_created')
+    and metadata->>'country' is not null
+  order by install_id, created_at
+)
+select coalesce(p.country, 'legacy_inconnu') as country,
+       count(*) as personnes
+from installations i
+left join premier_pays p on p.install_id = i.install_id
+group by coalesce(p.country, 'legacy_inconnu')
+order by personnes desc;
+
 
 -- ############################################################################
 -- SECTION 2 — ENTONNOIR D'ACTIVATION (combien franchissent chaque étape)
@@ -149,6 +173,51 @@ select
   (select count(*) from actifs_au_3e)     as encore_actifs_au_3e_rappel,
   round(100.0 * (select count(*) from actifs_au_3e)
         / nullif((select count(*) from cohorte_eligible), 0), 1) as retention_3e_rappel_pct;
+
+
+-- 3.b  Même mesure, séparée par pays choisi lors de la création du premier projet.
+--      C'est la vue à utiliser pour comparer la cohorte Gabon/FCFA à la cohorte France/EUR.
+with activation as (
+  select distinct on (install_id)
+         install_id,
+         created_at as activated_at
+  from events_reels
+  where event_type = 'goal_created'
+  order by install_id, created_at
+),
+pays as (
+  select distinct on (install_id)
+         install_id,
+         metadata->>'country' as country
+  from events_reels
+  where event_type in ('app_open', 'goal_created')
+    and metadata->>'country' is not null
+  order by install_id, created_at
+),
+cohorte_eligible as (
+  select a.install_id,
+         a.activated_at,
+         coalesce(p.country, 'legacy_inconnu') as country
+  from activation a
+  left join pays p on p.install_id = a.install_id
+  where a.activated_at <= now() - interval '90 days'
+),
+actifs_au_3e as (
+  select distinct e.install_id
+  from events_reels e
+  join cohorte_eligible c on c.install_id = e.install_id
+  where e.event_type = 'contribution_logged'
+    and e.metadata->>'type' = 'deposit'
+    and e.created_at >= c.activated_at + interval '90 days'
+)
+select c.country,
+       count(*) as cohorte_ayant_eu_le_temps,
+       count(a.install_id) as encore_actifs_au_3e_rappel,
+       round(100.0 * count(a.install_id) / nullif(count(*), 0), 1) as retention_3e_rappel_pct
+from cohorte_eligible c
+left join actifs_au_3e a on a.install_id = c.install_id
+group by c.country
+order by cohorte_ayant_eu_le_temps desc;
 
 
 -- ############################################################################

@@ -42,9 +42,10 @@ fragile (cf. notif de test, date de début différée).
   `getLocales()[0].regionCode`), **1 tap pour confirmer** — premier lancement minimal.
   Modifiable ensuite depuis le menu ; les notifications sont reprogrammées dans la nouvelle
   devise et un avertissement précise que les montants existants ne sont pas convertis.
-- ⏳ **`country` dans les métadonnées analytics** (`app_open` et `goal_created` au moins) →
-  rétention lisible par pays (donnée grossière, non personnelle, conforme à la page Confidentialité).
-  Mettre à jour `scripts/retention-queries.sql` (group by pays) + FEATURES.md.
+- ✅ *(Codex, session 40)* **`country` dans les métadonnées analytics** de `app_open` et
+  `goal_created` (+ `currencyCode`). `app_open` attend la confirmation du pays et reste unique.
+  Requêtes Supabase ajoutées pour le volume et la rétention à 90 jours par pays ; page
+  Confidentialité et documentation mises en cohérence.
 - ⏳ **Vocabulaire générique / par pays** : « mets de côté » plutôt que « vire depuis ta
   banque » ; adaptable selon le pays.
 

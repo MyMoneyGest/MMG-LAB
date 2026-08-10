@@ -86,7 +86,13 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
 
   track('goal_created', {
     goalId: goal.id,
-    metadata: { goalId: goal.id, category: goal.category, rhythm: goal.rhythm },
+    metadata: {
+      goalId: goal.id,
+      category: goal.category,
+      rhythm: goal.rhythm,
+      country: state.country ?? 'unknown',
+      currencyCode: state.currencyCode,
+    },
   });
   return goal;
 }

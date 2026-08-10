@@ -53,10 +53,10 @@ export default function LegalScreen() {
         </Text>
         <Text style={styles.paragraph}>
           Les événements peuvent contenir l'identifiant technique du projet, sa catégorie
-          générale et le rythme choisi, la plateforme, la version de l'app et, pour un
-          mouvement, une tranche de montant. Les montants exacts, le nom des projets et le
-          détail du budget ne sont jamais transmis. Ces données ne servent ni à la publicité
-          ni à la revente.
+          générale et le rythme choisi, le pays et la devise sélectionnés dans MMG, la
+          plateforme, la version de l'app et, pour un mouvement, une tranche de montant. Les
+          montants exacts, le nom des projets et le détail du budget ne sont jamais transmis.
+          Ces données ne servent ni à la publicité ni à la revente.
         </Text>
         <Text style={styles.paragraph}>
           La base légale de cette mesure est l'intérêt légitime de MyMoneyGest à vérifier la

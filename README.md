@@ -46,7 +46,8 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
 - `src/lib/analytics.ts` — insertion d'événements dans la table Supabase `events`
   (tracking de rétention uniquement, aucune donnée utilisateur) : `app_open`, `goal_created`,
   `contribution_logged` (montants bucketisés), `reminder_opened`, `reminder_postponed`,
-  `goal_deleted`.
+  `goal_deleted`. Le pays et la devise choisis sont joints aux ouvertures/créations afin de
+  lire la rétention par marché, sans transmettre de montant exact.
 - `src/lib/store.ts` — état persistant local (zustand + AsyncStorage), seule source de vérité
   des données utilisateur.
 

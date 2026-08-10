@@ -269,8 +269,10 @@ fichier `.gitignore` qui dit « n'envoie jamais ça en ligne »).
 - Pour compter la rétention, utilise l'onglet **SQL Editor** de Supabase. **Toutes les
   requêtes prêtes à copier-coller sont dans le fichier `scripts/retention-queries.sql`** du
   projet : santé de la base, entonnoir d'activation, **rétention au 3e rappel** (la mesure
-  clé, avec les seuils 40 % / 20 %), courbe rappel par rappel, et analyses par catégorie /
-  rythme. Ouvre ce fichier, copie la requête voulue, colle-la dans le SQL Editor, lance.
+  clé, avec les seuils 40 % / 20 %), comparaison de cette rétention **par pays choisi dans
+  MMG**, courbe rappel par rappel, et analyses par catégorie / rythme. Ouvre ce fichier, copie
+  la requête voulue, colle-la dans le SQL Editor, lance. `legacy_inconnu` désigne les événements
+  enregistrés avant l'ajout du choix de pays en V2.
 - **Deux entretiens à faire à la main** (aussi dans ce fichier, section 0) :
   1. **Avant de diffuser l'app** : vider les données de test, une seule fois, juste avant de
      partager le lien (sinon tes propres tests re-salissent la table) :

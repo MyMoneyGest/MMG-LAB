@@ -1,6 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { PendingReminderModal } from '@/components/pending-reminder-modal';
@@ -32,19 +32,29 @@ function waitForStoreHydration(): Promise<void> {
 
 export default function RootLayout() {
   const router = useRouter();
+  const country = useStore((state) => state.country);
+  const currencyCode = useStore((state) => state.currencyCode);
+  const appOpenTracked = useRef(false);
   const [pendingReminders, setPendingReminders] = useState<PendingReminder[]>([]);
   const enqueueReminders = useCallback((reminders: PendingReminder[]) => {
     setPendingReminders((current) => mergePendingReminders(current, reminders));
   }, []);
 
-  // app_open : après hydratation du store pour tracer avec le bon install_id.
+  // app_open : une seule fois, après hydratation ET choix du pays. Un nouveau
+  // lancement V2 n'est donc jamais classé « pays inconnu » avant confirmation.
   useEffect(() => {
-    if (useStore.persist.hasHydrated()) {
-      track('app_open');
-      return;
-    }
-    return useStore.persist.onFinishHydration(() => track('app_open'));
-  }, []);
+    const send = () => {
+      if (appOpenTracked.current) return;
+      const state = useStore.getState();
+      if (!state.country) return;
+      appOpenTracked.current = true;
+      track('app_open', {
+        metadata: { country: state.country, currencyCode: state.currencyCode },
+      });
+    };
+    if (useStore.persist.hasHydrated()) send();
+    else return useStore.persist.onFinishHydration(send);
+  }, [country, currencyCode]);
 
   // Boucle de rétention : notification → deep link vers le bon projet.
   useEffect(

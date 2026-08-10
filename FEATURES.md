@@ -322,20 +322,26 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 - **Quoi** : budget, projets (dont leur rythme, cycles et enveloppe confirmée), versements,
   snapshots du solde global et part non affectée, éventuelle relance de réajustement différée,
-  dernier projet consulté, installId — tout survit au redémarrage, uniquement sur le téléphone.
+  pays, devise, dernier projet consulté, installId — tout survit au redémarrage, uniquement
+  sur le téléphone.
 - **Comment** : zustand + middleware `persist` sur AsyncStorage (`mmg-store-v1`).
   `installId` généré une fois (`install-<timestamp>-<aléa>`, format de l'ancienne app).
 - **Où** : `src/lib/store.ts`, types dans `src/lib/types.ts`.
 
 ## 13. Tracking de rétention (Supabase)
 
-- **Quoi** : événements pseudonymisés dans la table `events` du projet MMG-LAB — `app_open`,
-  `goal_created` (catégorie générale + rythme), `contribution_logged` (type
+- **Quoi** : événements pseudonymisés dans la table `events` du projet MMG-LAB — `app_open`
+  (pays + devise sélectionnés), `goal_created` (catégorie générale + rythme + pays/devise),
+  `contribution_logged` (type
   deposit/withdrawal + bucket de montant), `reminder_opened`, `reminder_postponed`,
   `balance_confirmed` (sans solde ni montant), `rebalance_decided` (choix `applied`, `kept` ou
   `deferred`) et `goal_deleted`. Aucune donnée financière exacte.
 - **Comment** : `track()` fire-and-forget, no-op si `.env` absent. Montants bucketisés
   (`0_50`, `50_100`, `100_250`, `250_plus`). RLS « anon insert only » → jamais de `.select()`.
+  Le premier `app_open` V2 attend l'hydratation et la confirmation du pays, puis n'est envoyé
+  qu'une fois par lancement. `scripts/retention-queries.sql` fournit la répartition des
+  installations et la rétention au 3e rappel regroupées par pays ; les événements V1 sans
+  pays apparaissent sous `legacy_inconnu`.
   Les notifications marquées `isTest` et les gestes déclenchés depuis leurs actions sont
   volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
 - **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.
