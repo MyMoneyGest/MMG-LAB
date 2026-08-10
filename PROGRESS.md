@@ -7,6 +7,45 @@ relais sait exactement où on en est, sans relire tout l'historique git.
 signées, les plus récentes en haut. Chaque entrée dit : ce qui a été fait, ce qui est en cours,
 ce qui vient ensuite.
 
+> **Relais Claude Code ⇄ Codex (décidé par Patrick)** : les deux travaillent la V2 en
+> alternance (l'un prend le relais quand l'autre n'a plus de tokens). **Tout ce qui est fait
+> doit être consigné ici au fil de l'eau, par les deux.** Travailler sur la branche **`v2`**
+> (jamais `main`, qui reste la V1 taguée `v1.0.0`).
+
+---
+
+## 2026-08-XX — Claude Code — Session 39 : ouverture V2 + fondation devises (Lot A démarré)
+
+### Contexte / décisions
+- **Fin du gel « euro »** : le test de rétention euro ne tourne pas faute de recrues ;
+  la traction réelle vient du **Gabon** (réseau Facebook). Décision Patrick : **expansion
+  multi-devises / multi-pays** (on GARDE l'euro, on AJOUTE) — pas un pivot. Détails et brief
+  séquencé dans EXCHANGES.md ([DÉCISION] V2).
+- **V1 sauvegardée** : tag **`v1.0.0`** poussé sur GitHub (point de retour permanent).
+  Développement V2 sur la branche **`v2`**.
+
+### Fait (cette session)
+- Créé la branche `v2` (poussée).
+- **Fondation du système de devises** — `src/lib/currency.ts` (autonome, sans import pour
+  rester testable comme les autres modules) : `CurrencyCode` (EUR/XAF/XOF/USD), table
+  `CURRENCIES` avec **décimales par devise** (0 pour le FCFA), `formatMoney()` reproduisant
+  **exactement** le rendu V1 pour l'euro, liste `COUNTRIES` (starter) + `defaultCurrencyForCountry()`.
+- Store (`src/lib/store.ts`) : ajout `country?` + `currencyCode` (défaut EUR) + `setLocale()`.
+  Compatible utilisateurs existants (merge zustand/persist → EUR par défaut, aucune migration).
+- `format.ts` **laissé intact** (`formatEuro` = V1) pour ne rien casser ; migration vers
+  `formatMoney` = câblage à venir (Codex).
+- Test `scripts/test-currency.mjs` (+ `npm run test:currency`) : rendu V1 euro, FCFA sans
+  centimes, repli, pays→devise. **Les 8 suites passent**, tsc OK.
+
+### Ensuite (Lot A — reste à faire, voir brief EXCHANGES.md)
+1. **Câbler `formatMoney(x, currencyCode)`** partout où `formatEuro` est utilisé (écrans,
+   notifications, plan-summary…) + généraliser `parseAmountInput` (retirer € / FCFA / $).
+2. **Sélecteur de pays au 1er lancement** : pré-rempli depuis la locale de l'appareil, 1 tap
+   pour confirmer (garder l'écran minimal), pilote devise + vocabulaire. Appelle `setLocale`.
+3. **Envoyer le `country` dans les métadonnées analytics** (`app_open` / `goal_created`) →
+   rétention lisible par pays (bonus mesure, donnée grossière non personnelle).
+4. **Vocabulaire générique / par pays** (« mets de côté » plutôt que « vire depuis ta banque »).
+
 ---
 
 ## 2026-08-09 — Codex — Session 39 : diffusion sur le profil Facebook de Patrick

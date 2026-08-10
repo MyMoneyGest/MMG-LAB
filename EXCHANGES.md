@@ -9,6 +9,65 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-08-XX — Patrick / Claude Code — [DÉCISION] Ouverture V2 : expansion multi-devises / multi-pays
+
+**Fin du gel « euro ».** Le test de rétention euro ne s'est jamais matérialisé (recrutement
+France en échec). La traction réelle vient du **Gabon** (réseau perso de Patrick). Décision :
+on **élargit** MMG au multi-devises / multi-pays — **on garde l'euro, on ajoute** (ce n'est
+PAS un pivot ; « choisir c'est renoncer », donc on ne renonce à rien).
+
+**Cadre de travail :**
+- Développement V2 sur la branche **`v2`**. `main` reste la V1, taguée **`v1.0.0`** (point de
+  retour permanent). Aucune fonctionnalité ne doit écraser la V1.
+- Relais Claude Code ⇄ Codex en alternance ; **tout consigner dans PROGRESS.md au fil de l'eau**.
+- Discipline conservée : direction visuelle actée (fond chaud, terracotta, sombre = moments
+  marquants), rituel **non-punitif**, chargement paresseux d'expo-notifications, analytics
+  insert-only sans montants en clair, commits poussés régulièrement.
+
+**Principe transversal (rappel Claude Code)** : à chaque évolution, se demander *« est-ce que
+ça change qui compte comme actif, et à partir de quand ? »* — la mesure de rétention reste
+fragile (cf. notif de test, date de début différée).
+
+### Roadmap V2 (séquencée)
+
+**Lot A — Déblocage multi-marchés (EN COURS)**
+- ✅ *(Claude Code, session 39)* Fondation devises : `src/lib/currency.ts` (EUR/XAF/XOF/USD,
+  décimales par devise, `formatMoney`, `COUNTRIES`, `defaultCurrencyForCountry`) ;
+  store `country`/`currencyCode`/`setLocale` ; test `test:currency`. `formatEuro` intact.
+- ⏳ **Câblage `formatMoney(x, currencyCode)`** partout où `formatEuro` est appelé (grep
+  `formatEuro` : goal/[id].tsx, plan-summary.tsx, notifications.ts, amount/report/…-modal,
+  new-goal.tsx…). Lire `currencyCode` depuis le store. Généraliser `parseAmountInput`
+  (retirer aussi « FCFA » / « $ » ; pour une devise à 0 décimale, ne pas imposer de centimes).
+- ⏳ **Sélecteur de pays au 1er lancement** : nouvel écran (ou étape avant l'accueil si aucun
+  pays choisi), **pré-rempli depuis la locale de l'appareil** (`expo-localization` /
+  `Localization.region`), **1 tap pour confirmer** — garder le premier lancement minimal
+  (décision design actée). Appelle `setLocale({ country, currencyCode: defaultCurrencyForCountry(country) })`.
+  Modifiable ensuite depuis le menu.
+- ⏳ **`country` dans les métadonnées analytics** (`app_open` et `goal_created` au moins) →
+  rétention lisible par pays (donnée grossière, non personnelle, conforme à la page Confidentialité).
+  Mettre à jour `scripts/retention-queries.sql` (group by pays) + FEATURES.md.
+- ⏳ **Vocabulaire générique / par pays** : « mets de côté » plutôt que « vire depuis ta
+  banque » ; adaptable selon le pays.
+
+**Lot B — Quick wins cosmétiques (à embarquer avec le Lot A, cf. FEEDBACK.md)**
+- « le 1 » → « le **1er** » (jour de rappel ; seul le 1 prend l'ordinal). Ponctuation accueil.
+
+**Lot C — Cœur produit (à prioriser après validation du Lot A auprès de vrais inconnus)**
+- Écran d'estimation des dépenses (optionnel, éducation financière).
+- Mode épargne libre (revenus irréguliers, sans budget imposé). ⭐⭐
+- Date de début différée (⚠️ ancrer l'activation sur la date de début, pas la création). ⭐
+- Rappel/message sobre en cours de mois — **NON-PUNITIF** (pas de streak/culpabilisation
+  façon Duolingo), basse fréquence, désactivable.
+
+**Lot D — Bien plus tard (2 ans+, seulement si forte fidélisation prouvée)**
+- Intégrations mobile money / banques (additives). Lourd réglementaire (licences paiement/
+  e-monnaie, KYC/AML) — à ne pas sous-estimer.
+
+**Transversal** : vidéos/tutos une fois le FCFA visible ; valider chaque lot avec de vrais
+inconnus (pas seulement les proches) avant d'investir dans le suivant.
+
+---
+
 ## 2026-07-14 — Claude Code — [CRITIQUE] Vérification du lot de finition : 5/6 conformes, 1 écart + 1 rappel
 
 Contrôle indépendant (6 suites de tests vertes, TypeScript OK, parcours rejoué à l'écran) :

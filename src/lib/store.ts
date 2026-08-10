@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { CurrencyCode, DEFAULT_CURRENCY } from './currency';
 import {
   Budget,
   BalanceSnapshot,
@@ -21,6 +22,9 @@ function makeInstallId(): string {
 
 interface MMGState {
   installId: string;
+  /** V2 — Lot A : pays (ISO alpha-2) et devise choisis au premier lancement. */
+  country?: string;
+  currencyCode: CurrencyCode;
   budget?: Budget;
   balanceSnapshots: BalanceSnapshot[];
   rebalanceReview?: RebalanceReview;
@@ -28,6 +32,7 @@ interface MMGState {
   lastViewedGoalId?: string;
   notifPermissionAsked: boolean;
 
+  setLocale: (locale: { country?: string; currencyCode: CurrencyCode }) => void;
   setBudget: (budget: Budget) => void;
   addBalanceSnapshot: (snapshot: BalanceSnapshot) => void;
   setRebalanceReview: (review?: RebalanceReview) => void;
@@ -49,9 +54,14 @@ export const useStore = create<MMGState>()(
   persist(
     (set, get) => ({
       installId: makeInstallId(),
+      currencyCode: DEFAULT_CURRENCY,
       goals: [],
       balanceSnapshots: [],
       notifPermissionAsked: false,
+
+      // Les anciens utilisateurs (store persisté sans ces champs) retombent sur
+      // EUR par défaut via le merge de zustand/persist — aucune migration requise.
+      setLocale: ({ country, currencyCode }) => set({ country, currencyCode }),
 
       setBudget: (budget) => set({ budget }),
 
