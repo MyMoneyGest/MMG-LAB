@@ -21,6 +21,8 @@ export interface ReminderCycle {
   /** Identifiants natifs, renouvelés à chaque reprogrammation. */
   anchorNotificationId?: string;
   postponedNotificationId?: string;
+  /** Message facultatif et non interactif placé à mi-chemin du cycle. */
+  midCycleNotificationId?: string;
 }
 
 export interface Contribution {
@@ -81,6 +83,8 @@ export interface Goal {
    * Cette valeur libre reste locale et n'est jamais envoyée aux analytics.
    */
   savingsLocation?: string;
+  /** Coup de pouce non-punitif entre deux rappels, désactivé par défaut. */
+  midCycleNudgeEnabled?: boolean;
   /** ISO datetime de la prochaine action attendue (rappel à 9h) */
   nextReminderAt: string;
   /** Identifiant de la notification locale programmée */

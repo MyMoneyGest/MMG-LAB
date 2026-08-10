@@ -189,6 +189,28 @@ export function reminderAtForCycle(cycle: ReminderCycle): Date {
 }
 
 /**
+ * Milieu calendaire entre l'ancre précédente et celle du cycle, à 9 h.
+ * Le calcul reste attaché aux ancres mensuelles : un report ponctuel ne le décale jamais.
+ */
+export function midCycleNudgeAt(cycle: ReminderCycle): Date {
+  const anchor = new Date(cycle.anchorAt);
+  const previousAnchor = new Date(
+    anchor.getFullYear(),
+    anchor.getMonth() - 1,
+    anchor.getDate(),
+    9,
+    0,
+    0,
+    0
+  );
+  const cycleDays = calendarDayNumber(anchor) - calendarDayNumber(previousAnchor);
+  const midpoint = new Date(previousAnchor);
+  midpoint.setDate(previousAnchor.getDate() + Math.round(cycleDays / 2));
+  midpoint.setHours(9, 0, 0, 0);
+  return midpoint;
+}
+
+/**
  * Migration paresseuse des anciens projets puis ajout de trois ancres d'avance.
  * Les anciens champs ne sont lus qu'ici ; les cycles deviennent ensuite la source de vérité.
  */

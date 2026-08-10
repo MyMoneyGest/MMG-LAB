@@ -4,7 +4,9 @@ import { Platform } from 'react-native';
 import { DEFAULT_CURRENCY, formatMoney } from './currency';
 import {
   currentUpcomingCycle,
+  goalActivationDate,
   goalSavingsMode,
+  midCycleNudgeAt,
   nextReminderFromCycles,
   normalizedReminderCycles,
   oldestUnsettledDebt,
@@ -14,6 +16,7 @@ import {
 } from './plan';
 import {
   createReminderInbox,
+  pendingReminderFromNotification,
   REMINDER_ACTION_IDENTIFIERS,
   reminderActionFromIdentifier,
 } from './notification-model';
@@ -90,6 +93,16 @@ export interface ScheduledGoalReminders {
 let lastTestNotificationId: string | null = null;
 const deliveredResponseKeys = new Set<string>();
 const reminderInbox = createReminderInbox();
+let initialNotificationResponsePromise:
+  | Promise<import('expo-notifications').NotificationResponse | null>
+  | null = null;
+
+function initialNotificationResponse(N: NotificationsModule) {
+  if (!initialNotificationResponsePromise) {
+    initialNotificationResponsePromise = N.getLastNotificationResponseAsync();
+  }
+  return initialNotificationResponsePromise;
+}
 
 async function ensureAndroidChannel(N: NotificationsModule): Promise<void> {
   if (Platform.OS !== 'android') return;
@@ -174,6 +187,7 @@ export async function scheduleGoalReminders(
     ...cycle,
     anchorNotificationId: undefined,
     postponedNotificationId: undefined,
+    midCycleNotificationId: undefined,
   }));
   const result = (reminderCycles: ReminderCycle[]): ScheduledGoalReminders => ({
     reminderCycles,
@@ -196,43 +210,77 @@ export async function scheduleGoalReminders(
     const currencyCode = useStore.getState().currencyCode ?? DEFAULT_CURRENCY;
     const scheduleCycle = async (cycle: ReminderCycle): Promise<ReminderCycle> => {
       if (cycle.settledAt) return cycle;
+      let scheduledCycle = cycle;
       const when = reminderAtForCycle(cycle);
-      if (when <= now) return cycle;
-      const isPostponed = Boolean(cycle.postponedTo);
-      const surplus = isPostponed ? 0 : surplusForCycle(goal, cycle);
-      const freeMode = goalSavingsMode(goal) === 'free';
-      const body = freeMode
-        ? surplus > 0
-          ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci pour « ${goal.name} ». Ajoute quelque chose seulement si tu le souhaites.`
-          : `C'est ton rappel pour « ${goal.name} ». Mets de côté le montant qui te convient aujourd'hui.`
-        : surplus > 0
-          ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci. Ton versement prévu (${formatMoney(suggestedAmount, currencyCode)}) — fait, ou tu ajustes ?`
-          : `Mets ${formatMoney(suggestedAmount, currencyCode)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
-      const notificationId = await N.scheduleNotificationAsync({
-        content: {
-          title: 'MMG — ton rituel du mois',
-          body,
-          data: {
-            goalId: goal.id,
-            cycleId: cycle.id,
-            url: `mmg://goal/${goal.id}`,
-            reminderKind: isPostponed ? 'postponed' : 'anchor',
-          },
-          categoryIdentifier: ACTION_CATEGORY_ID,
-        },
-        trigger: {
-          type: N.SchedulableTriggerInputTypes.DATE,
-          date: when,
-          channelId: CHANNEL_ID,
-        },
-      });
-      return isPostponed
-        ? { ...cycle, postponedNotificationId: notificationId }
-        : { ...cycle, anchorNotificationId: notificationId };
+      if (when > now) {
+        try {
+          const isPostponed = Boolean(cycle.postponedTo);
+          const surplus = isPostponed ? 0 : surplusForCycle(goal, cycle);
+          const freeMode = goalSavingsMode(goal) === 'free';
+          const body = freeMode
+            ? surplus > 0
+              ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci pour « ${goal.name} ». Ajoute quelque chose seulement si tu le souhaites.`
+              : `C'est ton rappel pour « ${goal.name} ». Mets de côté le montant qui te convient aujourd'hui.`
+            : surplus > 0
+              ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci. Ton versement prévu (${formatMoney(suggestedAmount, currencyCode)}) — fait, ou tu ajustes ?`
+              : `Mets ${formatMoney(suggestedAmount, currencyCode)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
+          const notificationId = await N.scheduleNotificationAsync({
+            content: {
+              title: 'MMG — ton rituel du mois',
+              body,
+              data: {
+                goalId: goal.id,
+                cycleId: cycle.id,
+                url: `mmg://goal/${goal.id}`,
+                reminderKind: isPostponed ? 'postponed' : 'anchor',
+              },
+              categoryIdentifier: ACTION_CATEGORY_ID,
+            },
+            trigger: {
+              type: N.SchedulableTriggerInputTypes.DATE,
+              date: when,
+              channelId: CHANNEL_ID,
+            },
+          });
+          scheduledCycle = isPostponed
+            ? { ...scheduledCycle, postponedNotificationId: notificationId }
+            : { ...scheduledCycle, anchorNotificationId: notificationId };
+        } catch {
+          // Un cycle qui échoue ne doit pas empêcher les autres échéances d'être programmées.
+        }
+      }
+
+      if (goal.midCycleNudgeEnabled) {
+        const nudgeAt = midCycleNudgeAt(cycle);
+        const activationAt = goalActivationDate(goal);
+        if (nudgeAt > now && nudgeAt >= activationAt) {
+          try {
+            const midCycleNotificationId = await N.scheduleNotificationAsync({
+              content: {
+                title: 'MMG — un petit point',
+                body: `Ton projet « ${goal.name} » est toujours là. Tu avances à ton rythme — rien à faire maintenant.`,
+                data: {
+                  goalId: goal.id,
+                  cycleId: cycle.id,
+                  url: `mmg://goal/${goal.id}`,
+                  reminderKind: 'mid_cycle_nudge',
+                },
+              },
+              trigger: {
+                type: N.SchedulableTriggerInputTypes.DATE,
+                date: nudgeAt,
+                channelId: CHANNEL_ID,
+              },
+            });
+            scheduledCycle = { ...scheduledCycle, midCycleNotificationId };
+          } catch {
+            // Le rappel mensuel reste valide même si ce message facultatif échoue.
+          }
+        }
+      }
+      return scheduledCycle;
     };
-    const reminderCycles = await Promise.all(
-      cleanCycles.map((cycle) => scheduleCycle(cycle).catch(() => cycle))
-    );
+    const reminderCycles = await Promise.all(cleanCycles.map(scheduleCycle));
     return result(reminderCycles);
   } catch {
     return result(cleanCycles);
@@ -311,7 +359,10 @@ export async function takePresentedReminders(): Promise<PendingReminder[]> {
           )
         )
     );
-    return reminders.filter((reminder): reminder is PendingReminder => reminder !== null);
+    return reminders.filter(
+      (reminder): reminder is PendingReminder =>
+        reminder !== null && reminder.reminderKind !== 'mid_cycle_nudge'
+    );
   } catch {
     return [];
   }
@@ -329,7 +380,7 @@ export function addReminderReceivedListener(
         N.dismissNotificationAsync(notificationId).catch(() => {})
       )
       .then((reminder) => {
-        if (reminder) onReceived(reminder);
+        if (reminder && reminder.reminderKind !== 'mid_cycle_nudge') onReceived(reminder);
       });
   });
   return () => subscription.remove();
@@ -344,6 +395,7 @@ export async function cancelGoalReminder(goal: Goal): Promise<void> {
     ...(goal.reminderCycles ?? []).flatMap((cycle) => [
       cycle.anchorNotificationId,
       cycle.postponedNotificationId,
+      cycle.midCycleNotificationId,
     ]),
   ].filter(
     (id): id is string => Boolean(id)
@@ -397,9 +449,19 @@ export function addReminderOpenListener(
   };
 
   // Ouverture à froid depuis une notification.
-  N.getLastNotificationResponseAsync().then((response) => {
+  initialNotificationResponse(N).then((response) => {
     if (response) void handle(response);
   });
   const subscription = N.addNotificationResponseReceivedListener(handle);
   return () => subscription.remove();
+}
+
+/** Une ouverture déclenchée par le coup de pouce ne doit pas alimenter la rétention. */
+export async function openedByMidCycleNudge(): Promise<boolean> {
+  const N = getNotifications();
+  if (!N) return false;
+  const response = await initialNotificationResponse(N).catch(() => null);
+  return response
+    ? pendingReminderFromNotification(response.notification)?.reminderKind === 'mid_cycle_nudge'
+    : false;
 }

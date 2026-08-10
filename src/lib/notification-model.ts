@@ -5,7 +5,7 @@ export const REMINDER_ACTION_IDENTIFIERS = {
 } as const;
 
 export type ReminderNotificationAction = 'open' | 'done' | 'edit' | 'postpone';
-export type ReminderKind = 'anchor' | 'postponed';
+export type ReminderKind = 'anchor' | 'postponed' | 'mid_cycle_nudge';
 
 export interface ReminderNotificationLike {
   request: {
@@ -41,7 +41,11 @@ export function pendingReminderFromNotification(
     goalId,
     isTest: notification.request.content.data?.isTest === true,
     reminderKind:
-      notification.request.content.data?.reminderKind === 'postponed' ? 'postponed' : 'anchor',
+      notification.request.content.data?.reminderKind === 'mid_cycle_nudge'
+        ? 'mid_cycle_nudge'
+        : notification.request.content.data?.reminderKind === 'postponed'
+          ? 'postponed'
+          : 'anchor',
     cycleId:
       typeof notification.request.content.data?.cycleId === 'string'
         ? notification.request.content.data.cycleId

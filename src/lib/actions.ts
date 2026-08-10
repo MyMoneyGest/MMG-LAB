@@ -279,6 +279,20 @@ export async function changeReminderDay(goal: Goal, reminderDay: number): Promis
   await reschedule(goal.id);
 }
 
+/** Active ou coupe le coup de pouce du projet, sans produire d'événement analytics. */
+export async function changeMidCycleNudge(
+  goal: Goal,
+  enabled: boolean
+): Promise<{ ok: true } | { ok: false; reason: 'permission' }> {
+  if (enabled && !(await hasNotificationPermission())) {
+    const granted = await requestNotificationPermission();
+    if (!granted) return { ok: false, reason: 'permission' };
+  }
+  useStore.getState().updateGoal(goal.id, { midCycleNudgeEnabled: enabled });
+  await reschedule(goal.id);
+  return { ok: true };
+}
+
 export async function removeGoal(goal: Goal): Promise<void> {
   await cancelGoalReminder(goal);
   useStore.getState().deleteGoal(goal.id);

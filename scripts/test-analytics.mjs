@@ -12,6 +12,7 @@ const legal = read('src/app/legal.tsx');
 const supabase = read('src/lib/supabase.ts');
 const layout = read('src/app/_layout.tsx');
 const retentionQueries = read('scripts/retention-queries.sql');
+const notifications = read('src/lib/notifications.ts');
 
 assert.match(analytics, /\| 'balance_confirmed'/);
 assert.match(analytics, /\| 'rebalance_decided'/);
@@ -53,5 +54,16 @@ assert.match(retentionQueries, /Même mesure, séparée par pays choisi/);
 assert.match(retentionQueries, /group by c\.country/);
 assert.match(retentionQueries, /activationDelayDays/);
 assert.match(retentionQueries, /make_interval/);
+assert.match(layout, /if \(await openedByMidCycleNudge\(\)\) return/);
+assert.match(
+  layout,
+  /if \(reminderKind === 'mid_cycle_nudge'\)[\s\S]*?from: 'mid-cycle-nudge'[\s\S]*?return;/,
+);
+const nudgeAction = actions.match(
+  /export async function changeMidCycleNudge[\s\S]*?\n}\n\nexport async function removeGoal/,
+)?.[0];
+assert.ok(nudgeAction, 'l’action du coup de pouce doit exister');
+assert.doesNotMatch(nudgeAction, /track\(/);
+assert.doesNotMatch(notifications, /track\(/);
 
 console.log('Tests analytics : rythme, solde, décisions et insert-only Supabase validés.');

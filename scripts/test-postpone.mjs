@@ -17,6 +17,7 @@ const {
   cyclesAfterPostpone,
   cyclesAfterReminderDayChange,
   daysBeforeRegularReminder,
+  midCycleNudgeAt,
   nextRegularReminderAfterCurrent,
   normalizedReminderCycles,
   oldestUnsettledDebt,
@@ -43,6 +44,18 @@ const baseGoal = {
   createdAt: at(2026, 1, 1).toISOString(),
   contributions: [],
 };
+
+// Le coup de pouce reste au milieu des ancres, indépendamment d'un éventuel report.
+const augustCycle = { id: 'cycle-2026-08-28', anchorAt: at(2026, 8, 28).toISOString() };
+assert.deepEqual(midCycleNudgeAt(augustCycle), at(2026, 8, 13));
+assert.deepEqual(
+  midCycleNudgeAt({ ...augustCycle, postponedTo: at(2026, 9, 5).toISOString() }),
+  at(2026, 8, 13),
+);
+assert.deepEqual(
+  midCycleNudgeAt({ id: 'cycle-2026-03-28', anchorAt: at(2026, 3, 28).toISOString() }),
+  at(2026, 3, 14),
+);
 
 // Avant l'ancre, impossible de la dépasser : le 29 juillet doit être refusé.
 assert.deepEqual(nextRegularReminderAfterCurrent(baseGoal, july12), at(2026, 8, 28));

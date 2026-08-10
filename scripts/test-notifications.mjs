@@ -49,6 +49,22 @@ assert.deepEqual(
     cycleId: 'cycle-july',
   },
 );
+assert.deepEqual(
+  pendingReminderFromNotification(
+    notification('notif-nudge', {
+      goalId: 'goal-1',
+      reminderKind: 'mid_cycle_nudge',
+      cycleId: 'cycle-august',
+    }),
+  ),
+  {
+    notificationId: 'notif-nudge',
+    goalId: 'goal-1',
+    isTest: false,
+    reminderKind: 'mid_cycle_nudge',
+    cycleId: 'cycle-august',
+  },
+);
 assert.equal(pendingReminderFromNotification(notification('invalid', {})), null);
 
 const dismissed = [];
@@ -86,5 +102,19 @@ assert.match(notificationsSource, /goalSavingsMode\(goal\) === 'free'/);
 assert.match(notificationsSource, /Mets de côté le montant qui te convient aujourd'hui/);
 assert.match(notificationsSource, /remainingAmount\(goal\) <= 0/);
 assert.doesNotMatch(notificationsSource, /suggestedAmount <= 0/);
+assert.match(notificationsSource, /goal\.midCycleNudgeEnabled/);
+assert.match(notificationsSource, /midCycleNudgeAt\(cycle\)/);
+assert.match(notificationsSource, /reminderKind: 'mid_cycle_nudge'/);
+assert.match(notificationsSource, /midCycleNotificationId/);
+assert.match(notificationsSource, /reminder\.reminderKind !== 'mid_cycle_nudge'/);
+const nudgeSchedule = notificationsSource.match(
+  /if \(goal\.midCycleNudgeEnabled\)[\s\S]*?return scheduledCycle;/,
+)?.[0];
+assert.ok(nudgeSchedule, 'le bloc de programmation du coup de pouce doit exister');
+assert.doesNotMatch(
+  nudgeSchedule,
+  /categoryIdentifier/,
+  'le coup de pouce ne doit proposer aucune action native',
+);
 
 console.log('Tests notifications : routage, déduplication, retrait et configuration sonore validés.');

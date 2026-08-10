@@ -12,6 +12,7 @@ import type { PendingReminder } from '@/lib/notification-model';
 import {
   addReminderOpenListener,
   addReminderReceivedListener,
+  openedByMidCycleNudge,
   takePresentedReminders,
 } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
@@ -43,24 +44,25 @@ export default function RootLayout() {
   // app_open : une seule fois, après hydratation ET choix du pays. Un nouveau
   // lancement V2 n'est donc jamais classé « pays inconnu » avant confirmation.
   useEffect(() => {
-    const send = () => {
+    const send = async () => {
       if (appOpenTracked.current) return;
       const state = useStore.getState();
       if (!state.country) return;
       appOpenTracked.current = true;
+      if (await openedByMidCycleNudge()) return;
       track('app_open', {
         metadata: { country: state.country, currencyCode: state.currencyCode },
       });
     };
-    if (useStore.persist.hasHydrated()) send();
-    else return useStore.persist.onFinishHydration(send);
+    if (useStore.persist.hasHydrated()) void send();
+    else return useStore.persist.onFinishHydration(() => void send());
   }, [country, currencyCode]);
 
   // Boucle de rétention : notification → deep link vers le bon projet.
   useEffect(
     () =>
       addReminderOpenListener((reminder) => {
-        const { notificationId, goalId, responseKey, action, isTest } = reminder;
+        const { notificationId, goalId, responseKey, action, isTest, reminderKind } = reminder;
         void (async () => {
           await waitForStoreHydration();
           const goal = useStore.getState().goals.find((candidate) => candidate.id === goalId);
@@ -71,6 +73,13 @@ export default function RootLayout() {
           setPendingReminders((current) =>
             current.filter((reminder) => reminder.notificationId !== notificationId)
           );
+          if (reminderKind === 'mid_cycle_nudge') {
+            router.push({
+              pathname: '/goal/[id]',
+              params: { id: goalId, from: 'mid-cycle-nudge' },
+            });
+            return;
+          }
           if (!isTest) {
             if (useStore.persist.hasHydrated()) {
               track('reminder_opened', { goalId, metadata: { goalId } });

@@ -315,6 +315,13 @@ Dernière mise à jour : 2026-08-10 (Codex).
 - **Message contextuel** : les surplus du cycle sont additionnés dans le rappel d'ancre
   (« Tu as déjà mis X € ce mois-ci… »). Chaque nouveau surplus reprogramme les rappels afin que
   le message et le montant conseillé restent à jour.
+- **Coup de pouce facultatif** : depuis la fiche d'un projet, l'utilisateur peut activer un
+  message sobre à mi-chemin entre deux ancres mensuelles. Il est **désactivé par défaut**, se
+  règle séparément pour chaque projet, ne contient aucun bouton et ne demande aucune action.
+  Un report ponctuel ne déplace pas ce milieu de cycle. Aucun message n'est programmé avant la
+  date de démarrage du projet ni pour un cycle déjà soldé ; tout versement qui solde le cycle
+  annule aussi son coup de pouce. Un tap ouvre simplement le bon projet. Une ouverture normale
+  de MMG retire le message du tiroir sans afficher la fenêtre Fait / Modifier / Reporter.
 - **Ouverture normale de l'app** : si un rappel est encore dans le tiroir Android, MMG le retire
   puis affiche une fenêtre compacte au-dessus de l'écran courant avec **Fait**, **Modifier**,
   **Reporter** et **Fermer pour le moment**. Plusieurs rappels sont mis en file sans doublon.
@@ -379,7 +386,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
 ## 12. Persistance locale
 
 - **Quoi** : budget, projets (dont leur mode guidé/libre, éventuelle date de démarrage, repère
-  facultatif du lieu d'épargne, rythme, cycles et enveloppe confirmée), versements,
+  facultatif du lieu d'épargne, choix du coup de pouce, rythme, cycles et enveloppe confirmée),
+  versements,
   snapshots du solde global et part non affectée, éventuelle relance de réajustement différée,
   pays, devise, dernier projet consulté, installId — tout survit au redémarrage, uniquement
   sur le téléphone.
@@ -410,6 +418,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
   Le lieu d'épargne saisi sur un projet n'est inclus dans aucun événement : il reste local.
   Les notifications marquées `isTest` et les gestes déclenchés depuis leurs actions sont
   volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
+  Le coup de pouce de mi-cycle est lui aussi exclu : ni son ouverture ni le lancement de l'app
+  qu'elle provoque ne produisent `reminder_opened` ou `app_open`.
 - **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.
   Contrat verrouillé par `scripts/test-analytics.mjs`, notamment l'absence de `.select()`.
 

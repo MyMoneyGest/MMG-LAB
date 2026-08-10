@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppDialog } from '@/components/app-dialog';
@@ -20,6 +20,7 @@ import { Button, Card, Eyebrow, ProgressBar, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import {
   applyGlobalRebalance,
+  changeMidCycleNudge,
   changeReminderDay,
   clearGlobalRebalanceReview,
   confirmContribution,
@@ -110,6 +111,7 @@ export default function GoalScreen() {
   const [modalFromTest, setModalFromTest] = useState(false);
   const [notifBlocked, setNotifBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [nudgeSaving, setNudgeSaving] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(null);
   const [confirmation, setConfirmation] = useState<{
     amount: number;
@@ -288,6 +290,49 @@ export default function GoalScreen() {
   );
   const schedule = upcomingSchedule(goal);
   const explainRealBalance = () => setBalanceInfoOpen(true);
+  const toggleMidCycleNudge = async (enabled: boolean) => {
+    const currentGoal = useStore.getState().goals.find((candidate) => candidate.id === goal.id);
+    if (!currentGoal) return;
+    setNudgeSaving(true);
+    try {
+      const result = await changeMidCycleNudge(currentGoal, enabled);
+      if (!result.ok) {
+        setNotifBlocked(true);
+        showFeedback(
+          'Notifications désactivées',
+          'Autorise les notifications pour MMG avant d’activer ce coup de pouce.'
+        );
+        return;
+      }
+      setNotifBlocked(false);
+      showFeedback(
+        enabled ? 'Coup de pouce activé' : 'Coup de pouce désactivé',
+        enabled
+          ? 'Un message sobre sera envoyé à mi-chemin entre deux rappels.'
+          : 'Seul le rappel mensuel de ce projet reste actif.'
+      );
+    } finally {
+      setNudgeSaving(false);
+    }
+  };
+  const midCycleNudgeSetting = !reached ? (
+    <View style={styles.nudgeSetting}>
+      <View style={styles.nudgeCopy}>
+        <Text style={styles.nudgeTitle}>Coup de pouce à mi-parcours</Text>
+        <Text style={styles.nudgeText}>Un message entre deux rappels, sans action demandée.</Text>
+      </View>
+      <Switch
+        accessibilityLabel="Activer le coup de pouce à mi-parcours"
+        accessibilityState={{ checked: Boolean(goal.midCycleNudgeEnabled), disabled: nudgeSaving }}
+        value={Boolean(goal.midCycleNudgeEnabled)}
+        disabled={nudgeSaving}
+        onValueChange={(enabled) => void toggleMidCycleNudge(enabled)}
+        trackColor={{ false: colors.border, true: colors.cardSoftBorder }}
+        thumbColor={goal.midCycleNudgeEnabled ? colors.accent : colors.card}
+        ios_backgroundColor={colors.border}
+      />
+    </View>
+  ) : null;
   const tabBar = (
     <View style={styles.tabs}>
       {TABS.map((t) => {
@@ -331,7 +376,7 @@ export default function GoalScreen() {
       {notifBlocked ? (
         <View style={styles.banner}>
           <Text style={styles.bannerText}>
-            Rappel de test impossible : autorise les notifications pour MMG.
+            Rappels impossibles : autorise les notifications pour MMG.
           </Text>
         </View>
       ) : null}
@@ -431,6 +476,7 @@ export default function GoalScreen() {
                 reste prévu le {formatDate(goal.nextReminderAt)}.
               </Text>
               <Text style={styles.plannedNote}>Aucune action n’est attendue avant le démarrage.</Text>
+              {midCycleNudgeSetting}
             </View>
           ) : (
             <>
@@ -461,6 +507,7 @@ export default function GoalScreen() {
                     Jour de rappel : le {formatReminderDay(goal.reminderDay)} · Modifier
                   </Text>
                 </Pressable>
+                {midCycleNudgeSetting}
               </View>
               {freeMode ? (
                 <View style={{ gap: 12 }}>
@@ -934,6 +981,18 @@ const styles = StyleSheet.create({
   adviceReminder: { fontSize: 14, fontWeight: '600', color: colors.text },
   reminderDayLink: { alignSelf: 'flex-start', paddingTop: 10, paddingVertical: 4 },
   reminderDayLinkText: { color: colors.accent, fontSize: 14, fontWeight: '800' },
+  nudgeSetting: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.cardSoftBorder,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    paddingTop: 12,
+  },
+  nudgeCopy: { flex: 1, minWidth: 0 },
+  nudgeTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  nudgeText: { color: colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
   previewSchedule: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,

@@ -84,8 +84,11 @@ export default function LegalScreen() {
         <Text style={styles.paragraph}>
           La permission de notification est demandée lors de la création du premier projet.
           Les rappels sont programmés localement sur le téléphone et servent uniquement au
-          rituel choisi. Tu peux les désactiver dans les réglages Android ou iOS ; cela
-          n'efface pas tes projets, mais empêche les rappels et leur report.
+          rituel choisi. Tu peux aussi activer, séparément pour chaque projet, un message
+          facultatif et sans action à mi-chemin entre deux rappels ; il est désactivé par défaut
+          et son ouverture n'est pas comptée dans la mesure de rétention. Tu peux désactiver les
+          notifications dans les réglages Android ou iOS ; cela n'efface pas tes projets, mais
+          empêche les rappels et leur report.
         </Text>
 
         <Text style={styles.section}>Suppression et droits</Text>

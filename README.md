@@ -26,6 +26,11 @@ npm run test:notifications  # routage, retrait, déduplication et configuration 
 npm run test:format         # masque JJ/MM/AAAA et validation des dates
 npm run test:inputs         # champs, clavier, défilement et surfaces de saisie
 npm run test:postpone       # reports, rappel conservé, proximité et échéancier
+npm run test:balance        # solde réel, répartitions et réajustements
+npm run test:analytics      # événements autorisés et protection de la rétention
+npm run test:design         # contrats des écrans et composants
+npm run test:currency       # devises, formatage et arrondis
+npm run test:exchange       # taux et conversion multi-devises
 npx tsc --noEmit            # cohérence TypeScript de toute l'application
 npx expo export --platform android --output-dir /tmp/mmg-android-check
 ```
@@ -44,8 +49,10 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
 - `src/lib/notifications.ts` — un rappel local par objectif à son échéance (9h), ou deux
   temporairement lorsqu'un report conserve aussi le rappel mensuel suivant. Le message contient
   le montant conseillé en mode guidé et invite à saisir le montant réel en mode libre, avec le
-  deep link `mmg://goal/[id]`. Permission demandée uniquement à la création du premier objectif.
-  Inactif sur web.
+  deep link `mmg://goal/[id]`. Un coup de pouce facultatif, désactivé par défaut et réglé par
+  projet, peut aussi partir à mi-cycle sans bouton ni effet sur la rétention. Permission demandée
+  uniquement à la création du premier objectif ou lors de son activation explicite. Inactif
+  sur web.
 - `src/lib/analytics.ts` — insertion d'événements dans la table Supabase `events`
   (tracking de rétention uniquement, aucune donnée utilisateur) : `app_open`, `goal_created`,
   `contribution_logged` (montants bucketisés), `reminder_opened`, `reminder_postponed`,

@@ -195,7 +195,9 @@ Après **toute** modification de code, avant de sauvegarder, lance les vérifica
 ```
 cd ~/Documents/mmg-app
 npx tsc --noEmit
-npm run test:format && npm run test:inputs && npm run test:postpone && npm run test:notifications && npm run test:balance && npm run test:analytics && npm run test:design
+npm run test:format && npm run test:inputs && npm run test:postpone
+npm run test:notifications && npm run test:balance && npm run test:analytics
+npm run test:design && npm run test:currency && npm run test:exchange
 ```
 
 - `npx tsc --noEmit` vérifie qu'il n'y a pas d'erreur technique. S'il n'affiche rien ou

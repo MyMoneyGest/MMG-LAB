@@ -75,6 +75,10 @@ a assez bien marché pour qu'il se projette en v2). Les 4 idées vont toutes ver
      déjà = le rappel mensuel, et c'est précisément ce qu'on teste.
    - *Verdict* : NE PAS ajouter pendant le test. À reconsidérer APRÈS, sobrement, seulement
      si la rétention mesurée est faible.
+   - **Décision V2 — 2026-08-10** : un compromis borné a été retenu après l'élargissement de la
+     V2. Le **coup de pouce à mi-cycle** est facultatif, désactivé par défaut, sans action,
+     streak ou culpabilisation. Son ouverture et l'ouverture d'app correspondante sont exclues
+     des événements de rétention ; il ne peut donc pas gonfler artificiellement le signal.
 
 3. **Autres devises (ex. FCFA)**
    - *Analyse* : trahit une intuition de marché (Afrique francophone). Techniquement borné

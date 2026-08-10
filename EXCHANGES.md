@@ -9,6 +9,21 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-08-10 — Patrick / Codex — [DÉCISION] Coup de pouce facultatif à mi-cycle
+
+Le dernier item du Lot C est un réglage **par projet**, désactivé par défaut et absent de la
+création. Une fois activé, MMG programme un seul message non-punitif au milieu calendaire entre
+deux ancres mensuelles. Il ne comporte aucune action native et un report ponctuel ne le décale
+pas. Le soldage du cycle l'annule silencieusement ; une date de démarrage différée interdit tout
+envoi anticipé.
+
+La mesure de rétention reste protégée : ouvrir ce message conduit au bon projet sans événement
+`reminder_opened`, et l'`app_open` de ce lancement précis est également supprimé. Ouvrir MMG
+normalement retire un coup de pouce encore présenté sans afficher la fenêtre des actions du
+rappel mensuel.
+
+---
+
 ## 2026-08-10 — Codex — [DÉCISION] Repère libre du lieu d'épargne
 
 Le besoin est traité comme une information facultative de la fiche projet, pas comme un paramètre
@@ -123,8 +138,8 @@ fragile (cf. notif de test, date de début différée).
   rappel mensuel conservé, mesure séparée). ⭐⭐
 - ✅ *(Codex, session 47)* Date de début différée : aucun rappel avant l'activation ; la
   rétention utilise `activationDelayDays`, pas `goal_created` brut ni la date exacte. ⭐
-- Rappel/message sobre en cours de mois — **NON-PUNITIF** (pas de streak/culpabilisation
-  façon Duolingo), basse fréquence, désactivable.
+- ✅ *(Codex, session 50)* Coup de pouce sobre à mi-cycle — **NON-PUNITIF**, sans streak,
+  désactivé par défaut, réglé par projet et exclu de la rétention.
 
 **Lot D — Bien plus tard (2 ans+, seulement si forte fidélisation prouvée)**
 - Intégrations mobile money / banques (additives). Lourd réglementaire (licences paiement/

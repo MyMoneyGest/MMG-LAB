@@ -14,6 +14,41 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 50 : Lot C clos, coup de pouce à mi-cycle
+
+### Fait
+- Ajouté sur la fiche de chaque projet le réglage **Coup de pouce à mi-parcours**, désactivé
+  par défaut et absent de la création. Le switch natif reste lisible à 375 px dans le cadre du
+  rappel, pour un projet guidé comme libre ou planifié.
+- Programmé un seul message local à 9 h au milieu calendaire entre deux ancres mensuelles. Un
+  report ponctuel ne change pas sa date ; un démarrage différé interdit tout envoi anticipé.
+- Le message est non-punitif, ne contient aucune catégorie d'actions et ouvre simplement le bon
+  projet. Une ouverture normale de MMG l'efface sans afficher Fait / Modifier / Reporter.
+- Étendu les identifiants natifs par cycle : désactiver le réglage, supprimer le projet ou
+  solder le cycle annule aussi le coup de pouce correspondant. Un échec de ce message facultatif
+  ne fait pas perdre l'identifiant d'un rappel mensuel déjà programmé.
+- Protégé la mesure de rétention : ce message ne produit aucun événement propre ; son tap ne
+  produit ni `reminder_opened` ni l'`app_open` du lancement correspondant.
+- Aligné FEATURES, EXCHANGES, FEEDBACK, README, le guide de maintenance et la page
+  Confidentialité. Le Lot C de la roadmap V2 est désormais entièrement implémenté.
+
+### Vérifications
+- **9 suites fonctionnelles**, TypeScript et `git diff --check` : OK.
+- Export Expo Android complet : **1 700 modules**, bundle Hermes généré sans erreur.
+- Parcours web à **375 × 812 px** : création d'un projet libre, fiche projet, libellés et
+  alignement du switch vérifiés ; aucune erreur ni alerte console.
+- Le contrôle web a créé un projet technique vers **23 h 17 CEST**. Par prudence, tout
+  `goal_created` de ce créneau doit être considéré comme un événement de développement lors
+  d'une future lecture de Supabase.
+
+### Ensuite
+1. Confirmer sur un build natif V2 l'activation/désactivation du switch et l'ouverture du bon
+   projet depuis le message local.
+2. Faire la seconde passe produit de Claude Code sur le Lot C complet avant de préparer les
+   nouveaux builds Android et iOS.
+
+---
+
 ## 2026-08-10 — Codex — Session 49 : validation produit du repère « Où ? »
 
 ### Fait
