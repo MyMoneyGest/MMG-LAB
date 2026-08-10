@@ -14,6 +14,43 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 44 : accueil lisible + mode épargne libre
+
+### Fait
+- Reprise de la branche `v2` après la session 43 de Claude Code, en préservant et en intégrant
+  sa note de passation locale dans `EXCHANGES.md`.
+- Le titre du choix initial de pays devient **« Où épargnes-tu ? »**. Contrôle réel à 320 px :
+  police 25 px, hauteur 31 px pour une ligne de 31 px, sans réduction ni troncature.
+- Lot C — **épargne libre** : nouvel écran avant chaque création avec deux cadres explicites,
+  **Plan guidé** (budget + mensualités) et **Épargne libre** (revenus irréguliers, aucun budget
+  ni montant imposé, rappel mensuel conservé). Un même utilisateur peut mélanger les modes.
+- Les projets existants sans `savingsMode` restent guidés. Les projets libres gardent cible,
+  progression, historique, cycles, reports, solde réel et notifications, mais sont exclus de
+  la capacité budgétaire et des réajustements automatiques.
+- Sur un rappel libre, **Fait** ouvre la saisie du montant réel au lieu d'enregistrer zéro.
+  L'écran projet et l'échéancier affichent **Montant libre** ; la confirmation conserve la
+  prochaine date sans inventer de mensualité.
+- `goal_created` porte désormais `savingsMode`. La requête de rétention 90 jours est séparée
+  par mode afin de ne pas comparer directement revenus réguliers et irréguliers.
+- Raccord corrigé : après un premier projet libre sans budget, choisir ensuite un plan guidé
+  conduit bien de la saisie du budget à la création, sans retour parasite.
+
+### Vérifications
+- TypeScript : OK.
+- **9 suites fonctionnelles** : devise, change, format, saisies, notifications, cycles/report,
+  solde (dont exclusion du libre), analytics et design — toutes vertes.
+- Export Expo web : **12 routes**, dont `/onboarding/mode` — OK.
+- Parcours navigateur à 375 px : choix libre → projet FCFA `2 500 000` → étape Rappel → récap
+  sombre « Montant libre » et CTA « Créer le projet » — OK, sans sauvegarder le projet test.
+- `git diff --check` : OK.
+
+### Ensuite
+1. Validation native V2 du choix pays/devise et des rappels libres sur un futur build neuf.
+2. Lot C restant : écran optionnel d'estimation des dépenses, puis date de début différée en
+   ancrant la rétention sur la date d'activation choisie et non sur `goal_created`.
+
+---
+
 ## 2026-08-10 — Claude Code — Session 43 : affichage des très gros montants FCFA
 
 ### Contexte

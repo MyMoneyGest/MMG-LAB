@@ -17,7 +17,6 @@ export default function Home() {
     feedbackId?: string;
     feedbackName?: string;
   }>();
-  const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(null);
   const clearFeedback = useCallback(() => setFeedbackMessage(null), []);
@@ -51,13 +50,9 @@ export default function Home() {
 
       <View style={styles.actions}>
         <Button
-          label={budget ? (goals.length ? 'Voir mes projets' : 'Créer mon projet') : 'Commencer'}
+          label={goals.length ? 'Voir mes projets' : 'Commencer'}
           onPress={() =>
-            budget
-              ? goals.length
-                ? router.replace('/')
-                : router.push('/onboarding/new-goal')
-              : router.push('/onboarding/budget')
+            goals.length ? router.replace('/') : router.push('/onboarding/mode')
           }
         />
         <Button label="Voir un exemple" variant="secondary" onPress={() => router.push('/example')} />

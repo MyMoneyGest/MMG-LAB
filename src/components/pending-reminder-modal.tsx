@@ -2,7 +2,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius } from '@/constants/theme';
 import type { PendingReminder, ReminderNotificationAction } from '@/lib/notification-model';
-import { suggestedAmount } from '@/lib/plan';
+import { goalSavingsMode, suggestedAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { useMoney } from '@/lib/use-money';
 import { Button } from './ui';
@@ -23,6 +23,7 @@ export function PendingReminderModal({
 
   if (!reminder || !goal) return null;
   const amount = suggestedAmount(goal);
+  const freeMode = goalSavingsMode(goal) === 'free';
   return (
     <Modal
       visible
@@ -38,7 +39,10 @@ export function PendingReminderModal({
             La notification a été retirée du téléphone. Que veux-tu faire pour ce projet ?
           </Text>
 
-          <Button label={`Fait (${money(amount)})`} onPress={() => onChoice('done')} />
+          <Button
+            label={freeMode ? "J'ai mis de côté" : `Fait (${money(amount)})`}
+            onPress={() => onChoice('done')}
+          />
           <View style={styles.secondaryActions}>
             <Button
               label="Modifier"

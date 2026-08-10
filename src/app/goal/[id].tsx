@@ -35,6 +35,7 @@ import {
   contributionPlan,
   currentUpcomingCycle,
   estimatedGlobalBalance,
+  goalSavingsMode,
   latestBalanceSnapshot,
   progressPct,
   rebalanceReviewDue,
@@ -147,8 +148,8 @@ export default function GoalScreen() {
       routeFeedback === 'created'
         ? {
             key: feedbackId,
-            title: 'Ton plan est prêt',
-            detail: 'Le premier rappel et l’échéancier ont été programmés.',
+            title: 'Ton projet est prêt',
+            detail: 'Le premier rappel a été programmé.',
           }
         : routeFeedback === 'adjusted'
           ? {
@@ -246,8 +247,11 @@ export default function GoalScreen() {
       setModalFromTest(notificationIsTest === '1');
       setReportOpen(true);
     } else {
-      const amount = suggestedAmount(goal);
-      if (amount > 0) {
+      if (goalSavingsMode(goal) === 'free') {
+        setModalFromTest(notificationIsTest === '1');
+        setAmountModal('deposit');
+      } else {
+        const amount = suggestedAmount(goal);
         confirm(amount, notificationIsTest === '1' ? 'test_notification' : 'one_tap');
       }
     }
@@ -256,6 +260,7 @@ export default function GoalScreen() {
   if (!hydrated) return null;
   if (!goal) return <Redirect href="/" />;
 
+  const freeMode = goalSavingsMode(goal) === 'free';
   const saved = savedTotal(goal);
   const remaining = remainingAmount(goal);
   const pct = progressPct(goal);
@@ -296,7 +301,11 @@ export default function GoalScreen() {
 
   return (
     <Screen footer={tabBar}>
-      <AppHeader currentGoalId={goal.id} title={goal.name} subtitle="Plan actif" />
+      <AppHeader
+        currentGoalId={goal.id}
+        title={goal.name}
+        subtitle={freeMode ? 'Épargne libre' : 'Plan actif'}
+      />
 
       {feedbackMessage ? (
         <FeedbackBanner
@@ -383,14 +392,20 @@ export default function GoalScreen() {
           ) : (
             <>
               <View style={styles.adviceCard}>
-                <Text style={styles.adviceLabel}>Montant conseillé</Text>
-                <Text
-                  style={[styles.adviceAmount, { fontSize: fitFontSize(money(suggested), 38) }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.4}>
-                  {money(suggested)}
+                <Text style={styles.adviceLabel}>
+                  {freeMode ? 'Ton rythme libre' : 'Montant conseillé'}
                 </Text>
+                {freeMode ? (
+                  <Text style={styles.adviceFreeAmount}>Aucun montant imposé</Text>
+                ) : (
+                  <Text
+                    style={[styles.adviceAmount, { fontSize: fitFontSize(money(suggested), 38) }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.4}>
+                    {money(suggested)}
+                  </Text>
+                )}
                 <Text style={styles.adviceReminder}>
                   {pending ? 'Rappel en cours : ' : 'Rappel prévu : '}
                   {formatDate(goal.nextReminderAt)}
@@ -404,22 +419,16 @@ export default function GoalScreen() {
                   </Text>
                 </Pressable>
               </View>
-              <View style={{ gap: 12 }}>
-                <Button
-                  label={`Versement fait (${money(suggested)})`}
-                  onPress={() => confirm(suggested, 'one_tap')}
-                  loading={actionLoading}
-                  loadingLabel="Enregistrement…"
-                />
-                <View style={{ flexDirection: 'row', gap: 12 }}>
+              {freeMode ? (
+                <View style={{ gap: 12 }}>
                   <Button
-                    label="Montant différent"
-                    variant="secondary"
+                    label="J'ai mis de côté"
                     onPress={() => {
                       setModalFromTest(false);
                       setAmountModal('deposit');
                     }}
-                    style={{ flex: 1 }}
+                    loading={actionLoading}
+                    loadingLabel="Enregistrement…"
                   />
                   <Button
                     label="Reporter"
@@ -428,10 +437,38 @@ export default function GoalScreen() {
                       setModalFromTest(false);
                       setReportOpen(true);
                     }}
-                    style={{ flex: 1 }}
                   />
                 </View>
-              </View>
+              ) : (
+                <View style={{ gap: 12 }}>
+                  <Button
+                    label={`Versement fait (${money(suggested)})`}
+                    onPress={() => confirm(suggested, 'one_tap')}
+                    loading={actionLoading}
+                    loadingLabel="Enregistrement…"
+                  />
+                  <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <Button
+                      label="Montant différent"
+                      variant="secondary"
+                      onPress={() => {
+                        setModalFromTest(false);
+                        setAmountModal('deposit');
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <Button
+                      label="Reporter"
+                      variant="secondary"
+                      onPress={() => {
+                        setModalFromTest(false);
+                        setReportOpen(true);
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                </View>
+              )}
               {checkBalance ? (
                 <View style={styles.balanceCheckCard}>
                   <Text style={styles.balanceCheckTitle}>Vérification trimestrielle</Text>
@@ -454,7 +491,9 @@ export default function GoalScreen() {
                         <Text style={styles.previewDate}>{formatDate(row.date)}</Text>
                         <Text style={styles.previewMeta}>{index === 0 ? 'Prochaine' : 'Puis'}</Text>
                       </View>
-                      <Text style={styles.previewAmount}>{money(row.amount)}</Text>
+                      <Text style={styles.previewAmount}>
+                        {freeMode ? 'Montant libre' : money(row.amount)}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -492,7 +531,9 @@ export default function GoalScreen() {
                   <Text style={styles.scheduleDate}>{formatDate(row.date)}</Text>
                   {index === 0 ? <Text style={styles.scheduleNext}>Prochain rappel</Text> : null}
                 </View>
-                <Text style={styles.scheduleAmount}>{money(row.amount)}</Text>
+                <Text style={styles.scheduleAmount}>
+                  {freeMode ? 'Montant libre' : money(row.amount)}
+                </Text>
               </View>
             ))
           )}
@@ -533,8 +574,12 @@ export default function GoalScreen() {
 
       <AmountModal
         visible={amountModal === 'deposit'}
-        title="Montant différent"
-        subtitle="N'importe quel montant compte : le plan s'ajustera."
+        title={freeMode ? 'Combien as-tu mis de côté ?' : 'Montant différent'}
+        subtitle={
+          freeMode
+            ? 'Chaque montant compte. Ton objectif avance sans mensualité imposée.'
+            : "N'importe quel montant compte : le plan s'ajustera."
+        }
         confirmLabel="Valider"
         onConfirm={(amount) => {
           const source = modalFromTest ? 'test_notification' : 'custom_amount';
@@ -643,6 +688,7 @@ export default function GoalScreen() {
         nextAmount={confirmation?.nextAmount}
         done={confirmation?.done}
         cycleAnchorAt={confirmation?.cycleAnchorAt}
+        freeMode={freeMode}
         onClose={() => setConfirmation(null)}
       />
       <RecentContributionModal
@@ -786,6 +832,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   adviceAmount: { fontSize: 38, fontWeight: '800', color: colors.text, marginVertical: 3 },
+  adviceFreeAmount: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '800',
+    color: colors.text,
+    marginVertical: 6,
+  },
   adviceReminder: { fontSize: 14, fontWeight: '600', color: colors.text },
   reminderDayLink: { alignSelf: 'flex-start', paddingTop: 10, paddingVertical: 4 },
   reminderDayLinkText: { color: colors.accent, fontSize: 14, fontWeight: '800' },

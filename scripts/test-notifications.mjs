@@ -82,5 +82,9 @@ assert.match(notificationsSource, /surplusForCycle/);
 assert.match(notificationsSource, /getPresentedNotificationsAsync/);
 assert.match(notificationsSource, /notification\.request\.content\.data\?\.goalId === goalId/);
 assert.match(notificationsSource, /notification\.request\.content\.data\?\.cycleId === cycleId/);
+assert.match(notificationsSource, /goalSavingsMode\(goal\) === 'free'/);
+assert.match(notificationsSource, /Mets de côté le montant qui te convient aujourd'hui/);
+assert.match(notificationsSource, /remainingAmount\(goal\) <= 0/);
+assert.doesNotMatch(notificationsSource, /suggestedAmount <= 0/);
 
 console.log('Tests notifications : routage, déduplication, retrait et configuration sonore validés.');

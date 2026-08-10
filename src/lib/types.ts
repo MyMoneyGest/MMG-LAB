@@ -2,6 +2,8 @@ export type GoalCategory = 'emergency' | 'car' | 'moving' | 'travel' | 'other';
 
 export type SavingsRhythm = 'stable' | 'progressive' | 'regressive';
 
+export type SavingsMode = 'guided' | 'free';
+
 export type ContributionType = 'deposit' | 'withdrawal';
 
 export type ContributionAllocation = 'cycle' | 'surplus';
@@ -67,6 +69,8 @@ export interface Goal {
   reminderDay: number;
   /** Rythme d'épargne. Absent sur les anciens projets, qui restent stables. */
   rhythm?: SavingsRhythm;
+  /** Mode libre sans montant conseillé. Absent sur les anciens projets, qui restent guidés. */
+  savingsMode?: SavingsMode;
   /** ISO datetime de la prochaine action attendue (rappel à 9h) */
   nextReminderAt: string;
   /** Identifiant de la notification locale programmée */

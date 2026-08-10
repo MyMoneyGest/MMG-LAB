@@ -1,6 +1,7 @@
 # MMG — MyMoneyGest
 
-App d'épargne de projet **100 % manuelle** : budget → capacité d'épargne → plan réaliste →
+App d'épargne de projet **100 % manuelle** : soit un plan guidé par le budget, soit une
+épargne libre pour revenus irréguliers ; dans les deux cas, objectif → rappel mensuel →
 versements manuels confirmés → encouragements. Ce n'est pas une banque, elle n'est pas connectée
 à ta banque, pas de compte à créer. Le tout-manuel est la méthode (référence YNAB), pas une
 contrainte technique.
@@ -38,11 +39,12 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
   projet avec versement dû/en retard (le plus urgent d'abord) → sinon dernier projet consulté.
 - `src/lib/plan.ts` — logique pure du plan : capacité prudente (reste à vivre − marge 20 %),
   répartition stable, progressive ou régressive du reste à financer, recalcul non-punitif
-  après tout versement (n'importe quel montant marque le mois comme fait).
+  après tout versement, plus échéances sans montant calculé pour l'épargne libre.
 - `src/lib/notifications.ts` — un rappel local par objectif à son échéance (9h), ou deux
-  temporairement lorsqu'un report conserve aussi le rappel mensuel suivant. Montant conseillé
-  dans le message, deep link `mmg://goal/[id]`. Permission demandée uniquement à la création du
-  premier objectif. Inactif sur web.
+  temporairement lorsqu'un report conserve aussi le rappel mensuel suivant. Le message contient
+  le montant conseillé en mode guidé et invite à saisir le montant réel en mode libre, avec le
+  deep link `mmg://goal/[id]`. Permission demandée uniquement à la création du premier objectif.
+  Inactif sur web.
 - `src/lib/analytics.ts` — insertion d'événements dans la table Supabase `events`
   (tracking de rétention uniquement, aucune donnée utilisateur) : `app_open`, `goal_created`,
   `contribution_logged` (montants bucketisés), `reminder_opened`, `reminder_postponed`,
@@ -58,8 +60,9 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
 
 ## Boucle de rétention (priorité n°1)
 
-Notification locale → deep link vers le bon projet → **confirmation du versement en un tap**
-(« Versement fait (X €) ») → écran sombre de confirmation → rappel suivant reprogrammé.
+Notification locale → deep link vers le bon projet → **confirmation en un tap** du montant
+guidé, ou saisie du montant réellement épargné en mode libre → écran sombre de confirmation →
+rappel suivant reprogrammé.
 C'est cette boucle qui conditionne la validité du test de rétention au 3e rappel.
 
 ## Builds

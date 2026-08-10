@@ -4,9 +4,11 @@ import { Platform } from 'react-native';
 import { DEFAULT_CURRENCY, formatMoney } from './currency';
 import {
   currentUpcomingCycle,
+  goalSavingsMode,
   nextReminderFromCycles,
   normalizedReminderCycles,
   oldestUnsettledDebt,
+  remainingAmount,
   reminderAtForCycle,
   surplusForCycle,
 } from './plan';
@@ -186,7 +188,7 @@ export async function scheduleGoalReminders(
   if (!N) return result(cleanCycles);
   try {
     await cancelGoalReminder(goal);
-    if (suggestedAmount <= 0) {
+    if (remainingAmount(goal) <= 0) {
       return result(cleanCycles);
     }
     await ensureAndroidChannel(N);
@@ -198,8 +200,12 @@ export async function scheduleGoalReminders(
       if (when <= now) return cycle;
       const isPostponed = Boolean(cycle.postponedTo);
       const surplus = isPostponed ? 0 : surplusForCycle(goal, cycle);
-      const body =
-        surplus > 0
+      const freeMode = goalSavingsMode(goal) === 'free';
+      const body = freeMode
+        ? surplus > 0
+          ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci pour « ${goal.name} ». Ajoute quelque chose seulement si tu le souhaites.`
+          : `C'est ton rappel pour « ${goal.name} ». Mets de côté le montant qui te convient aujourd'hui.`
+        : surplus > 0
           ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci. Ton versement prévu (${formatMoney(suggestedAmount, currencyCode)}) — fait, ou tu ajustes ?`
           : `Mets ${formatMoney(suggestedAmount, currencyCode)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
       const notificationId = await N.scheduleNotificationAsync({
@@ -243,7 +249,7 @@ export async function scheduleTestReminder(
 ): Promise<TestReminderResult> {
   const N = getNotifications();
   if (!N) return { ok: false, reason: 'unsupported' };
-  if (suggestedAmount <= 0) return { ok: false, reason: 'completed' };
+  if (remainingAmount(goal) <= 0) return { ok: false, reason: 'completed' };
 
   try {
     if (!(await hasNotificationPermission()) && !(await requestNotificationPermission())) {
@@ -254,8 +260,12 @@ export async function scheduleTestReminder(
     const cycle = oldestUnsettledDebt(goal) ?? currentUpcomingCycle(goal);
     const surplus = cycle ? surplusForCycle(goal, cycle) : 0;
     const currencyCode = useStore.getState().currencyCode ?? DEFAULT_CURRENCY;
-    const body =
-      surplus > 0
+    const freeMode = goalSavingsMode(goal) === 'free';
+    const body = freeMode
+      ? surplus > 0
+        ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci pour « ${goal.name} ». Ajoute quelque chose seulement si tu le souhaites.`
+        : `C'est ton rappel pour « ${goal.name} ». Mets de côté le montant qui te convient aujourd'hui.`
+      : surplus > 0
         ? `Tu as déjà mis ${formatMoney(surplus, currencyCode)} ce mois-ci. Ton versement prévu (${formatMoney(suggestedAmount, currencyCode)}) — fait, ou tu ajustes ?`
         : `Mets ${formatMoney(suggestedAmount, currencyCode)} de côté pour « ${goal.name} ». Même moins, c'est déjà bien.`;
     if (lastTestNotificationId) {

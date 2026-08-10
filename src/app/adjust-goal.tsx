@@ -10,6 +10,7 @@ import { changeReminderDay } from '@/lib/actions';
 import { formatDate, formatReminderDay, parseAmountInput, parseDateInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
+  goalSavingsMode,
   nextReminderFromCycles,
   peakScheduledAmount,
   savedTotal,
@@ -43,6 +44,7 @@ export default function AdjustGoalScreen() {
 
   if (!goal) return <Redirect href="/" />;
 
+  const freeMode = goalSavingsMode(goal) === 'free';
   const now = new Date();
   const saved = savedTotal(goal);
   const parsedTarget = parseAmountInput(target, currencyCode);
@@ -84,7 +86,7 @@ export default function AdjustGoalScreen() {
     target.trim() !== String(goal.targetAmount) ||
     dateText !== formatDate(goal.targetDate) ||
     reminderDayText !== String(goal.reminderDay) ||
-    rhythm !== (goal.rhythm ?? 'stable');
+    (!freeMode && rhythm !== (goal.rhythm ?? 'stable'));
   const comparisons = [
     {
       label: 'Montant cible',
@@ -101,16 +103,20 @@ export default function AdjustGoalScreen() {
       before: `Le ${formatReminderDay(goal.reminderDay)}`,
       after: reminderDayValid ? `Le ${formatReminderDay(reminderDay)}` : 'À compléter',
     },
-    {
-      label: 'Versement conseillé',
-      before: money(currentSuggested),
-      after: nextSuggested === null ? 'À calculer' : money(nextSuggested),
-    },
-    {
-      label: 'Mois le plus élevé',
-      before: money(currentPeak),
-      after: nextPeak === null ? 'À calculer' : money(nextPeak),
-    },
+    ...(!freeMode
+      ? [
+          {
+            label: 'Versement conseillé',
+            before: money(currentSuggested),
+            after: nextSuggested === null ? 'À calculer' : money(nextSuggested),
+          },
+          {
+            label: 'Mois le plus élevé',
+            before: money(currentPeak),
+            after: nextPeak === null ? 'À calculer' : money(nextPeak),
+          },
+        ]
+      : []),
   ];
 
   const validate = (): string | null => {
@@ -159,13 +165,19 @@ export default function AdjustGoalScreen() {
 
   return (
     <Screen>
-      <AppHeader showBack currentGoalId={goal.id} title="Ajuster le plan" subtitle={goal.name} />
+      <AppHeader
+        showBack
+        currentGoalId={goal.id}
+        title={freeMode ? 'Ajuster le projet' : 'Ajuster le plan'}
+        subtitle={goal.name}
+      />
 
       <Card>
         <Text style={styles.title}>Les paramètres utiles, en un seul écran</Text>
         <Text style={styles.body}>
-          Le nom et le type de projet restent inchangés. Tu ajustes seulement l'objectif et son
-          échéancier.
+          {freeMode
+            ? "Le nom et le type de projet restent inchangés. Tu ajustes l'objectif et son rappel."
+            : "Le nom et le type de projet restent inchangés. Tu ajustes seulement l'objectif et son échéancier."}
         </Text>
         <View style={styles.savedRow}>
           <Text style={styles.savedLabel}>Déjà mis de côté</Text>
@@ -204,29 +216,44 @@ export default function AdjustGoalScreen() {
           error={error?.startsWith('Choisis un jour') ? error : null}
         />
 
-        <Text style={styles.fieldLabel}>Rythme des versements</Text>
-        <View style={styles.rhythms}>
-          {RHYTHMS.map((option) => {
-            const selected = rhythm === option.key;
-            return (
-              <Pressable
-                key={option.key}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-                onPress={() => setRhythm(option.key)}
-                style={[styles.rhythm, selected && styles.rhythmSelected]}>
-                <Text style={[styles.rhythmText, selected && styles.rhythmTextSelected]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {freeMode ? (
+          <View style={styles.freeModeCard}>
+            <Text style={styles.freeModeTitle}>Épargne libre</Text>
+            <Text style={styles.freeModeBody}>
+              Aucun montant mensuel n'est recalculé. Seuls la cible et le rappel évoluent.
+            </Text>
+          </View>
+        ) : (
+          <>
+            <Text style={styles.fieldLabel}>Rythme des versements</Text>
+            <View style={styles.rhythms}>
+              {RHYTHMS.map((option) => {
+                const selected = rhythm === option.key;
+                return (
+                  <Pressable
+                    key={option.key}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
+                    onPress={() => setRhythm(option.key)}
+                    style={[styles.rhythm, selected && styles.rhythmSelected]}>
+                    <Text style={[styles.rhythmText, selected && styles.rhythmTextSelected]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
       </Card>
 
       <Card>
         <Text style={styles.title}>Avant → après</Text>
-        <Text style={styles.body}>Le conseil se recalcule pendant que tu ajustes le plan.</Text>
+        <Text style={styles.body}>
+          {freeMode
+            ? 'Visualise les changements avant de les enregistrer.'
+            : 'Le conseil se recalcule pendant que tu ajustes le plan.'}
+        </Text>
         {comparisons.map((item) => (
           <View key={item.label} style={styles.comparisonRow}>
             <Text style={styles.comparisonLabel}>{item.label}</Text>
@@ -250,7 +277,11 @@ export default function AdjustGoalScreen() {
       <ActionLoadingOverlay
         visible={saving}
         title="Mise à jour du plan…"
-        detail="Recalcul des montants et reprogrammation des rappels."
+        detail={
+          freeMode
+            ? 'Mise à jour de la cible et reprogrammation du rappel.'
+            : 'Recalcul des montants et reprogrammation des rappels.'
+        }
       />
     </Screen>
   );
@@ -286,6 +317,14 @@ const styles = StyleSheet.create({
   rhythmSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
   rhythmText: { fontSize: 13, fontWeight: '700', color: colors.textSecondary },
   rhythmTextSelected: { color: colors.accent },
+  freeModeCard: {
+    backgroundColor: colors.cardSoft,
+    borderRadius: radius.field,
+    padding: 13,
+    marginTop: 14,
+  },
+  freeModeTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  freeModeBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 3 },
   comparisonRow: {
     paddingVertical: 9,
     borderBottomWidth: StyleSheet.hairlineWidth,

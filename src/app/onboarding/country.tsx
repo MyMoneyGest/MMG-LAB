@@ -130,7 +130,7 @@ export default function CountryScreen() {
 
       <Card>
         <Text style={styles.eyebrow}>{settings === '1' ? 'Réglages' : 'Bienvenue'}</Text>
-        <Text style={styles.title}>Dans quel pays épargnes-tu ?</Text>
+        <Text style={styles.title}>Où épargnes-tu ?</Text>
         <Text style={styles.body}>
           MMG adapte les montants à ta devise. Le pays proposé vient du réglage régional de ton
           téléphone et tu peux le modifier.

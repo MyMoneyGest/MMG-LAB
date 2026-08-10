@@ -50,7 +50,6 @@ const EXAMPLE_FIGURES: Record<CurrencyCode, ExampleFigures> = {
 export default function ExampleScreen() {
   const { money, currencyCode } = useMoney();
   const router = useRouter();
-  const budget = useStore((s) => s.budget);
   const ex = EXAMPLE_FIGURES[currencyCode] ?? EUR_FIGURES;
 
   return (
@@ -84,8 +83,8 @@ export default function ExampleScreen() {
       </Card>
 
       <Button
-        label={budget ? 'Créer mon plan' : 'Estimer ma capacité'}
-        onPress={() => router.push(budget ? '/onboarding/new-goal' : '/onboarding/budget')}
+        label="Créer mon projet"
+        onPress={() => router.push('/onboarding/mode')}
       />
     </Screen>
   );

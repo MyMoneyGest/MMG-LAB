@@ -69,7 +69,8 @@ Tout le code vit dans le dossier `src`. Voici la carte, du plus visible au plus 
 ### `src/app/` — les écrans (ce que l'utilisateur voit)
 Chaque fichier = un écran.
 - `home.tsx` — l'écran d'accueil (« Un projet. Un geste par mois. »)
-- `onboarding/budget.tsx` — l'écran du budget
+- `onboarding/mode.tsx` — le choix entre plan guidé et épargne libre
+- `onboarding/budget.tsx` — l'écran du budget, utilisé seulement par le plan guidé
 - `onboarding/new-goal.tsx` — la création d'un projet
 - `goal/[id].tsx` — l'écran d'un projet (le cœur de l'app : montant du mois, versement…)
 - `adjust-goal.tsx` — l'ajustement d'un plan existant
@@ -271,7 +272,9 @@ fichier `.gitignore` qui dit « n'envoie jamais ça en ligne »).
   requêtes prêtes à copier-coller sont dans le fichier `scripts/retention-queries.sql`** du
   projet : santé de la base, entonnoir d'activation, **rétention au 3e rappel** (la mesure
   clé, avec les seuils 40 % / 20 %), comparaison de cette rétention **par pays choisi dans
-  MMG**, courbe rappel par rappel, et analyses par catégorie / rythme. Ouvre ce fichier, copie
+  MMG**, séparation plan guidé / épargne libre, courbe rappel par rappel, et analyses par
+  catégorie / rythme. Ne mélange pas les deux modes dans une décision : les revenus irréguliers
+  peuvent produire des versements moins réguliers. Ouvre ce fichier, copie
   la requête voulue, colle-la dans le SQL Editor, lance. `legacy_inconnu` désigne les événements
   enregistrés avant l'ajout du choix de pays en V2.
 - **Deux entretiens à faire à la main** (aussi dans ce fichier, section 0) :

@@ -25,7 +25,7 @@ import {
   scheduleGoalReminders,
 } from './notifications';
 import { newGoalId, useStore } from './store';
-import { Goal, GoalCategory, SavingsRhythm } from './types';
+import { Goal, GoalCategory, SavingsMode, SavingsRhythm } from './types';
 import type { RebalanceReason } from './types';
 import { normalizeMoney } from './currency';
 import type { CurrencyCode } from './currency';
@@ -40,6 +40,7 @@ export interface NewGoalInput {
   targetDate: Date;
   reminderDay: number;
   rhythm: SavingsRhythm;
+  savingsMode: SavingsMode;
 }
 
 export type ContributionSource = 'one_tap' | 'custom_amount' | 'test_notification';
@@ -74,6 +75,7 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
     targetDate: input.targetDate.toISOString(),
     reminderDay: input.reminderDay,
     rhythm: input.rhythm,
+    savingsMode: input.savingsMode,
     nextReminderAt: nextReminderAfter(now, input.reminderDay).toISOString(),
     createdAt: now.toISOString(),
     contributions: [],
@@ -96,6 +98,7 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
       goalId: goal.id,
       category: goal.category,
       rhythm: goal.rhythm,
+      savingsMode: goal.savingsMode ?? 'guided',
       country: state.country ?? 'unknown',
       currencyCode: state.currencyCode,
     },

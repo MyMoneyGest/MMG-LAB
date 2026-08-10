@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -15,6 +15,7 @@ import {
 } from '@/lib/format';
 import {
   diagnostic,
+  goalSavingsMode,
   nextReminderAfter,
   peakScheduledAmount,
   plannedAmounts,
@@ -28,6 +29,7 @@ import {
   CATEGORY_DESCRIPTIONS,
   CATEGORY_LABELS,
   GoalCategory,
+  SavingsMode,
   SavingsRhythm,
 } from '@/lib/types';
 import { useMoney } from '@/lib/use-money';
@@ -46,6 +48,8 @@ const RHYTHMS: {
 export default function NewGoalScreen() {
   const { currency, currencyCode, money, amountInput } = useMoney();
   const router = useRouter();
+  const { mode } = useLocalSearchParams<{ mode?: SavingsMode }>();
+  const savingsMode: SavingsMode = mode === 'free' ? 'free' : 'guided';
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
 
@@ -84,6 +88,8 @@ export default function NewGoalScreen() {
   const now = new Date();
   const previewValid =
     parsedTarget !== null && parsedTarget > 0 && parsedDate !== null && parsedDate > now;
+  const firstReminder = nextReminderAfter(now, reminderDay);
+  const planMonths = previewValid ? scheduledMonths(firstReminder, parsedDate!) : 0;
   let preview: {
     average: number;
     first: number;
@@ -91,9 +97,8 @@ export default function NewGoalScreen() {
     peak: number;
     months: number;
   } | null = null;
-  if (previewValid) {
-    const firstReminder = nextReminderAfter(now, reminderDay);
-    const months = scheduledMonths(firstReminder, parsedDate!);
+  if (previewValid && savingsMode === 'guided') {
+    const months = planMonths;
     const remaining = Math.max(0, parsedTarget! - parsedAvailable);
     const amounts = plannedAmounts(remaining, months, rhythm);
     preview = {
@@ -105,7 +110,9 @@ export default function NewGoalScreen() {
     };
   }
   const previewRemaining = previewValid ? Math.max(0, parsedTarget! - parsedAvailable) : 0;
-  const activeExistingGoals = goals.filter((goal) => remainingAmount(goal) > 0);
+  const activeExistingGoals = goals.filter(
+    (goal) => remainingAmount(goal) > 0 && goalSavingsMode(goal) === 'guided'
+  );
   const existingEffort = activeExistingGoals
     .reduce((sum, goal) => sum + peakScheduledAmount(goal), 0);
   const globalPeak = preview ? existingEffort + preview.peak : existingEffort;
@@ -145,6 +152,7 @@ export default function NewGoalScreen() {
         targetDate: parsedDate!,
         reminderDay,
         rhythm,
+        savingsMode,
       });
       await waitForMinimumLoading(loadingStartedAt);
       router.replace({
@@ -169,8 +177,15 @@ export default function NewGoalScreen() {
 
   return (
     <Screen>
-      <AppHeader showBack title="Créer mon plan" subtitle={`Étape ${step} sur 2`} />
-      <StepIndicator current={step} labels={['Projet', 'Rythme']} />
+      <AppHeader
+        showBack
+        title={savingsMode === 'free' ? 'Créer mon projet' : 'Créer mon plan'}
+        subtitle={`Étape ${step} sur 2`}
+      />
+      <StepIndicator
+        current={step}
+        labels={savingsMode === 'free' ? ['Projet', 'Rappel'] : ['Projet', 'Rythme']}
+      />
 
       {step === 1 ? (
         <Card>
@@ -236,7 +251,15 @@ export default function NewGoalScreen() {
               setError(null);
             }}
           />
-          {budget ? (
+          {savingsMode === 'free' ? (
+            <View style={styles.freeModeCard}>
+              <Text style={styles.freeModeTitle}>Épargne libre</Text>
+              <Text style={styles.freeModeBody}>
+                Aucun budget ni montant mensuel ne sera imposé. Ton objectif avance avec les
+                sommes que tu choisis de mettre de côté.
+              </Text>
+            </View>
+          ) : budget ? (
             <View style={styles.budgetSummary}>
               <View style={styles.budgetSummaryHeader}>
                 <Text style={styles.budgetSummaryTitle}>Ton budget mensuel</Text>
@@ -298,13 +321,23 @@ export default function NewGoalScreen() {
             </Text>
           )}
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <Button label="Continuer vers le rythme" onPress={continueToRhythm} style={styles.primaryAction} />
+          <Button
+            label={savingsMode === 'free' ? 'Continuer vers le rappel' : 'Continuer vers le rythme'}
+            onPress={continueToRhythm}
+            style={styles.primaryAction}
+          />
         </Card>
       ) : (
         <>
           <Card>
-            <Text style={styles.title}>Choisis ton rythme</Text>
-            <Text style={styles.body}>Le total ne change pas, seulement la façon d'avancer.</Text>
+            <Text style={styles.title}>
+              {savingsMode === 'free' ? 'Choisis ton rappel' : 'Choisis ton rythme'}
+            </Text>
+            <Text style={styles.body}>
+              {savingsMode === 'free'
+                ? "MMG garde ton rituel mensuel, sans t'imposer de montant."
+                : 'Le total ne change pas, seulement la façon d’avancer.'}
+            </Text>
         <Field
           label="Jour du rappel dans le mois (1 à 28)"
           value={reminderDayText}
@@ -316,7 +349,7 @@ export default function NewGoalScreen() {
           placeholder="1"
         />
 
-        <View style={styles.rhythmChoices}>
+        {savingsMode === 'guided' ? <View style={styles.rhythmChoices}>
           {RHYTHMS.map((option) => {
             const selected = rhythm === option.key;
             const optionAmounts = preview
@@ -350,24 +383,39 @@ export default function NewGoalScreen() {
               </Pressable>
             );
           })}
-        </View>
+        </View> : (
+          <View style={styles.freeReminderNote}>
+            <Text style={styles.freeReminderTitle}>Montant libre à chaque rappel</Text>
+            <Text style={styles.freeReminderBody}>
+              Le jour venu, tu indiqueras simplement ce que tu as réellement mis de côté.
+            </Text>
+          </View>
+        )}
           </Card>
 
-          {preview ? (
+          {previewValid ? (
             <>
               <PlanSummaryDark
                 description={CATEGORY_DESCRIPTIONS[category]}
                 monthly={
-                  rhythm === 'stable'
+                  savingsMode === 'free'
+                    ? 'Montant libre'
+                    : rhythm === 'stable' && preview
                     ? `${money(preview.average)} / mois`
-                    : `${money(preview.first)} → ${money(preview.last)}`
+                    : preview
+                      ? `${money(preview.first)} → ${money(preview.last)}`
+                      : 'À calculer'
                 }
                 targetDate={formatDate(parsedDate!)}
-                months={`${preview.months} mois`}
+                months={`${planMonths} mois`}
                 remaining={money(previewRemaining)}
-                diagnostic={previewDiagnostic}
+                diagnostic={savingsMode === 'free' ? null : previewDiagnostic}
                 reminderDay={reminderDay}
-                rhythm={RHYTHMS.find((option) => option.key === rhythm)!.title}
+                rhythm={
+                  savingsMode === 'free'
+                    ? 'Épargne libre'
+                    : RHYTHMS.find((option) => option.key === rhythm)!.title
+                }
               />
               {previewDiagnostic === 'Confortable' && budget ? (
                 <View style={styles.compatCard}>
@@ -394,7 +442,7 @@ export default function NewGoalScreen() {
           <View style={styles.finalActions}>
             <Button label="Revenir au projet" variant="secondary" onPress={() => setStep(1)} style={{ flex: 1 }} />
             <Button
-              label="Créer le plan"
+              label={savingsMode === 'free' ? 'Créer le projet' : 'Créer le plan'}
               onPress={save}
               loading={saving}
               loadingLabel="Création…"
@@ -405,8 +453,12 @@ export default function NewGoalScreen() {
       )}
       <ActionLoadingOverlay
         visible={saving}
-        title="Création de ton plan…"
-        detail="Calcul de l’échéancier et programmation du premier rappel."
+        title={savingsMode === 'free' ? 'Création de ton projet…' : 'Création de ton plan…'}
+        detail={
+          savingsMode === 'free'
+            ? 'Préparation de ton objectif et programmation du premier rappel.'
+            : 'Calcul de l’échéancier et programmation du premier rappel.'
+        }
       />
     </Screen>
   );
@@ -438,6 +490,16 @@ const styles = StyleSheet.create({
     padding: 13,
     overflow: 'hidden',
   },
+  freeModeCard: {
+    backgroundColor: colors.cardSoft,
+    borderWidth: 1,
+    borderColor: colors.cardSoftBorder,
+    borderRadius: radius.field,
+    padding: 14,
+    marginTop: 4,
+  },
+  freeModeTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  freeModeBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 3 },
   budgetSummaryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -477,6 +539,14 @@ const styles = StyleSheet.create({
   rhythmTextSelected: { color: colors.text },
   rhythmBody: { fontSize: 14, color: colors.textSecondary, marginTop: 5, lineHeight: 20 },
   rhythmBodySelected: { color: colors.textSecondary },
+  freeReminderNote: {
+    backgroundColor: colors.cardSoft,
+    borderRadius: radius.field,
+    padding: 14,
+    marginTop: 4,
+  },
+  freeReminderTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  freeReminderBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 3 },
   compatCard: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,

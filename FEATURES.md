@@ -66,10 +66,12 @@ Dernière mise à jour : 2026-08-10 (Codex).
 - **Quoi** : premier lancement volontairement minimal — grand M terracotta, promesse
   « Un projet, un geste par mois. », CTA principal adaptatif, lien exemple et courte
   réassurance. L'espace autour de la marque est intentionnel et l'écran ne comporte plus la
-  checklist pédagogique ni un header de type site.
-- **Comment** : variantes selon `budget` et `goals.length` du store. La pédagogie sur la
-  capacité d'épargne est présentée à l'étape Budget, au moment où elle devient utile.
-- **Où** : `src/app/home.tsx`.
+  checklist pédagogique ni un header de type site. **Commencer** ouvre le choix entre plan
+  guidé et épargne libre avant de demander un budget.
+- **Comment** : le **plan guidé** passe par le budget et calcule des mensualités. L'**épargne
+  libre** va directement au projet : aucun budget imposé, mais le rappel mensuel est conservé.
+  Un même utilisateur peut choisir un mode différent pour chacun de ses projets.
+- **Où** : `src/app/home.tsx`, `src/app/onboarding/mode.tsx`.
 
 ## 3. Budget et capacité d'épargne
 
@@ -85,8 +87,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
   attend 14 jours. Une bannière non bloquante propose alors **Revoir** ou **Dans 14 jours**.
   Aucune notification système n'est envoyée. Appliquer le réajustement efface la relance.
 - **Parcours visible** : Budget est un écran autonome, sans numérotation d'étape. Il précède la
-  première création lors de l'accueil initial, mais son accès depuis le menu revient à l'écran
-  précédent après enregistrement et ne relance jamais la création d'un projet. Il accueille la
+  première création d'un **plan guidé**, mais il est entièrement ignoré par le mode libre. Son
+  accès depuis le menu revient à l'écran précédent après enregistrement et ne relance jamais
+  la création d'un projet. Il accueille la
   checklist expliquant le reste à vivre, la marge de sécurité de 20 % et l'effort cumulé des
   projets.
 - **Récap à la création** : lorsqu'un budget existe déjà, l'étape Projet affiche sans étape
@@ -99,7 +102,10 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 ## 4. Création et ajustement d'un plan
 
-- **Quoi** : parcours de création en deux écrans compacts : étape 1/2 **Projet** avec les cinq
+- **Choix du cadre** : avant chaque nouveau projet, MMG propose **Plan guidé** pour les revenus
+  réguliers ou **Épargne libre** pour les revenus irréguliers. Un champ `savingsMode` est
+  persisté sur le projet ; son absence sur une donnée plus ancienne signifie `guided`.
+- **Plan guidé** : parcours de création en deux écrans compacts : étape 1/2 **Projet** avec les cinq
   catégories (Fonds d'urgence, Voiture, Déménagement, Vacances, Autre), nom, montant cible,
   déjà disponible et date cible ; puis étape 2/2 **Rythme** avec le jour de rappel (1-28) et le
   choix entre trois rythmes : **stable** (même montant), **progressif** (effort croissant)
@@ -108,10 +114,17 @@ Dernière mise à jour : 2026-08-10 (Codex).
   échéance. Le diagnostic de compatibilité est calculé sur le mois le plus élevé, pas sur la
   moyenne, et additionne l'effort des autres projets actifs. Un nouveau plan ne peut donc pas
   consommer à lui seul une capacité déjà utilisée ailleurs.
+- **Épargne libre** : l'étape Projet conserve le nom, la cible, le déjà disponible et la date
+  cible. L'étape 2 devient **Rappel** : l'utilisateur choisit uniquement son jour mensuel.
+  Aucun montant n'est conseillé, aucun budget n'est demandé et le projet ne consomme aucune
+  capacité dans les propositions de réajustement. L'objectif, la progression, l'historique,
+  le solde réel et le rituel mensuel restent identiques.
 - **Ajustement dédié** : « Ajuster le plan » ouvre un seul écran, séparé du parcours de
   création. Le nom et la catégorie restent inchangés ; l'utilisateur peut modifier le montant
   cible, la date cible, le jour de rappel et le rythme. Un tableau **Avant → après** recalcule
-  immédiatement le versement conseillé et le mois le plus élevé. La nouvelle cible ne peut pas
+  immédiatement le versement conseillé et le mois le plus élevé. Pour un projet libre, il
+  montre seulement la cible, la date et le jour de rappel, sans recréer de mensualité. La
+  nouvelle cible ne peut pas
   être inférieure au montant déjà mis de côté. Toute sauvegarde reprogramme les rappels.
 - **Suggestions** : sélectionner une catégorie préremplit le nom correspondant. Changer de
   catégorie actualise un nom suggéré, sans écraser un nom personnalisé ; « Autre » vide le
@@ -127,9 +140,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
 - **Retour d'action** : la création et l'ajustement affichent après 40 ms une fenêtre de
   traitement qui précise ce que MMG calcule. Elle reste perceptible pendant au moins 1,2 seconde
   au total ; si l'opération technique a déjà duré davantage, aucun délai ne s'ajoute. L'écran
-  projet affiche ensuite une confirmation animée et temporaire (« Ton plan est prêt » ou
+  projet affiche ensuite une confirmation animée et temporaire (« Ton projet est prêt » ou
   « Plan mis à jour »).
-- **Où** : `src/app/onboarding/new-goal.tsx`, `src/app/adjust-goal.tsx`,
+- **Où** : `src/app/onboarding/mode.tsx`, `src/app/onboarding/new-goal.tsx`, `src/app/adjust-goal.tsx`,
   `src/lib/actions.ts` (`createGoal`, `changeReminderDay`),
   `src/components/plan-summary.tsx`.
 
@@ -154,6 +167,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
   - **Historique** : versements datés ; les retraits saisis dans les anciennes versions restent
     visibles pour préserver les données existantes.
   Bannière si permission de notification manquante (fidèle à l'ancienne app).
+- **Variante libre** : le header indique **Épargne libre**, la carte principale affiche
+  **Aucun montant imposé** et le CTA **J'ai mis de côté** ouvre la saisie du montant réel.
+  Les échéances restent visibles avec **Montant libre** au lieu d'un faux montant nul.
 - **Couleur encourageante** : la barre, sa flèche et « X % atteint » évoluent ensemble et sans
   palier brutal selon la progression : argile sombre au démarrage, terracotta MMG, ocre à un
   stade avancé puis vert profond à 100 %. Le début n'utilise jamais un rouge d'alerte. Le
@@ -161,6 +177,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
 - **Comment** : le reste à financer est redistribué sur les échéances selon le rythme choisi,
   puis recalculé après chaque geste : les écarts sont absorbés sans pénalité. Les projets créés
   avant l'ajout de ce réglage restent automatiquement en rythme stable (`rhythm ?? 'stable'`).
+  En mode libre, les dates de rappel sont conservées mais `upcomingSchedule()` produit des
+  montants nuls uniquement comme valeur technique ; l'interface ne les affiche jamais et le
+  projet est exclu de `buildGlobalRebalanceProposal()`.
   Le rattachement aux cycles suit les règles détaillées en section 8 : une dette est soldée en
   priorité, tandis qu'un surplus ne supprime pas le rappel mensuel.
 - **Où** : `src/app/goal/[id].tsx`, `src/lib/plan.ts` (`suggestedAmount`, `upcomingSchedule`,
@@ -261,7 +280,10 @@ Dernière mise à jour : 2026-08-10 (Codex).
   propose aussi trois actions : **Fait**, **Modifier**, **Reporter**.
 - **Actions** : Fait exécute la même confirmation en un tap et affiche l'écran de confirmation ;
   Modifier ouvre la saisie d'un autre montant ; Reporter ouvre les choix de date. Dans les trois
-  cas, l'onglet Aujourd'hui du projet porté par `data.goalId` est ouvert.
+  cas, l'onglet Aujourd'hui du projet porté par `data.goalId` est ouvert. Pour l'épargne libre,
+  **Fait** ouvre la saisie du montant réel, puisque aucune mensualité n'existe à confirmer.
+- **Mode libre** : le rappel ne contient aucun faux montant nul. Il invite à saisir ce qui
+  convient aujourd'hui ; les surplus déjà enregistrés peuvent être rappelés sans culpabiliser.
 - **Test caché (builds de développement uniquement)** : maintenir le **M** du logo pendant
   700 ms programme un rappel test après 15 secondes pour le projet affiché (ou le dernier
   projet actif). **Réservé aux builds `__DEV__`** : en production le M est un simple élément
@@ -336,7 +358,7 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 ## 12. Persistance locale
 
-- **Quoi** : budget, projets (dont leur rythme, cycles et enveloppe confirmée), versements,
+- **Quoi** : budget, projets (dont leur mode guidé/libre, rythme, cycles et enveloppe confirmée), versements,
   snapshots du solde global et part non affectée, éventuelle relance de réajustement différée,
   pays, devise, dernier projet consulté, installId — tout survit au redémarrage, uniquement
   sur le téléphone.
@@ -347,7 +369,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
 ## 13. Tracking de rétention (Supabase)
 
 - **Quoi** : événements pseudonymisés dans la table `events` du projet MMG-LAB — `app_open`
-  (pays + devise sélectionnés), `goal_created` (catégorie générale + rythme + pays/devise),
+  (pays + devise sélectionnés), `goal_created` (catégorie générale + rythme + mode
+  guidé/libre + pays/devise),
   `contribution_logged` (type
   deposit/withdrawal + bucket de montant), `reminder_opened`, `reminder_postponed`,
   `balance_confirmed` (sans solde ni montant), `rebalance_decided` (choix `applied`, `kept` ou
@@ -356,8 +379,10 @@ Dernière mise à jour : 2026-08-10 (Codex).
   (`0_50`, `50_100`, `100_250`, `250_plus`). RLS « anon insert only » → jamais de `.select()`.
   Le premier `app_open` V2 attend l'hydratation et la confirmation du pays, puis n'est envoyé
   qu'une fois par lancement. `scripts/retention-queries.sql` fournit la répartition des
-  installations et la rétention au 3e rappel regroupées par pays ; les événements V1 sans
-  pays apparaissent sous `legacy_inconnu`.
+  installations et la rétention au 3e rappel regroupées par pays, ainsi qu'une lecture séparée
+  par mode d'épargne. Les événements V1 sans pays apparaissent sous `legacy_inconnu` et ceux
+  sans mode sous `guided`. Les deux modes ne doivent pas être agrégés pour juger le rituel :
+  un épargnant libre peut être fidèle avec des versements plus irréguliers.
   Les notifications marquées `isTest` et les gestes déclenchés depuis leurs actions sont
   volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
 - **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.

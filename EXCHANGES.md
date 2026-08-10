@@ -9,6 +9,44 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-08-10 — Codex — [DÉCISION] Contrat du mode épargne libre
+
+Le mode libre est ajouté comme **second cadre de projet**, pas comme remplacement du plan
+guidé. Le choix est proposé avant chaque création :
+- **guidé** : budget obligatoire, mensualité et rythme calculés comme aujourd'hui ;
+- **libre** : objectif + rappel mensuel, sans budget imposé ni montant conseillé.
+
+Les anciens projets sans champ `savingsMode` restent `guided`. Un projet libre conserve la
+progression, le solde réel, les cycles, reports et confirmations, mais compte pour **zéro** dans
+la capacité budgétaire et les réajustements. L'action **Fait** d'un rappel libre ouvre la saisie
+du montant réel : aucun versement à zéro n'est créé.
+
+Mesure : `goal_created` porte `savingsMode`, et les requêtes de rétention séparent les deux
+populations. Elles ne doivent pas être agrégées pour décider du produit, car les revenus
+irréguliers peuvent rester fidèles sans verser exactement chaque mois.
+
+---
+
+## 2026-08-10 — Claude Code — [DÉCISION] Passation à Codex (fin session 43)
+
+Terminé et **poussé sur `origin/v2`** (commit `80349c7`) : correctif d'affichage des très gros
+montants FCFA (helper `fitFontSize` dans `format.ts` + en-tête projet en disposition verticale
++ montant conseillé/overlay). Vérifié à l'écran (150 000 000 / 12 187 500 FCFA), non-régression
+euro OK, 9 suites vertes, `tsc` OK. Détail dans PROGRESS.md (session 43), verdict dans FEEDBACK.md.
+
+**État de la branche** : `v2` propre, rien en cours, tout est consigné. `main` = V1 intacte.
+
+**Codex prend la suite.** Point d'entrée conseillé — **Lot C** (post-Lot A/B) :
+- mode **épargne libre** (revenus irréguliers) ⭐⭐ — insight le plus structurant (cf. FEEDBACK.md) ;
+- écran d'**estimation des dépenses** (éducation financière) ;
+- **date de début différée** ⭐ — ⚠️ piège mesure : l'ancre de rétention doit démarrer à la date
+  choisie, pas à `goal_created` (cf. `retention-queries.sql`).
+
+⚠️ Rappel transversal avant toute évolution : *« est-ce que ça change qui compte comme actif,
+et à partir de quand ? »*
+
+---
+
 ## 2026-08-XX — Patrick / Claude Code — [DÉCISION] Ouverture V2 : expansion multi-devises / multi-pays
 
 **Fin du gel « euro ».** Le test de rétention euro ne s'est jamais matérialisé (recrutement
@@ -63,7 +101,8 @@ fragile (cf. notif de test, date de début différée).
 
 **Lot C — Cœur produit (à prioriser après validation du Lot A auprès de vrais inconnus)**
 - Écran d'estimation des dépenses (optionnel, éducation financière).
-- Mode épargne libre (revenus irréguliers, sans budget imposé). ⭐⭐
+- ✅ *(Codex, session 44)* Mode épargne libre (revenus irréguliers, sans budget imposé,
+  rappel mensuel conservé, mesure séparée). ⭐⭐
 - Date de début différée (⚠️ ancrer l'activation sur la date de début, pas la création). ⭐
 - Rappel/message sobre en cours de mois — **NON-PUNITIF** (pas de streak/culpabilisation
   façon Duolingo), basse fréquence, désactivable.

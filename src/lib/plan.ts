@@ -12,6 +12,7 @@ import {
   Goal,
   RebalanceReview,
   ReminderCycle,
+  SavingsMode,
   SavingsRhythm,
 } from './types';
 
@@ -22,6 +23,11 @@ export const CLOSE_CONTRIBUTION_DAYS = 3;
 export const BALANCE_CHECK_DAYS = 90;
 export const REBALANCE_REVIEW_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Compatibilité : tout projet créé avant la V2 reste un plan guidé. */
+export function goalSavingsMode(goal: Goal): SavingsMode {
+  return goal.savingsMode ?? 'guided';
+}
 
 function calendarDayNumber(date: Date): number {
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS;
@@ -420,7 +426,10 @@ export function upcomingSchedule(
     if (cursor <= target) dates.push(new Date(cursor));
   }
   if (!dates.length) dates.push(new Date(cursor));
-  const amounts = plannedAmounts(remaining, dates.length, goal.rhythm ?? 'stable');
+  const amounts =
+    goalSavingsMode(goal) === 'free'
+      ? dates.map(() => 0)
+      : plannedAmounts(remaining, dates.length, goal.rhythm ?? 'stable');
   for (let i = 0; i < dates.length && i < maxRows; i++) {
     rows.push({ date: dates[i], amount: amounts[i] });
   }
@@ -618,7 +627,9 @@ export function buildGlobalRebalanceProposal(
   budget: Budget,
   now: Date = new Date()
 ): GlobalRebalanceProposal {
-  const active = goals.filter((goal) => remainingAmount(goal) > 0);
+  const active = goals.filter(
+    (goal) => remainingAmount(goal) > 0 && goalSavingsMode(goal) === 'guided'
+  );
   const currentAmounts = active.map((goal) => peakScheduledAmount(goal, now));
   const currentEffort = currentAmounts.reduce((sum, amount) => sum + amount, 0);
   const capacity = prudentCapacity(budget);

@@ -17,6 +17,7 @@ export function ConfirmationOverlay({
   nextAmount,
   done,
   cycleAnchorAt,
+  freeMode,
   onClose,
 }: {
   visible: boolean;
@@ -27,6 +28,7 @@ export function ConfirmationOverlay({
   /** true si l'objectif est atteint avec ce versement */
   done?: boolean;
   cycleAnchorAt?: string;
+  freeMode?: boolean;
   onClose: () => void;
 }) {
   const { money } = useMoney();
@@ -59,7 +61,9 @@ export function ConfirmationOverlay({
           <Text style={styles.message}>
             {done
               ? `« ${goalName} » est financé. Tu viens d'atteindre ton objectif 🎉`
-              : `mis de côté pour « ${goalName} ». Même moins que prévu, c'est déjà bien : le plan s'ajuste tout seul.`}
+              : freeMode
+                ? `mis de côté pour « ${goalName} ». Ton objectif avance, à ton rythme.`
+                : `mis de côté pour « ${goalName} ». Même moins que prévu, c'est déjà bien : le plan s'ajuste tout seul.`}
           </Text>
         </Animated.View>
         {cycleAnchorAt ? (
@@ -69,13 +73,15 @@ export function ConfirmationOverlay({
             Ce versement compte pour {formatMonth(cycleAnchorAt)}.
           </Animated.Text>
         ) : null}
-        {!done && nextReminderAt && nextAmount !== undefined && nextAmount > 0 ? (
+        {!done && nextReminderAt && (freeMode || (nextAmount !== undefined && nextAmount > 0)) ? (
           <Animated.View
             entering={FadeInUp.delay(620).duration(300).reduceMotion(ReduceMotion.System)}
             style={styles.nextCard}>
             <Text style={styles.nextLabel}>Prochain rappel</Text>
             <Text style={styles.nextValue}>
-              {formatDate(nextReminderAt)} · {money(nextAmount)} conseillés
+              {freeMode
+                ? `${formatDate(nextReminderAt)} · montant libre`
+                : `${formatDate(nextReminderAt)} · ${money(nextAmount ?? 0)} conseillés`}
             </Text>
           </Animated.View>
         ) : null}

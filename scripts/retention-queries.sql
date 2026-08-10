@@ -13,7 +13,7 @@
 --    platform, app_version, metadata (détails en JSON).
 --  Clés metadata connues :
 --    app_open             → country, currencyCode
---    goal_created         → category, rhythm, country, currencyCode
+--    goal_created         → category, rhythm, savingsMode, country, currencyCode
 --    contribution_logged  → type ('deposit'/'withdrawal'), amountBucket, source
 --    rebalance_decided    → choice ('applied'/'kept'/'deferred')
 --
@@ -217,6 +217,42 @@ select c.country,
 from cohorte_eligible c
 left join actifs_au_3e a on a.install_id = c.install_id
 group by c.country
+order by cohorte_ayant_eu_le_temps desc;
+
+
+-- 3.c  Même mesure séparée par mode du premier projet.
+--      Ne jamais agréger directement « guided » et « free » : une personne en
+--      épargne libre peut être fidèle avec des versements irréguliers, sans suivre
+--      exactement une mensualité. Les anciens événements sans clé restent guidés.
+with activation as (
+  select distinct on (install_id)
+         install_id,
+         created_at as activated_at,
+         coalesce(metadata->>'savingsMode', 'guided') as savings_mode
+  from events_reels
+  where event_type = 'goal_created'
+  order by install_id, created_at
+),
+cohorte_eligible as (
+  select install_id, activated_at, savings_mode
+  from activation
+  where activated_at <= now() - interval '90 days'
+),
+actifs_au_3e as (
+  select distinct e.install_id
+  from events_reels e
+  join cohorte_eligible c on c.install_id = e.install_id
+  where e.event_type = 'contribution_logged'
+    and e.metadata->>'type' = 'deposit'
+    and e.created_at >= c.activated_at + interval '90 days'
+)
+select c.savings_mode,
+       count(*) as cohorte_ayant_eu_le_temps,
+       count(a.install_id) as encore_actifs_apres_90_jours,
+       round(100.0 * count(a.install_id) / nullif(count(*), 0), 1) as retention_90_jours_pct
+from cohorte_eligible c
+left join actifs_au_3e a on a.install_id = c.install_id
+group by c.savings_mode
 order by cohorte_ayant_eu_le_temps desc;
 
 

@@ -108,6 +108,11 @@ future** choisie (« je m'y mets dans 2-3 mois »).
 
 ## 2026-07-24 — Patrick (dogfooding) : mode « épargne libre » sans budget/revenus  ⭐⭐ (insight structurant)
 
+**Statut V2 — implémenté le 2026-08-10** : second cadre de projet, choisi avant la création.
+Budget et montant conseillé sont retirés, mais l'objectif, la progression et le rappel mensuel
+restent présents. Les projets libres sont exclus des réajustements budgétaires et séparés dans
+les requêtes de rétention (`savingsMode=free`).
+
 Découvert par Patrick en essayant d'utiliser l'app pour son propre cas : entrepreneur à
 revenus **irréguliers et non quantifiables à l'avance**. Il « subit » des rentrées d'argent
 distinctes du salaire, ne peut pas les budgéter, mais veut en mettre une partie de côté au fil

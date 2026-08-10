@@ -15,10 +15,12 @@ const {
   balanceCheckDue,
   buildGlobalRebalanceProposal,
   estimatedGlobalBalance,
+  goalSavingsMode,
   nextRebalanceReviewAt,
   peakScheduledAmount,
   rebalanceReviewDue,
   savedTotal,
+  upcomingSchedule,
 } = loaded.exports;
 
 const at = (year, month, day, hour = 9) => new Date(year, month - 1, day, hour).toISOString();
@@ -96,6 +98,17 @@ const progressive = {
 };
 assert.equal(peakScheduledAmount(progressive, new Date(2026, 6, 12, 12)), 260);
 
+// Le mode libre garde les dates de rappel, mais ne calcule aucun montant et
+// n'entre jamais dans la capacité budgétaire. Les anciens projets restent guidés.
+const free = { ...makeGoal('free', 0, 600), savingsMode: 'free' };
+assert.equal(goalSavingsMode(first), 'guided');
+assert.equal(goalSavingsMode(free), 'free');
+assert.ok(upcomingSchedule(free, new Date(2026, 6, 12, 12)).length > 0);
+assert.ok(
+  upcomingSchedule(free, new Date(2026, 6, 12, 12)).every((row) => row.amount === 0)
+);
+assert.equal(peakScheduledAmount(free, new Date(2026, 6, 12, 12)), 0);
+
 // La somme proposée respecte la capacité globale ; une capacité nulle est signalée impossible.
 const budget = { income: 2000, fixedCharges: 1000, variableExpenses: 500 };
 const proposal = buildGlobalRebalanceProposal(
@@ -106,6 +119,12 @@ const proposal = buildGlobalRebalanceProposal(
 assert.equal(proposal.capacity, 400);
 assert.equal(proposal.possible, true);
 assert.ok(proposal.goals.reduce((sum, goal) => sum + goal.proposedMonthly, 0) <= 400.01);
+const proposalWithFree = buildGlobalRebalanceProposal(
+  [first, free],
+  budget,
+  new Date(2026, 6, 12, 12),
+);
+assert.deepEqual(proposalWithFree.goals.map((goal) => goal.goalId), ['one']);
 const impossible = buildGlobalRebalanceProposal(
   [first],
   { income: 1000, fixedCharges: 800, variableExpenses: 200 },

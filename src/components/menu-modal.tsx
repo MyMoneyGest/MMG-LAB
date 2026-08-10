@@ -145,10 +145,10 @@ export function MenuModal({
             })}
 
             <View style={[styles.actions, { marginTop: goals.length ? 10 : 2 }]}>
-              <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/new-goal'))} />
+              <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/mode'))} />
               <View style={styles.actionList}>
                 {currentGoalId
-                  ? action('Ajuster le plan', () =>
+                  ? action(activeGoal?.savingsMode === 'free' ? 'Ajuster le projet' : 'Ajuster le plan', () =>
                       router.push({
                         pathname: '/adjust-goal',
                         params: { id: currentGoalId },
