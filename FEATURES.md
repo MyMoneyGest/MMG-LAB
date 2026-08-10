@@ -22,7 +22,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
   avec ou sans symbole (`€`, `FCFA`, `$`) ainsi que les codes de devise. La précision est
   normalisée selon la devise : deux décimales pour EUR/USD, aucune pour XAF/XOF. Cette
   normalisation est aussi réappliquée à l'enregistrement d'un versement rapide afin qu'un
-  montant de plan calculé en interne ne crée jamais de centimes invisibles en FCFA.
+  montant de plan calculé en interne ne crée jamais de centimes invisibles en FCFA. Pendant la
+  frappe en FCFA, les milliers sont regroupés en direct (`2500000` → `2 500 000`) sur toutes
+  les surfaces monétaires afin de réduire les erreurs de lecture.
 - **Pays disponibles (starter)** : Gabon, Cameroun, Congo, Tchad, République centrafricaine,
   Guinée équatoriale, Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Bénin, Togo, Niger, France,
   Belgique et États-Unis. Une locale inconnue retombe sur l'euro.
@@ -30,12 +32,22 @@ Dernière mise à jour : 2026-08-10 (Codex).
   un écran minimal prérempli avec `expo-localization` (`regionCode`). Seule la proposition
   détectée est affichée au départ : un appui la confirme, tandis que **Changer** déplie la liste
   accessible des autres pays. Le menu **Pays et devise** permet de modifier ensuite ce choix.
-  MMG ne convertit jamais silencieusement les montants existants : un avertissement le précise
-  lorsqu'un changement d'unité concerne déjà un budget ou un projet. Les rappels locaux sont
-  reprogrammés pour utiliser immédiatement le bon symbole.
-- **Où** : `src/lib/currency.ts`, `src/lib/format.ts`, `src/lib/use-money.ts`,
-  `src/lib/store.ts`, `src/app/onboarding/country.tsx`, `src/lib/actions.ts` (`changeLocale`)
-  et l'ensemble des surfaces monétaires sous `src/app` / `src/components`.
+  MMG ne convertit jamais silencieusement les montants existants. Si un changement d'unité
+  concerne déjà des données, l'écran propose explicitement **Convertir mes montants** ou
+  **Garder les mêmes valeurs**, affiche le taux éditable et un aperçu avant validation. Une
+  conversion recalcule atomiquement budget, projets, versements, soldes confirmés et
+  répartitions, avec l'arrondi de la devise cible ; les rappels sont ensuite reprogrammés à
+  partir de ces nouveaux montants.
+- **Taux proposé et mode hors ligne** : EUR/XAF/XOF utilisent localement la parité fixe
+  `1 EUR = 655,957 FCFA` (XAF et XOF restent distingués). Quand USD intervient, MMG demande
+  uniquement le taux EUR/USD de la Banque centrale européenne via l'API sans clé Frankfurter,
+  puis compose la paire voulue. Aucun montant personnel n'est envoyé. Si la requête échoue,
+  la saisie manuelle du taux reste disponible.
+- **Où** : `src/lib/currency.ts`, `src/lib/currency-conversion.ts`, `src/lib/format.ts`,
+  `src/lib/use-money.ts`, `src/lib/exchange-rate.ts`, `src/lib/store.ts`,
+  `src/app/onboarding/country.tsx`,
+  `src/lib/actions.ts` (`changeLocale`) et l'ensemble des surfaces monétaires sous `src/app` /
+  `src/components`.
 
 ---
 

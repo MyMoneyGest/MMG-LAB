@@ -31,7 +31,7 @@ export function AmountModal({
   onConfirm: (amount: number) => void;
   onClose: () => void;
 }) {
-  const { currency, currencyCode, money } = useMoney();
+  const { currency, currencyCode, money, amountInput } = useMoney();
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -71,7 +71,7 @@ export function AmountModal({
               <Field
                 value={value}
                 onChangeText={(t) => {
-                  setValue(t);
+                  setValue(amountInput(t));
                   setError(null);
                 }}
                 keyboardType="decimal-pad"

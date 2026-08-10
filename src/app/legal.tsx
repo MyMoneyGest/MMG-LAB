@@ -66,6 +66,17 @@ export default function LegalScreen() {
           conservés 12 mois au maximum, puis supprimés.
         </Text>
 
+        <Text style={styles.section}>Taux de conversion</Text>
+        <Text style={styles.paragraph}>
+          Si tu changes de devise, MMG peut proposer un taux indicatif. La parité euro/franc
+          CFA est calculée localement. Lorsqu'un taux avec le dollar est nécessaire, MMG
+          consulte la paire EUR/USD publiée par la Banque centrale européenne via le service
+          Frankfurter. Aucun budget, projet, solde ni montant personnel n'est envoyé ; la
+          requête réseau transmet seulement la paire de devises et les informations techniques
+          habituelles d'une connexion Internet. Tu peux toujours saisir ton propre taux ou
+          choisir de ne pas convertir les valeurs.
+        </Text>
+
         <Text style={styles.section}>Notifications</Text>
         <Text style={styles.paragraph}>
           La permission de notification est demandée lors de la création du premier projet.
@@ -99,6 +110,12 @@ export default function LegalScreen() {
           saisis. Ils ne constituent pas un conseil financier, fiscal ou juridique. Tu restes
           responsable de vérifier les montants et dates, puis d'effectuer toi-même les
           opérations nécessaires avec ton moyen d'épargne habituel.
+        </Text>
+        <Text style={styles.paragraph}>
+          Les taux de change proposés sont indicatifs et peuvent différer du taux réellement
+          appliqué par une banque, un opérateur ou un service de paiement. Avant une conversion,
+          MMG affiche le taux et un aperçu : tu restes responsable de les vérifier et de les
+          valider.
         </Text>
         <Text style={styles.paragraph}>
           Utilise MMG uniquement à des fins personnelles et licites. L'équipe MyMoneyGest

@@ -72,6 +72,15 @@ export function normalizeMoney(
   return Math.round(amount * factor) / factor;
 }
 
+/** Convertit puis arrondit selon la précision réelle de la devise cible. */
+export function convertMoney(
+  amount: number,
+  rate: number,
+  targetCode: CurrencyCode
+): number {
+  return normalizeMoney(amount * rate, targetCode);
+}
+
 function groupThousands(intStr: string): string {
   let grouped = '';
   let rest = intStr;

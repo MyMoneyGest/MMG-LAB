@@ -44,7 +44,7 @@ const RHYTHMS: {
 ];
 
 export default function NewGoalScreen() {
-  const { currency, currencyCode, money } = useMoney();
+  const { currency, currencyCode, money, amountInput } = useMoney();
   const router = useRouter();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
@@ -210,7 +210,7 @@ export default function NewGoalScreen() {
             label="Montant cible"
             value={target}
             onChangeText={(t) => {
-              setTarget(t);
+              setTarget(amountInput(t));
               setError(null);
             }}
             keyboardType="decimal-pad"
@@ -221,7 +221,7 @@ export default function NewGoalScreen() {
             label="Déjà disponible"
             value={available}
             onChangeText={(t) => {
-              setAvailable(t);
+              setAvailable(amountInput(t));
               setError(null);
             }}
             keyboardType="decimal-pad"

@@ -65,6 +65,15 @@ assert.doesNotMatch(goalScreen, /label="Retrait"/);
 assert.match(balanceModal, /Solde réel global/);
 assert.match(balanceModal, /Estimation actuelle/);
 assert.match(balanceModal, /loadingLabel="Recalcul…"/);
+for (const [name, source] of [
+  ['budget', budgetScreen],
+  ['new-goal', newGoal],
+  ['adjust-goal', adjustGoal],
+  ['amount-modal', amountModal],
+  ['balance-modal', balanceModal],
+]) {
+  assert.match(source, /amountInput/, `${name} doit grouper les grandes saisies FCFA`);
+}
 assert.match(rebalanceModal, /Garder mes plans/);
 assert.match(rebalanceModal, /Appliquer/);
 assert.match(rebalanceModal, /conserver ton ancien échéancier/);

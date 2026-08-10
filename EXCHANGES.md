@@ -51,6 +51,11 @@ fragile (cf. notif de test, date de début différée).
   de « mettre de côté avec ton moyen habituel » plutôt que de virement bancaire. Les mentions
   de banque sont conservées uniquement lorsqu'elles rassurent sur l'absence de connexion ou
   décrivent juridiquement ce que MMG n'est pas.
+- ✅ *(Codex, session 41 — retour Patrick)* **Sécurisation des grands montants et conversion** :
+  regroupement des milliers pendant toute saisie FCFA ; lors d'un changement de devise avec
+  données existantes, choix explicite convertir/conserver, taux proposé mais modifiable, aperçu
+  avant validation et conversion atomique de toutes les valeurs locales. Parité CFA calculée
+  hors ligne ; taux EUR/USD BCE consulté via Frankfurter sans envoyer de montant personnel.
 
 **Lot B — Quick wins cosmétiques (à embarquer avec le Lot A, cf. FEEDBACK.md)**
 - ✅ *(Codex, session 40)* « le 1 » → « le **1er** » sur toutes les surfaces de rappel ;

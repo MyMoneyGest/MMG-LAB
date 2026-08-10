@@ -25,7 +25,13 @@ new Function('exports', 'module', 'require', compile('src/lib/format.ts'))(
   }
 );
 
-const { formatDateInput, formatReminderDay, parseDateInput, parseAmountInput } = loaded.exports;
+const {
+  formatAmountInput,
+  formatDateInput,
+  formatReminderDay,
+  parseDateInput,
+  parseAmountInput,
+} = loaded.exports;
 
 assert.equal(formatDateInput(''), '');
 assert.equal(formatDateInput('1'), '1');
@@ -50,5 +56,9 @@ assert.equal(parseAmountInput('2 500,9 FCFA', 'XOF'), 2501);
 assert.equal(parseAmountInput('$1 250.50', 'USD'), 1250.5);
 assert.equal(parseAmountInput('-1', 'EUR'), null);
 assert.equal(parseAmountInput('montant', 'EUR'), null);
+assert.equal(formatAmountInput('2500000', 'XAF'), '2 500 000');
+assert.equal(formatAmountInput('2 500 000 FCFA', 'XOF'), '2 500 000');
+assert.equal(formatAmountInput('0002500', 'XAF'), '2 500');
+assert.equal(formatAmountInput('2500000', 'EUR'), '2500000');
 
 console.log('Tests format : dates et saisies EUR/FCFA/USD validées.');

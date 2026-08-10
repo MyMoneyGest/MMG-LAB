@@ -50,6 +50,11 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
   lire la rétention par marché, sans transmettre de montant exact.
 - `src/lib/store.ts` — état persistant local (zustand + AsyncStorage), seule source de vérité
   des données utilisateur.
+- `src/lib/exchange-rate.ts` — taux de conversion proposé lors d'un changement de devise :
+  parité EUR/FCFA locale et, uniquement si USD intervient, référence EUR/USD de la BCE via
+  Frankfurter. Le taux reste modifiable et aucun montant utilisateur n'est envoyé.
+- `src/lib/currency-conversion.ts` — conversion pure et testable de toutes les valeurs
+  financières persistées avant que le store remplace la devise.
 
 ## Boucle de rétention (priorité n°1)
 

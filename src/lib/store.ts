@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { CurrencyCode, DEFAULT_CURRENCY } from './currency';
+import { convertFinancialData } from './currency-conversion';
 import {
   Budget,
   BalanceSnapshot,
@@ -33,6 +34,11 @@ interface MMGState {
   notifPermissionAsked: boolean;
 
   setLocale: (locale: { country?: string; currencyCode: CurrencyCode }) => void;
+  convertLocale: (locale: {
+    country?: string;
+    currencyCode: CurrencyCode;
+    rate: number;
+  }) => void;
   setBudget: (budget: Budget) => void;
   addBalanceSnapshot: (snapshot: BalanceSnapshot) => void;
   setRebalanceReview: (review?: RebalanceReview) => void;
@@ -62,6 +68,16 @@ export const useStore = create<MMGState>()(
       // Les anciens utilisateurs (store persisté sans ces champs) retombent sur
       // EUR par défaut via le merge de zustand/persist — aucune migration requise.
       setLocale: ({ country, currencyCode }) => set({ country, currencyCode }),
+
+      convertLocale: ({ country, currencyCode, rate }) =>
+        set((state) => {
+          const converted = convertFinancialData(state, rate, currencyCode);
+          return {
+            country,
+            currencyCode,
+            ...converted,
+          };
+        }),
 
       setBudget: (budget) => set({ budget }),
 

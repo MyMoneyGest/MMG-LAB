@@ -44,14 +44,19 @@ export interface NewGoalInput {
 
 export type ContributionSource = 'one_tap' | 'custom_amount' | 'test_notification';
 
-/**
- * Change le pays/la devise sans convertir les données locales, puis recrée les
- * notifications pour que leurs montants utilisent immédiatement le bon symbole.
- */
-export async function changeLocale(country: string, currencyCode: CurrencyCode): Promise<void> {
+/** Change le pays/la devise, avec conversion explicite optionnelle des données locales. */
+export async function changeLocale(
+  country: string,
+  currencyCode: CurrencyCode,
+  conversionRate?: number
+): Promise<void> {
   const state = useStore.getState();
-  state.setLocale({ country, currencyCode });
-  for (const goal of state.goals) {
+  if (conversionRate && Number.isFinite(conversionRate) && conversionRate > 0) {
+    state.convertLocale({ country, currencyCode, rate: conversionRate });
+  } else {
+    state.setLocale({ country, currencyCode });
+  }
+  for (const goal of useStore.getState().goals) {
     const scheduled = await scheduleGoalReminders(goal, suggestedAmount(goal));
     useStore.getState().updateGoal(goal.id, scheduled);
   }

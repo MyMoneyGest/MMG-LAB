@@ -51,7 +51,8 @@
     "test:balance": "node scripts/test-balance.mjs",
     "test:analytics": "node scripts/test-analytics.mjs",
     "test:design": "node scripts/test-design.mjs",
-    "test:currency": "node scripts/test-currency.mjs"
+    "test:currency": "node scripts/test-currency.mjs",
+    "test:exchange": "node scripts/test-exchange-rate.mjs"
   },
   "private": true
 }

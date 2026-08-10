@@ -28,13 +28,13 @@ const RHYTHMS: { key: SavingsRhythm; label: string }[] = [
 ];
 
 export default function AdjustGoalScreen() {
-  const { currency, currencyCode, money } = useMoney();
+  const { currency, currencyCode, money, amountInput } = useMoney();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const goal = useStore((state) => state.goals.find((candidate) => candidate.id === id));
   const updateGoal = useStore((state) => state.updateGoal);
 
-  const [target, setTarget] = useState(goal ? String(goal.targetAmount) : '');
+  const [target, setTarget] = useState(goal ? amountInput(String(goal.targetAmount)) : '');
   const [dateText, setDateText] = useState(goal ? formatDate(goal.targetDate) : '');
   const [reminderDayText, setReminderDayText] = useState(goal ? String(goal.reminderDay) : '');
   const [rhythm, setRhythm] = useState<SavingsRhythm>(goal?.rhythm ?? 'stable');
@@ -176,7 +176,7 @@ export default function AdjustGoalScreen() {
           label="Nouveau montant cible"
           value={target}
           onChangeText={(value) => {
-            setTarget(value);
+            setTarget(amountInput(value));
             setError(null);
           }}
           keyboardType="decimal-pad"

@@ -14,6 +14,47 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 41 : saisie FCFA sécurisée + conversion explicite
+
+### Fait
+- Le tunnel Expo temporaire utilisé pour diagnostiquer le simulateur cloud a été coupé dès que
+  Patrick a choisi de poursuivre sur le navigateur. Le dev client iOS V1 ne contient pas le
+  nouveau module natif `ExpoLocalization` : un build V2 neuf sera donc nécessaire pour la
+  future validation native ; aucun nouveau build ni aucune nouvelle session payante lancés.
+- Ajouté le regroupement visuel des milliers pendant la frappe dans les devises sans centimes :
+  `2500000` devient `2 500 000` sur le budget, les projets, les versements et le solde réel.
+  Les espaces restent purement visuels et le parseur conserve la valeur numérique exacte.
+- Remplacé l'ancien changement d'unité sans conversion par un choix explicite : **Convertir mes
+  montants** ou **Garder les mêmes valeurs**. Le taux est affiché, modifiable et accompagné
+  d'un aperçu construit à partir d'une valeur réelle déjà présente dans l'app.
+- La conversion explicite couvre atomiquement le budget, les objectifs, l'historique des
+  versements, les soldes confirmés et leurs répartitions, avec arrondi selon la devise cible.
+  Les rappels sont recréés ensuite à partir des montants convertis.
+- La parité EUR/XAF/XOF reste disponible hors ligne (`1 EUR = 655,957 FCFA`). Pour USD, MMG
+  récupère uniquement la paire EUR/USD de la BCE via Frankfurter, avec délai maximal et repli
+  sur une saisie manuelle ; aucun montant personnel n'est transmis.
+- Confidentialité, CGU, FEATURES, README, guide de maintenance et tests mis en cohérence.
+
+### Vérifications
+- TypeScript : OK.
+- **9 suites fonctionnelles** : devise, change/conversion complète, format, saisies, design,
+  notifications, cycles/report, solde et analytics — toutes OK.
+- Parcours navigateur réel : budget EUR créé, changement France → Gabon, taux fixe affiché,
+  aperçu `2 000 € → 1 311 914 FCFA`, conversion appliquée puis budget entièrement visible en
+  FCFA — OK. Le taux manuel a recalculé l'aperçu immédiatement et l'option de conservation a
+  correctement masqué la conversion.
+- Appel réseau réel XAF → USD : taux BCE récupéré via Frankfurter, source/date affichées et
+  aperçu recalculé — OK. Une première tentative avec `expo/fetch` a échoué sur web ; remplacée
+  avant livraison par le `fetch` standard Expo/React Native, vérifié dans le navigateur.
+- Export Expo web complet : 11 routes générées, dont `/onboarding/country` — OK.
+- `git diff --check` : OK.
+
+### Ensuite
+1. Confirmer plus tard la saisie et la conversion sur un build natif V2 neuf.
+2. Le Lot C reste différé jusqu'aux retours de vrais utilisateurs inconnus.
+
+---
+
 ## 2026-08-10 — Codex — Session 40 : Lot A, devises câblées + choix du pays
 
 ### Fait

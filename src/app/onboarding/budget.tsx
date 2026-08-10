@@ -24,7 +24,7 @@ import { MIN_INLINE_LOADING_MS, waitForMinimumLoading } from '@/lib/timing';
 import { useMoney } from '@/lib/use-money';
 
 export default function BudgetScreen() {
-  const { currency, currencyCode, money } = useMoney();
+  const { currency, currencyCode, money, amountInput } = useMoney();
   const router = useRouter();
   const { returnToGoal, standalone } = useLocalSearchParams<{
     returnToGoal?: string;
@@ -34,9 +34,11 @@ export default function BudgetScreen() {
   const goals = useStore((s) => s.goals);
   const setBudget = useStore((s) => s.setBudget);
 
-  const [income, setIncome] = useState(budget ? String(budget.income) : '');
-  const [fixed, setFixed] = useState(budget ? String(budget.fixedCharges) : '');
-  const [variable, setVariable] = useState(budget ? String(budget.variableExpenses) : '');
+  const [income, setIncome] = useState(budget ? amountInput(String(budget.income)) : '');
+  const [fixed, setFixed] = useState(budget ? amountInput(String(budget.fixedCharges)) : '');
+  const [variable, setVariable] = useState(
+    budget ? amountInput(String(budget.variableExpenses)) : ''
+  );
   const [error, setError] = useState<string | null>(null);
   const [rebalanceProposal, setRebalanceProposal] =
     useState<GlobalRebalanceProposal | null>(null);
@@ -87,7 +89,7 @@ export default function BudgetScreen() {
           label="Revenus nets par mois"
           value={income}
           onChangeText={(t) => {
-            setIncome(t);
+            setIncome(amountInput(t));
             setError(null);
           }}
           keyboardType="decimal-pad"
@@ -98,7 +100,7 @@ export default function BudgetScreen() {
           label="Charges fixes (loyer, abonnements, crédits…)"
           value={fixed}
           onChangeText={(t) => {
-            setFixed(t);
+            setFixed(amountInput(t));
             setError(null);
           }}
           keyboardType="decimal-pad"
@@ -109,7 +111,7 @@ export default function BudgetScreen() {
           label="Dépenses variables (courses, sorties…)"
           value={variable}
           onChangeText={(t) => {
-            setVariable(t);
+            setVariable(amountInput(t));
             setError(null);
           }}
           keyboardType="decimal-pad"

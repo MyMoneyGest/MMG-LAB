@@ -34,9 +34,9 @@ Trois idées à retenir :
 - **Toutes les données de l'utilisateur (budget, projets, versements) restent sur son
   téléphone.** MMG n'est pas connectée à une banque et ne stocke rien de personnel sur
   Internet. Si l'utilisateur désinstalle l'app, ses données disparaissent avec elle.
-- **Le seul élément en ligne est un compteur d'usage anonyme** (Supabase, voir §2 et §8) :
-  il sert uniquement à mesurer combien de personnes reviennent utiliser l'app. Aucune donnée
-  d'argent réelle n'y est envoyée.
+- **Deux fonctions peuvent utiliser Internet** : le compteur d'usage anonyme (Supabase, voir
+  §2 et §8) et, uniquement lors d'un changement de devise avec le dollar, la récupération d'un
+  taux EUR/USD auprès de Frankfurter. Aucune donnée d'argent réelle n'est envoyée à ces services.
 - **Le cœur de l'app est un rituel mensuel** : un rappel arrive → l'utilisateur ouvre l'app →
   il confirme son versement en un seul geste. Cette boucle est la chose la plus importante à
   ne jamais casser.
@@ -55,6 +55,7 @@ au quotidien : ils sont déjà installés. Ce tableau sert à comprendre **qui f
 | **Expo** | La boîte à outils qui construit l'app et la lance sur ton téléphone. | Commande `npx expo start`. |
 | **EAS** | Le service d'Expo « dans le nuage » qui fabrique les fichiers installables (APK Android, app iPhone). | Commande `eas build`. Voir §4. |
 | **Supabase** | Une base de données en ligne. Ici, uniquement le compteur d'usage anonyme (table `events`). | Tu y vas via ton navigateur, sur supabase.com. Voir §8. |
+| **Frankfurter** | Un service public de taux issus de banques centrales. MMG lui demande seulement EUR/USD quand une conversion avec le dollar est proposée. | Automatique dans l'écran Pays et devise ; aucun compte ni clé à gérer. |
 | **GitHub** | La sauvegarde en ligne de tout le code + l'historique des modifications. | Commandes `git`. Voir §6. |
 | **TestFlight** | Le service d'Apple pour distribuer l'app iPhone à tes testeurs avant l'App Store. | Depuis le site App Store Connect. |
 | **Le code** | Les fichiers texte qui décrivent l'app, dans le dossier `src`. | Voir §3. |

@@ -19,7 +19,7 @@ export function BalanceModal({
   onConfirm: (amount: number) => Promise<void> | void;
   onClose: () => void;
 }) {
-  const { currency, currencyCode, money } = useMoney();
+  const { currency, currencyCode, money, amountInput } = useMoney();
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -74,7 +74,7 @@ export function BalanceModal({
                 label="Solde réel global"
                 value={value}
                 onChangeText={(text) => {
-                  setValue(text);
+                  setValue(amountInput(text));
                   setError(null);
                 }}
                 keyboardType="decimal-pad"

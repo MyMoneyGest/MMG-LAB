@@ -71,11 +71,16 @@ assert.match(country, /\{listOpen \? 'Fermer' : 'Changer'\}/);
 assert.match(country, /accessibilityRole="radio"/);
 assert.match(country, /accessibilityState=\{\{ checked: selected \}\}/);
 assert.match(country, /Dans quel pays épargnes-tu/);
-assert.match(country, /MMG changera l'unité affichée, mais ne convertira pas les montants/);
-assert.match(country, /await changeLocale\(selectedCountry\.code, selectedCountry\.currency\)/);
+assert.match(country, /Que faire de tes montants actuels/);
+assert.match(country, /Convertir mes montants/);
+assert.match(country, /Garder les mêmes valeurs/);
+assert.match(country, /fetchSuggestedExchangeRate\(currentCurrency, selectedCountry\.currency\)/);
+assert.match(country, /Aucun montant personnel n'est envoyé/);
+assert.match(country, /await changeLocale\(selectedCountry\.code, selectedCountry\.currency, conversionRate\)/);
 assert.match(menu, /Pays et devise/);
 assert.match(menu, /pathname: '\/onboarding\/country'/);
 assert.match(actions, /state\.setLocale\(\{ country, currencyCode \}\)/);
+assert.match(actions, /state\.convertLocale\(\{ country, currencyCode, rate: conversionRate \}\)/);
 assert.match(actions, /scheduleGoalReminders\(goal, suggestedAmount\(goal\)\)/);
 
 assert.match(ui, /footer\?: ReactNode/);

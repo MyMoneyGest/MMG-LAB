@@ -61,6 +61,21 @@ export function formatReminderDay(day: number): string {
   return Math.round(day) === 1 ? '1er' : String(Math.round(day));
 }
 
+/**
+ * Rend les grands montants lisibles pendant la frappe dans les devises sans
+ * centimes. Les espaces sont purement visuels et parseAmountInput les ignore.
+ */
+export function formatAmountInput(
+  value: string,
+  code: CurrencyCode = DEFAULT_CURRENCY
+): string {
+  if ((CURRENCIES[code]?.decimals ?? 2) > 0) return value;
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return '';
+  const normalized = digits.replace(/^0+(?=\d)/, '');
+  return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
 /** Insère automatiquement les séparateurs d'une saisie JJ/MM/AAAA. */
 export function formatDateInput(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 8);
