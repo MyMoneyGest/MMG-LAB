@@ -33,6 +33,30 @@ function calendarDayNumber(date: Date): number {
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS;
 }
 
+/** Les anciens projets, sans startDate, sont actifs depuis leur création. */
+export function goalActivationDate(goal: Goal): Date {
+  const activation = new Date(goal.startDate ?? goal.createdAt);
+  return Number.isNaN(activation.getTime()) ? new Date(goal.createdAt) : activation;
+}
+
+/** Le jour choisi devient actif dès minuit local, sans attendre l'heure de création. */
+export function goalStartsInFuture(goal: Goal, now: Date = new Date()): boolean {
+  return calendarDayNumber(goalActivationDate(goal)) > calendarDayNumber(now);
+}
+
+/** Délai non financier envoyé à l'analytics, plutôt que la date personnelle exacte. */
+export function goalActivationDelayDays(goal: Goal): number {
+  return Math.max(
+    0,
+    calendarDayNumber(goalActivationDate(goal)) - calendarDayNumber(new Date(goal.createdAt))
+  );
+}
+
+/** Point de départ des calculs : aujourd'hui si le plan est actif, sinon sa date future. */
+export function goalScheduleReference(goal: Goal, now: Date = new Date()): Date {
+  return goalStartsInFuture(goal, now) ? goalActivationDate(goal) : now;
+}
+
 export function resteAVivre(b: Budget): number {
   return Math.max(0, b.income - b.fixedCharges - b.variableExpenses);
 }
@@ -396,7 +420,8 @@ export function cyclesAfterReminderDayChange(
 
   const oldAnchor = new Date(current.anchorAt);
   const candidate = new Date(oldAnchor.getFullYear(), oldAnchor.getMonth(), day, 9, 0, 0, 0);
-  const first = candidate > now ? cycleFromAnchor(candidate) : { ...current };
+  const scheduleReference = goalScheduleReference(goal, now);
+  const first = candidate > scheduleReference ? cycleFromAnchor(candidate) : { ...current };
   const rebuilt = [...pastOrDue, first];
   let cursor = new Date(first.anchorAt);
   for (let index = 0; index < 3; index += 1) {
@@ -492,7 +517,7 @@ export function balanceCheckDue(
   const latest = latestBalanceSnapshot(snapshots);
   const reference = latest
     ? new Date(latest.date)
-    : new Date(Math.min(...goals.map((goal) => new Date(goal.createdAt).getTime())));
+    : new Date(Math.min(...goals.map((goal) => goalActivationDate(goal).getTime())));
   return calendarDayNumber(now) - calendarDayNumber(reference) >= BALANCE_CHECK_DAYS;
 }
 
@@ -611,7 +636,7 @@ function targetDateForCapacity(
     const amounts = plannedAmounts(remaining, months, goal.rhythm ?? 'stable');
     const peak = Math.max(...amounts);
     if (peak <= monthlyCapacity + 0.01) {
-      let date = nextReminderAfter(now, goal.reminderDay);
+      let date = nextReminderAfter(goalScheduleReference(goal, now), goal.reminderDay);
       for (let index = 1; index < months; index += 1) {
         date = nextReminderAfter(date, goal.reminderDay);
       }

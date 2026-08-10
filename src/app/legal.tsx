@@ -54,8 +54,9 @@ export default function LegalScreen() {
         <Text style={styles.paragraph}>
           Les événements peuvent contenir l'identifiant technique du projet, sa catégorie
           générale, le rythme et le mode guidé ou libre choisis, le pays et la devise
-          sélectionnés dans MMG, la
-          plateforme, la version de l'app et, pour un mouvement, une tranche de montant. Les
+          sélectionnés dans MMG, ainsi que le nombre de jours avant le démarrage d'un projet
+          différé — jamais sa date exacte. Ils peuvent aussi contenir la plateforme, la version
+          de l'app et, pour un mouvement, une tranche de montant. Les
           montants exacts, le nom des projets et le détail du budget ne sont jamais transmis.
           Ces données ne servent ni à la publicité ni à la revente.
         </Text>

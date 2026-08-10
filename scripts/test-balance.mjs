@@ -14,8 +14,12 @@ const {
   allocateGlobalBalance,
   balanceCheckDue,
   buildGlobalRebalanceProposal,
+  cyclesAfterReminderDayChange,
   estimatedGlobalBalance,
+  goalActivationDate,
+  goalActivationDelayDays,
   goalSavingsMode,
+  goalStartsInFuture,
   nextRebalanceReviewAt,
   peakScheduledAmount,
   rebalanceReviewDue,
@@ -109,6 +113,32 @@ assert.ok(
 );
 assert.equal(peakScheduledAmount(free, new Date(2026, 6, 12, 12)), 0);
 
+// Un démarrage différé n'ouvre aucun cycle avant la date choisie. Les anciens
+// projets sans startDate restent immédiatement actifs.
+const deferred = {
+  ...makeGoal('deferred', 0, 600),
+  createdAt: at(2026, 8, 10, 12),
+  startDate: at(2026, 10, 15, 0),
+  nextReminderAt: at(2026, 10, 28),
+};
+assert.equal(goalStartsInFuture(deferred, new Date(2026, 7, 10, 12)), true);
+assert.equal(goalStartsInFuture(deferred, new Date(2026, 9, 15, 0)), false);
+assert.equal(goalStartsInFuture(first, new Date(2026, 0, 2, 12)), false);
+assert.equal(goalActivationDate(deferred).toISOString(), at(2026, 10, 15, 0));
+assert.equal(goalActivationDelayDays(deferred), 66);
+const deferredSchedule = upcomingSchedule(deferred, new Date(2026, 7, 10, 12));
+assert.equal(deferredSchedule[0].date.toISOString(), at(2026, 10, 28));
+assert.ok(deferredSchedule.every((row) => row.date >= new Date(deferred.startDate)));
+assert.equal(balanceCheckDue([deferred], [], new Date(2027, 0, 12, 12)), false);
+assert.equal(balanceCheckDue([deferred], [], new Date(2027, 0, 13, 12)), true);
+const deferredDayChange = cyclesAfterReminderDayChange(
+  deferred,
+  5,
+  new Date(2026, 7, 10, 12),
+);
+assert.equal(deferredDayChange[0].anchorAt, at(2026, 10, 28));
+assert.equal(deferredDayChange[1].anchorAt, at(2026, 11, 5));
+
 // La somme proposée respecte la capacité globale ; une capacité nulle est signalée impossible.
 const budget = { income: 2000, fixedCharges: 1000, variableExpenses: 500 };
 const proposal = buildGlobalRebalanceProposal(
@@ -141,5 +171,7 @@ assert.match(actionsSource, /export async function applyGlobalRebalance/);
 assert.match(actionsSource, /export function deferGlobalRebalance/);
 assert.match(actionsSource, /nextRebalanceReviewAt\(now\)/);
 assert.match(actionsSource, /clearGlobalRebalanceReview\(\)/);
+assert.match(actionsSource, /startDate: startDate\?\.toISOString\(\)/);
+assert.match(actionsSource, /nextReminderAfter\(scheduleReference, input\.reminderDay\)/);
 
 console.log('Tests solde : réconciliation, trimestre, capacité globale et relance douce validés.');

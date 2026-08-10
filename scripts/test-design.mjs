@@ -35,6 +35,8 @@ const planSummary = read('src/components/plan-summary.tsx');
 const iconGenerator = read('scripts/generate-app-icons.swift');
 const actions = read('src/lib/actions.ts');
 
+assert.match(newGoal, /La date cible doit permettre le premier rappel prévu/);
+
 assert.equal(appConfig.expo.icon, './assets/images/icon.png');
 assert.equal(appConfig.expo.ios.icon, './assets/images/icon.png');
 assert.equal(
@@ -159,6 +161,12 @@ assert.match(newGoal, /Continuer vers le rappel/);
 assert.match(newGoal, /savingsMode === 'free'/);
 assert.match(newGoal, /savingsMode,/);
 assert.match(newGoal, /Aucun budget ni montant mensuel ne sera imposé/);
+assert.match(newGoal, /Quand veux-tu commencer/);
+assert.match(newGoal, /Dès maintenant/);
+assert.match(newGoal, /Plus tard/);
+assert.match(newGoal, /Date de démarrage/);
+assert.match(newGoal, /Aucun rappel ne partira avant cette date/);
+assert.match(newGoal, /startDate: startMode === 'later' \? parsedStartDate! : undefined/);
 assert.match(newGoal, /loading=\{saving\}/);
 assert.match(newGoal, /loadingLabel="Création…"/);
 assert.match(newGoal, /<ActionLoadingOverlay/);
@@ -207,6 +215,9 @@ assert.match(goal, /schedule\.slice\(0, 2\)/);
 assert.match(goal, /label=\{`Versement fait \(\$\{money\(suggested\)\}\)`\}/);
 assert.match(goal, /label="J'ai mis de côté"/);
 assert.match(goal, /Aucun montant imposé/);
+assert.match(goal, /goalStartsInFuture\(goal\)/);
+assert.match(goal, /Tout est prêt pour le/);
+assert.match(goal, /Aucune action n’est attendue avant le démarrage/);
 assert.match(goal, /freeMode \? 'Montant libre'/);
 assert.match(goal, /loading=\{actionLoading\}/);
 assert.match(goal, /loadingLabel="Enregistrement…"/);

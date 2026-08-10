@@ -71,6 +71,11 @@ export interface Goal {
   rhythm?: SavingsRhythm;
   /** Mode libre sans montant conseillé. Absent sur les anciens projets, qui restent guidés. */
   savingsMode?: SavingsMode;
+  /**
+   * Date locale à partir de laquelle le plan et ses rappels deviennent actifs.
+   * Absente sur les anciens projets et les démarrages immédiats.
+   */
+  startDate?: string;
   /** ISO datetime de la prochaine action attendue (rappel à 9h) */
   nextReminderAt: string;
   /** Identifiant de la notification locale programmée */

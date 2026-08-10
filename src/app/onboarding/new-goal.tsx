@@ -35,6 +35,7 @@ import {
 import { useMoney } from '@/lib/use-money';
 
 const CATEGORIES: GoalCategory[] = ['emergency', 'car', 'moving', 'travel', 'other'];
+type StartMode = 'now' | 'later';
 const RHYTHMS: {
   key: SavingsRhythm;
   title: string;
@@ -59,6 +60,8 @@ export default function NewGoalScreen() {
   const [target, setTarget] = useState('');
   const [available, setAvailable] = useState('');
   const [dateText, setDateText] = useState('');
+  const [startMode, setStartMode] = useState<StartMode>('now');
+  const [startDateText, setStartDateText] = useState('');
   const [reminderDayText, setReminderDayText] = useState(
     String(Math.min(28, new Date().getDate()))
   );
@@ -70,6 +73,7 @@ export default function NewGoalScreen() {
   const parsedTarget = parseAmountInput(target, currencyCode);
   const parsedAvailable = parseAmountInput(available, currencyCode) ?? 0;
   const parsedDate = parseDateInput(dateText);
+  const parsedStartDate = parseDateInput(startDateText);
   const reminderDay = Math.min(28, Math.max(1, Number(reminderDayText) || 1));
 
   const selectCategory = (nextCategory: GoalCategory) => {
@@ -86,9 +90,19 @@ export default function NewGoalScreen() {
 
   // Aperçu du plan dès que les champs clés sont remplis.
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const deferredStartValid =
+    startMode === 'now' || Boolean(parsedStartDate && parsedStartDate > today);
+  const scheduleReference =
+    startMode === 'later' && parsedStartDate ? parsedStartDate : now;
+  const firstReminder = nextReminderAfter(scheduleReference, reminderDay);
   const previewValid =
-    parsedTarget !== null && parsedTarget > 0 && parsedDate !== null && parsedDate > now;
-  const firstReminder = nextReminderAfter(now, reminderDay);
+    parsedTarget !== null &&
+    parsedTarget > 0 &&
+    parsedDate !== null &&
+    parsedDate > now &&
+    deferredStartValid &&
+    (startMode === 'now' || (parsedDate > scheduleReference && firstReminder <= parsedDate));
   const planMonths = previewValid ? scheduledMonths(firstReminder, parsedDate!) : 0;
   let preview: {
     average: number;
@@ -132,6 +146,16 @@ export default function NewGoalScreen() {
     if (parsedAvailable > parsedTarget) return 'Le déjà disponible dépasse le montant cible.';
     if (!parsedDate) return 'Date cible invalide. Format attendu : JJ/MM/AAAA.';
     if (parsedDate <= now) return 'Choisis une date cible à venir.';
+    if (startMode === 'later') {
+      if (!parsedStartDate) return 'Date de démarrage invalide. Format attendu : JJ/MM/AAAA.';
+      if (parsedStartDate <= today) return 'Choisis une date de démarrage après aujourd’hui.';
+      if (parsedDate <= parsedStartDate) {
+        return 'La date cible doit être postérieure au démarrage du projet.';
+      }
+      if (firstReminder > parsedDate) {
+        return `La date cible doit permettre le premier rappel prévu le ${formatDate(firstReminder)}.`;
+      }
+    }
     return null;
   };
 
@@ -153,6 +177,7 @@ export default function NewGoalScreen() {
         reminderDay,
         rhythm,
         savingsMode,
+        startDate: startMode === 'later' ? parsedStartDate! : undefined,
       });
       await waitForMinimumLoading(loadingStartedAt);
       router.replace({
@@ -251,6 +276,46 @@ export default function NewGoalScreen() {
               setError(null);
             }}
           />
+          <Text style={styles.fieldLabel}>Quand veux-tu commencer ?</Text>
+          <View style={styles.startChoices}>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: startMode === 'now' }}
+              onPress={() => {
+                setStartMode('now');
+                setError(null);
+              }}
+              style={[styles.startChoice, startMode === 'now' && styles.startChoiceSelected]}>
+              <Text style={styles.startChoiceTitle}>Dès maintenant</Text>
+              <Text style={styles.startChoiceBody}>Le plan commence ce mois-ci.</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: startMode === 'later' }}
+              onPress={() => {
+                setStartMode('later');
+                setError(null);
+              }}
+              style={[styles.startChoice, startMode === 'later' && styles.startChoiceSelected]}>
+              <Text style={styles.startChoiceTitle}>Plus tard</Text>
+              <Text style={styles.startChoiceBody}>Choisis une date future.</Text>
+            </Pressable>
+          </View>
+          {startMode === 'later' ? (
+            <>
+              <DateField
+                label="Date de démarrage"
+                value={startDateText}
+                onChangeText={(value) => {
+                  setStartDateText(value);
+                  setError(null);
+                }}
+              />
+              <Text style={styles.startHint}>
+                Aucun rappel ne partira avant cette date.
+              </Text>
+            </>
+          ) : null}
           {savingsMode === 'free' ? (
             <View style={styles.freeModeCard}>
               <Text style={styles.freeModeTitle}>Épargne libre</Text>
@@ -411,6 +476,11 @@ export default function NewGoalScreen() {
                 remaining={money(previewRemaining)}
                 diagnostic={savingsMode === 'free' ? null : previewDiagnostic}
                 reminderDay={reminderDay}
+                startDate={
+                  startMode === 'later' && parsedStartDate
+                    ? formatDate(parsedStartDate)
+                    : 'Dès maintenant'
+                }
                 rhythm={
                   savingsMode === 'free'
                     ? 'Épargne libre'
@@ -467,6 +537,20 @@ export default function NewGoalScreen() {
 const styles = StyleSheet.create({
   title: { fontSize: 23, fontWeight: '800', color: colors.text, lineHeight: 28, marginBottom: 5 },
   body: { fontSize: 15, color: colors.textSecondary, lineHeight: 21, marginBottom: 15 },
+  fieldLabel: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 7 },
+  startChoices: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  startChoice: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.field,
+    padding: 12,
+    backgroundColor: colors.card,
+  },
+  startChoiceSelected: { borderColor: colors.accent, backgroundColor: colors.cardSoft },
+  startChoiceTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  startChoiceBody: { color: colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  startHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: -5, marginBottom: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 },
   chip: {
     flexDirection: 'row',

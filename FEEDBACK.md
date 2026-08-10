@@ -89,6 +89,11 @@ a assez bien marché pour qu'il se projette en v2). Les 4 idées vont toutes ver
 
 ## 2026-07-24 — Testeur : date de début différée du projet  ⭐ (priorité haute post-test)
 
+**Statut V2 — implémenté le 2026-08-10** : choix facultatif **Plus tard** à la création,
+première ancre calculée après la date choisie, écran planifié sans action anticipée et aucune
+notification avant l'activation. La rétention utilise un délai en jours dans `goal_created`
+plutôt que la date exacte ; les requêtes démarrent donc la cohorte au bon moment.
+
 Idée : pouvoir créer un projet dont le démarrage (plan + rappels) commence à une **date
 future** choisie (« je m'y mets dans 2-3 mois »).
 
@@ -101,8 +106,7 @@ future** choisie (« je m'y mets dans 2-3 mois »).
   de `goal_created`. Sinon un « démarrage différé » ressemble à un abandon immédiat dans les
   requêtes (cf. `scripts/retention-queries.sql`, section 3) → mesure faussée. Même famille de
   piège que la notif de test.
-- *Verdict* : après test (gel), mais **priorité plus haute** que anglais / FCFA / gamification.
-  À prioriser si le retour se répète.
+- *Verdict* : intégré à la V2 avec compatibilité des anciens projets.
 
 ---
 

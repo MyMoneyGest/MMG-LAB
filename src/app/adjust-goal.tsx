@@ -10,7 +10,9 @@ import { changeReminderDay } from '@/lib/actions';
 import { formatDate, formatReminderDay, parseAmountInput, parseDateInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
+  goalActivationDate,
   goalSavingsMode,
+  goalStartsInFuture,
   nextReminderFromCycles,
   peakScheduledAmount,
   savedTotal,
@@ -45,6 +47,8 @@ export default function AdjustGoalScreen() {
   if (!goal) return <Redirect href="/" />;
 
   const freeMode = goalSavingsMode(goal) === 'free';
+  const waitingToStart = goalStartsInFuture(goal);
+  const activationDate = goalActivationDate(goal);
   const now = new Date();
   const saved = savedTotal(goal);
   const parsedTarget = parseAmountInput(target, currencyCode);
@@ -56,6 +60,7 @@ export default function AdjustGoalScreen() {
       parsedTarget >= saved &&
       parsedDate &&
       parsedDate > now &&
+      (!waitingToStart || parsedDate > activationDate) &&
       reminderDayValid
   );
 
@@ -126,6 +131,9 @@ export default function AdjustGoalScreen() {
     }
     if (!parsedDate) return 'Date cible invalide. Format attendu : JJ/MM/AAAA.';
     if (parsedDate <= now) return 'Choisis une date cible à venir.';
+    if (waitingToStart && parsedDate <= activationDate) {
+      return 'La date cible doit être postérieure au démarrage du projet.';
+    }
     if (!reminderDayValid) return 'Choisis un jour de rappel compris entre 1 et 28.';
     return null;
   };

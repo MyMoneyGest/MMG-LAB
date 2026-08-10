@@ -7,6 +7,7 @@ import {
   contributionPlan,
   cyclesAfterPostpone,
   cyclesAfterReminderDayChange,
+  goalActivationDelayDays,
   nextReminderAfter,
   nextRebalanceReviewAt,
   nextReminderFromCycles,
@@ -41,6 +42,7 @@ export interface NewGoalInput {
   reminderDay: number;
   rhythm: SavingsRhythm;
   savingsMode: SavingsMode;
+  startDate?: Date;
 }
 
 export type ContributionSource = 'one_tap' | 'custom_amount' | 'test_notification';
@@ -66,6 +68,8 @@ export async function changeLocale(
 export async function createGoal(input: NewGoalInput): Promise<Goal> {
   const state = useStore.getState();
   const now = new Date();
+  const startDate = input.startDate && input.startDate > now ? input.startDate : undefined;
+  const scheduleReference = startDate ?? now;
   const goal: Goal = {
     id: newGoalId(),
     name: input.name,
@@ -76,7 +80,8 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
     reminderDay: input.reminderDay,
     rhythm: input.rhythm,
     savingsMode: input.savingsMode,
-    nextReminderAt: nextReminderAfter(now, input.reminderDay).toISOString(),
+    startDate: startDate?.toISOString(),
+    nextReminderAt: nextReminderAfter(scheduleReference, input.reminderDay).toISOString(),
     createdAt: now.toISOString(),
     contributions: [],
   };
@@ -99,6 +104,7 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
       category: goal.category,
       rhythm: goal.rhythm,
       savingsMode: goal.savingsMode ?? 'guided',
+      activationDelayDays: goalActivationDelayDays(goal),
       country: state.country ?? 'unknown',
       currencyCode: state.currencyCode,
     },

@@ -21,8 +21,8 @@ assert.doesNotMatch(supabase, /\.select\(/);
 
 assert.match(
   actions,
-  /rhythm: goal\.rhythm,[\s\S]*savingsMode: goal\.savingsMode \?\? 'guided',[\s\S]*country: state\.country \?\? 'unknown',[\s\S]*currencyCode: state\.currencyCode/,
-  'goal_created doit conserver rythme, mode, pays et devise',
+  /rhythm: goal\.rhythm,[\s\S]*savingsMode: goal\.savingsMode \?\? 'guided',[\s\S]*activationDelayDays: goalActivationDelayDays\(goal\),[\s\S]*country: state\.country \?\? 'unknown',[\s\S]*currencyCode: state\.currencyCode/,
+  'goal_created doit conserver rythme, mode, délai d’activation, pays et devise',
 );
 assert.match(layout, /const appOpenTracked = useRef\(false\)/);
 assert.match(layout, /if \(!state\.country\) return/);
@@ -46,8 +46,12 @@ assert.match(goalScreen, /rebalanceReason === 'review' \? 'deferred' : 'kept'/);
 assert.match(legal, /Le solde réel n'est jamais\s+transmis/s);
 assert.match(legal, /le pays et la devise\s+sélectionnés dans MMG/);
 assert.match(legal, /le mode guidé ou libre choisis/);
+assert.match(legal, /nombre de jours avant le démarrage/);
+assert.match(legal, /jamais sa date exacte/);
 assert.match(retentionQueries, /Répartition des installations par pays choisi/);
 assert.match(retentionQueries, /Même mesure, séparée par pays choisi/);
 assert.match(retentionQueries, /group by c\.country/);
+assert.match(retentionQueries, /activationDelayDays/);
+assert.match(retentionQueries, /make_interval/);
 
 console.log('Tests analytics : rythme, solde, décisions et insert-only Supabase validés.');

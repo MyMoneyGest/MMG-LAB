@@ -14,6 +14,37 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Codex — Session 47 : Lot C, date de démarrage différée
+
+### Fait
+- Ajouté à la création le choix facultatif **Dès maintenant / Plus tard**, commun aux plans
+  guidés et aux projets libres. Une date future doit rester antérieure à la date cible.
+- Le premier cycle et le premier rappel sont calculés à partir du démarrage choisi. Un
+  changement ultérieur du jour mensuel ne peut pas reconstruire une ancre avant cette date.
+- Avant l'activation, l'écran projet affiche **Prévu le…**, le premier rappel régulier et un
+  état sans bouton de versement ou de report. Les projets existants sans `startDate` gardent
+  exactement leur comportement immédiat.
+- La vérification trimestrielle et les propositions d'échéancier utilisent aussi le vrai point
+  de départ du projet.
+- Protégé la mesure : `goal_created` envoie uniquement `activationDelayDays`, jamais la date
+  exacte. Toutes les requêtes de rétention choisissent le démarrage effectif le plus ancien,
+  y compris si un second projet immédiat est créé après un premier projet différé.
+- Page Confidentialité, FEATURES, FEEDBACK, EXCHANGES et README mis en cohérence.
+
+### Vérifications
+- **9 suites fonctionnelles**, TypeScript et `git diff --check` : OK.
+- Export Expo web complet : **12 routes statiques générées** — OK.
+- Tests ajoutés : compatibilité legacy, activation au jour choisi, délai de 66 jours, aucune
+  échéance avant le démarrage, changement d'ancre protégé et contrôle de solde à J+90.
+- Parcours web à 375 px : choix **Plus tard**, champ `JJ / MM / AAAA`, aide « Aucun rappel… »
+  et disposition mobile vérifiés. Aucun projet test n'a été sauvegardé.
+
+### Ensuite
+1. Validation native V2 lors du prochain build neuf (pays/devise, mode libre, estimation et
+   démarrage différé).
+2. Dernier item du Lot C, seulement après décision produit : rappel de milieu de mois sobre,
+   basse fréquence et désactivable.
+
 ## 2026-08-10 — Codex — Session 46 : Lot C, estimation facultative des dépenses
 
 ### Fait

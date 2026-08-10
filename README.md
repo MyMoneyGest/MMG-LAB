@@ -39,7 +39,8 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
   projet avec versement dû/en retard (le plus urgent d'abord) → sinon dernier projet consulté.
 - `src/lib/plan.ts` — logique pure du plan : capacité prudente (reste à vivre − marge 20 %),
   répartition stable, progressive ou régressive du reste à financer, recalcul non-punitif
-  après tout versement, plus échéances sans montant calculé pour l'épargne libre.
+  après tout versement, échéances sans montant calculé pour l'épargne libre et activation
+  future facultative sans rappel anticipé.
 - `src/lib/notifications.ts` — un rappel local par objectif à son échéance (9h), ou deux
   temporairement lorsqu'un report conserve aussi le rappel mensuel suivant. Le message contient
   le montant conseillé en mode guidé et invite à saisir le montant réel en mode libre, avec le

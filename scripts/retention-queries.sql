@@ -13,7 +13,8 @@
 --    platform, app_version, metadata (détails en JSON).
 --  Clés metadata connues :
 --    app_open             → country, currencyCode
---    goal_created         → category, rhythm, savingsMode, country, currencyCode
+--    goal_created         → category, rhythm, savingsMode, activationDelayDays,
+--                           country, currencyCode
 --    contribution_logged  → type ('deposit'/'withdrawal'), amountBucket, source
 --    rebalance_decided    → choice ('applied'/'kept'/'deferred')
 --
@@ -140,7 +141,9 @@ from events_reels;
 -- ############################################################################
 --
 --  Logique :
---   • « activation » = date du 1er projet créé par chaque personne (son point de départ).
+--   • « activation » = démarrage effectif le plus ancien choisi par chaque personne.
+--     Pour un projet immédiat ou ancien, c'est sa création. Pour un démarrage différé,
+--     on ajoute activationDelayDays à la création sans stocker la date choisie en clair.
 --   • On ne compte que les personnes qui ont EU LE TEMPS d'atteindre le 3e rappel,
 --     c.-à-d. activées il y a au moins 90 jours. (Sinon on sous-estime la rétention :
 --     quelqu'un inscrit hier n'a pas encore pu revenir 3 fois.)
@@ -150,7 +153,12 @@ from events_reels;
 --  → Change le seuil « 90 days » si tu veux mesurer le 1er rappel (30) ou le 2e (60).
 
 with activation as (
-  select install_id, min(created_at) as activated_at
+  select install_id,
+         min(
+           created_at + make_interval(
+             days => coalesce((metadata->>'activationDelayDays')::integer, 0)
+           )
+         ) as activated_at
   from events_reels
   where event_type = 'goal_created'
   group by install_id
@@ -175,15 +183,23 @@ select
         / nullif((select count(*) from cohorte_eligible), 0), 1) as retention_3e_rappel_pct;
 
 
--- 3.b  Même mesure, séparée par pays choisi lors de la création du premier projet.
+-- 3.b  Même mesure, séparée par pays choisi lors du premier démarrage effectif.
 --      C'est la vue à utiliser pour comparer la cohorte Gabon/FCFA à la cohorte France/EUR.
-with activation as (
-  select distinct on (install_id)
-         install_id,
-         created_at as activated_at
+with projets as (
+  select install_id,
+         created_at,
+         created_at + make_interval(
+           days => coalesce((metadata->>'activationDelayDays')::integer, 0)
+         ) as activated_at
   from events_reels
   where event_type = 'goal_created'
-  order by install_id, created_at
+),
+activation as (
+  select distinct on (install_id)
+         install_id,
+         activated_at
+  from projets
+  order by install_id, activated_at, created_at
 ),
 pays as (
   select distinct on (install_id)
@@ -220,18 +236,27 @@ group by c.country
 order by cohorte_ayant_eu_le_temps desc;
 
 
--- 3.c  Même mesure séparée par mode du premier projet.
+-- 3.c  Même mesure séparée par mode du premier projet effectivement démarré.
 --      Ne jamais agréger directement « guided » et « free » : une personne en
 --      épargne libre peut être fidèle avec des versements irréguliers, sans suivre
 --      exactement une mensualité. Les anciens événements sans clé restent guidés.
-with activation as (
-  select distinct on (install_id)
-         install_id,
-         created_at as activated_at,
+with projets as (
+  select install_id,
+         created_at,
+         created_at + make_interval(
+           days => coalesce((metadata->>'activationDelayDays')::integer, 0)
+         ) as activated_at,
          coalesce(metadata->>'savingsMode', 'guided') as savings_mode
   from events_reels
   where event_type = 'goal_created'
-  order by install_id, created_at
+),
+activation as (
+  select distinct on (install_id)
+         install_id,
+         activated_at,
+         savings_mode
+  from projets
+  order by install_id, activated_at, created_at
 ),
 cohorte_eligible as (
   select install_id, activated_at, savings_mode
@@ -266,7 +291,12 @@ order by cohorte_ayant_eu_le_temps desc;
 --  Lecture : combien de personnes sont actives à chaque rappel successif.
 
 with activation as (
-  select install_id, min(created_at) as activated_at
+  select install_id,
+         min(
+           created_at + make_interval(
+             days => coalesce((metadata->>'activationDelayDays')::integer, 0)
+           )
+         ) as activated_at
   from events_reels
   where event_type = 'goal_created'
   group by install_id

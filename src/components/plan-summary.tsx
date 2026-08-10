@@ -15,6 +15,7 @@ export function PlanSummaryDark({
   remaining,
   diagnostic,
   reminderDay,
+  startDate,
   rhythm,
 }: {
   description: string;
@@ -24,6 +25,7 @@ export function PlanSummaryDark({
   remaining: string;
   diagnostic: Diagnostic | null;
   reminderDay: number;
+  startDate?: string;
   rhythm?: string;
 }) {
   const rows: { label: string; value: string; valueColor?: string }[] = [
@@ -32,6 +34,7 @@ export function PlanSummaryDark({
     { label: 'Durée estimée', value: months },
     { label: 'Reste à financer', value: remaining },
   ];
+  if (startDate) rows.push({ label: 'Démarrage', value: startDate });
   if (rhythm) rows.push({ label: 'Rythme', value: rhythm });
   if (diagnostic) {
     rows.push({

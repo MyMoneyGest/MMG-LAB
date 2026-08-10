@@ -36,6 +36,7 @@ import {
   currentUpcomingCycle,
   estimatedGlobalBalance,
   goalSavingsMode,
+  goalStartsInFuture,
   latestBalanceSnapshot,
   progressPct,
   rebalanceReviewDue,
@@ -149,7 +150,10 @@ export default function GoalScreen() {
         ? {
             key: feedbackId,
             title: 'Ton projet est prêt',
-            detail: 'Le premier rappel a été programmé.',
+            detail:
+              goal && goalStartsInFuture(goal)
+                ? `Il démarrera le ${formatDate(goal.startDate!)}. Aucun rappel ne partira avant.`
+                : 'Le premier rappel a été programmé.',
           }
         : routeFeedback === 'adjusted'
           ? {
@@ -163,7 +167,7 @@ export default function GoalScreen() {
               detail: `« ${feedbackName ?? 'Le projet'} » et son historique ont été supprimés.`,
             }
     );
-  }, [feedbackId, feedbackName, routeFeedback]);
+  }, [feedbackId, feedbackName, goal?.startDate, routeFeedback]);
 
   useEffect(() => {
     if (!notificationsSupported) return; // web : pas de rappels, pas de bannière
@@ -261,6 +265,7 @@ export default function GoalScreen() {
   if (!goal) return <Redirect href="/" />;
 
   const freeMode = goalSavingsMode(goal) === 'free';
+  const waitingToStart = goalStartsInFuture(goal);
   const saved = savedTotal(goal);
   const remaining = remainingAmount(goal);
   const pct = progressPct(goal);
@@ -304,7 +309,13 @@ export default function GoalScreen() {
       <AppHeader
         currentGoalId={goal.id}
         title={goal.name}
-        subtitle={freeMode ? 'Épargne libre' : 'Plan actif'}
+        subtitle={
+          waitingToStart
+            ? `Prévu le ${formatDate(goal.startDate!)}`
+            : freeMode
+              ? 'Épargne libre'
+              : 'Plan actif'
+        }
       />
 
       {feedbackMessage ? (
@@ -389,6 +400,17 @@ export default function GoalScreen() {
                 « {goal.name} » est financé. Tu peux créer un nouveau projet depuis le menu.
               </Text>
             </>
+          ) : waitingToStart ? (
+            <View style={styles.plannedCard}>
+              <Text style={styles.plannedTitle}>
+                Tout est prêt pour le {formatDate(goal.startDate!)}
+              </Text>
+              <Text style={styles.plannedBody}>
+                Le plan et ses rappels commenceront à cette date. Ton premier rappel régulier
+                reste prévu le {formatDate(goal.nextReminderAt)}.
+              </Text>
+              <Text style={styles.plannedNote}>Aucune action n’est attendue avant le démarrage.</Text>
+            </View>
           ) : (
             <>
               <View style={styles.adviceCard}>
@@ -782,6 +804,16 @@ const styles = StyleSheet.create({
   },
   balanceCheckTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
   balanceCheckText: { color: colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  plannedCard: {
+    backgroundColor: colors.cardSoft,
+    borderWidth: 1,
+    borderColor: colors.cardSoftBorder,
+    borderRadius: radius.field,
+    padding: 16,
+  },
+  plannedTitle: { color: colors.text, fontSize: 20, fontWeight: '800', lineHeight: 25 },
+  plannedBody: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 7 },
+  plannedNote: { color: colors.accent, fontSize: 13, fontWeight: '800', marginTop: 10 },
   balanceActionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   infoButton: {
     width: 44,

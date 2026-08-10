@@ -114,6 +114,7 @@ assert.match(recentContributionModal, /money\(contribution\.amount\)/);
 assert.match(recentContributionModal, /formatDate\(contribution\.date\)/);
 
 assert.match(newGoal, /<DateField/);
+assert.match(newGoal, /label="Date de démarrage"/);
 assert.match(reportModal, /<DateField/);
 assert.doesNotMatch(newGoal, /placeholder="JJ\/MM\/AAAA"/);
 assert.doesNotMatch(reportModal, /placeholder="JJ\/MM\/AAAA"/);

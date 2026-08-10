@@ -126,6 +126,13 @@ Dernière mise à jour : 2026-08-10 (Codex).
   Aucun montant n'est conseillé, aucun budget n'est demandé et le projet ne consomme aucune
   capacité dans les propositions de réajustement. L'objectif, la progression, l'historique,
   le solde réel et le rituel mensuel restent identiques.
+- **Démarrage différé** : à la création, **Dès maintenant** reste le choix par défaut. L'option
+  **Plus tard** demande une date future antérieure à la cible. Le plan calcule sa première
+  échéance à partir de cette date ; la cible doit laisser la place à ce premier rappel et
+  aucune notification n'est programmée avant. En attendant,
+  l'écran projet affiche un état planifié sans bouton de versement ou de report. Le premier
+  rappel mensuel conserve le jour choisi par l'utilisateur. Les projets plus anciens sans
+  `startDate` restent actifs immédiatement.
 - **Ajustement dédié** : « Ajuster le plan » ouvre un seul écran, séparé du parcours de
   création. Le nom et la catégorie restent inchangés ; l'utilisateur peut modifier le montant
   cible, la date cible, le jour de rappel et le rythme. Un tableau **Avant → après** recalcule
@@ -285,6 +292,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
   la prochaine échéance calculé selon le rythme choisi (« Mets X de côté pour “Nom”. Même
   moins, c'est déjà bien. »). Le tap ouvre l'app directement sur le bon projet. La notification
   propose aussi trois actions : **Fait**, **Modifier**, **Reporter**.
+- **Projet planifié** : pour un démarrage différé, le premier cycle est créé à la première
+  ancre mensuelle située à partir de la date choisie. Aucun rappel régulier ne peut donc partir
+  avant l'activation, y compris après un changement du jour mensuel.
 - **Actions** : Fait exécute la même confirmation en un tap et affiche l'écran de confirmation ;
   Modifier ouvre la saisie d'un autre montant ; Reporter ouvre les choix de date. Dans les trois
   cas, l'onglet Aujourd'hui du projet porté par `data.goalId` est ouvert. Pour l'épargne libre,
@@ -365,7 +375,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 ## 12. Persistance locale
 
-- **Quoi** : budget, projets (dont leur mode guidé/libre, rythme, cycles et enveloppe confirmée), versements,
+- **Quoi** : budget, projets (dont leur mode guidé/libre, éventuelle date de démarrage, rythme,
+  cycles et enveloppe confirmée), versements,
   snapshots du solde global et part non affectée, éventuelle relance de réajustement différée,
   pays, devise, dernier projet consulté, installId — tout survit au redémarrage, uniquement
   sur le téléphone.
@@ -377,7 +388,7 @@ Dernière mise à jour : 2026-08-10 (Codex).
 
 - **Quoi** : événements pseudonymisés dans la table `events` du projet MMG-LAB — `app_open`
   (pays + devise sélectionnés), `goal_created` (catégorie générale + rythme + mode
-  guidé/libre + pays/devise),
+  guidé/libre + délai d'activation en jours + pays/devise),
   `contribution_logged` (type
   deposit/withdrawal + bucket de montant), `reminder_opened`, `reminder_postponed`,
   `balance_confirmed` (sans solde ni montant), `rebalance_decided` (choix `applied`, `kept` ou
@@ -390,6 +401,9 @@ Dernière mise à jour : 2026-08-10 (Codex).
   par mode d'épargne. Les événements V1 sans pays apparaissent sous `legacy_inconnu` et ceux
   sans mode sous `guided`. Les deux modes ne doivent pas être agrégés pour juger le rituel :
   un épargnant libre peut être fidèle avec des versements plus irréguliers.
+  Pour un projet différé, les cohortes commencent au démarrage choisi et non à la création.
+  Seul le nombre de jours d'attente est transmis, jamais la date exacte ; un ancien événement
+  sans ce champ garde un délai nul.
   Les notifications marquées `isTest` et les gestes déclenchés depuis leurs actions sont
   volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
 - **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.

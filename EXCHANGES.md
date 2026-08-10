@@ -104,7 +104,8 @@ fragile (cf. notif de test, date de début différée).
   seul le total validé rejoint le budget ; aucun détail supplémentaire n'est persisté.
 - ✅ *(Codex, session 44)* Mode épargne libre (revenus irréguliers, sans budget imposé,
   rappel mensuel conservé, mesure séparée). ⭐⭐
-- Date de début différée (⚠️ ancrer l'activation sur la date de début, pas la création). ⭐
+- ✅ *(Codex, session 47)* Date de début différée : aucun rappel avant l'activation ; la
+  rétention utilise `activationDelayDays`, pas `goal_created` brut ni la date exacte. ⭐
 - Rappel/message sobre en cours de mois — **NON-PUNITIF** (pas de streak/culpabilisation
   façon Duolingo), basse fréquence, désactivable.
 
