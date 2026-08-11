@@ -14,6 +14,34 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Claude Code — Session 54 : validation à l'écran des parcours Lot C (web)
+
+Vérification visuelle sur le preview web (store Gabon/FCFA) des parcours du Lot C qui sont
+observables sans appareil — complément aux tests de notifs (que Patrick, sur Expo Go, ne peut
+pas vérifier lui-même pour le moment).
+
+### Vérifié à l'écran, sans erreur console
+- **Sélecteur de mode** (`onboarding/mode`) : « Plan guidé » / « Épargne libre », le texte du
+  mode libre précise bien « Le rappel mensuel reste là ».
+- **Création épargne libre** : étapes « Projet » + **« Rappel »** (pas « Rythme »), pas de
+  budget imposé, carte « Épargne libre » ; étape 2 « MMG garde ton rituel mensuel, sans
+  t'imposer de montant » ; récap = « Montant libre » / « Épargne libre ».
+- **Démarrage différé** (testé dans le même projet) : champ date + hint « Aucun rappel ne
+  partira avant cette date » ; récap « Démarrage 01/11/2026 » ; écran projet → en-tête « Prévu
+  le 01/11/2026 » + carte « Tout est prêt pour le 01/11/2026 » (état d'attente, pas de montant
+  conseillé). Le projet libre n'est pas compté dans l'effort de capacité (bandeau inchangé).
+- **Validation** : nom vide correctement bloqué.
+- **Estimation des dépenses** (`expense-estimate-modal`) : garde-fou « ne recompte pas… charges
+  fixes », 5 catégories FCFA, total live correct (300 000 + 80 000 + 120 000 = 500 000 FCFA).
+- **Gros montants FCFA** (rappel Session 43) : rendu sur une ligne confirmé.
+
+### Reste (non vérifiable sans appareil)
+- Comportement natif des notifications (rappel mensuel, coup de pouce discret sur canal LOW /
+  iOS passif, démarrage différé qui n'émet rien avant la date) → couvert par les tests, à
+  confirmer par Patrick en validation native quand un build le permettra.
+
+---
+
 ## 2026-08-10 — Claude Code — Session 53 : coup de pouce sur canal dédié discret
 
 Suite de l'audit : second point signalé, sur décision de Patrick.
