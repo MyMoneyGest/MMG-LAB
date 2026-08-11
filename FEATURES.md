@@ -4,7 +4,11 @@ Description technique de toutes les fonctionnalités : ce qu'elles font, comment
 fonctionnent, où elles vivent dans le code. **Mis à jour à chaque fonctionnalité ajoutée ou
 modifiée**, pas après coup.
 
-Dernière mise à jour : 2026-08-10 (Codex).
+Dernière mise à jour : 2026-08-11 (Claude Code).
+
+> **Distribution (V2)** : Android via le **Google Play Store** (abandon du lien APK direct,
+> jugé source de friction/méfiance) ; iOS via **TestFlight**. Procédure et stratégie de
+> lancement dans `PLAY-STORE.md` ; build/version dans `GUIDE-MAINTENANCE.md` §4.
 
 ---
 

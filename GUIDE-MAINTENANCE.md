@@ -127,16 +127,45 @@ Un carré de points noirs (un « QR code ») apparaît.
 Pour **arrêter**, reviens dans le Terminal et fais **Ctrl + C**.
 
 ### Fabriquer un fichier installable (build)
-Quand tu veux une vraie app à installer (pour tes testeurs) :
 
+Il y a **trois profils de build** (définis dans `eas.json`) :
+
+| Profil | Sert à | Produit | Outils de test (M, aperçu) |
+|---|---|---|---|
+| `preview-test` | **Ton** test perso rapide | APK Android autonome | **OUI** (appui long M, aperçu du coup de pouce) |
+| `production` | **Distribution** (Play Store / TestFlight) | AAB Android + app iPhone | **NON** |
+| `preview` | APK autonome sans outils de test (dépannage) | APK Android | NON |
+
+**Pour TON test perso** (installer et essayer, avec le M de test) :
 ```
 cd ~/Documents/mmg-app
-eas build --profile preview --platform android
+eas build --profile preview-test --platform android
 ```
+EAS te donne un lien : ouvre-le sur ton Android pour installer l'APK.
 
-À la fin, EAS te donne un **lien** : ouvre-le sur le téléphone Android pour installer l'APK.
-Pour l'iPhone, c'est `--platform ios` puis une soumission à TestFlight (plus complexe, à
-faire accompagné la première fois).
+**Pour la DISTRIBUTION** (mise en production) :
+```
+cd ~/Documents/mmg-app
+eas build --profile production --platform android   # AAB pour le Play Store
+eas build --profile production --platform ios       # app iPhone pour TestFlight
+```
+- Android → un fichier **.aab** à importer dans le **Google Play Console** (voir `PLAY-STORE.md`).
+  Ce n'est PAS un APK qu'on installe directement : il passe par le Play Store.
+- iPhone → à envoyer sur **TestFlight** via App Store Connect (`eas submit -p ios` ou l'upload
+  manuel).
+
+### Monter la version
+- Le **numéro de build** (versionCode Android / build number iOS) est **auto-incrémenté par EAS**
+  à chaque build `production` (réglage `appVersionSource: remote` + `autoIncrement`). Rien à faire.
+- La **version marketing** (ex. `2.0.0`) est dans `app.json` (`expo.version`). À monter **à la
+  main** pour une nouvelle version visible (ex. `2.1.0`). ⚠️ Elle sert aussi à taguer les
+  événements analytics (`app_version`) : la monter permet de distinguer les versions dans la
+  table `events`.
+
+### Distribution : Play Store (Android) + TestFlight (iPhone)
+La stratégie complète (compte, fiche, tests internes/fermés, règle des 12 testeurs / 14 jours,
+politique de confidentialité) est détaillée dans **`PLAY-STORE.md`**. On est passés du lien APK
+direct (méfiance des utilisateurs) au Play Store.
 
 ---
 

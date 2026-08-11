@@ -14,6 +14,38 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Claude Code — Session 61 : builds de production + pivot Google Play
+
+Décision de Patrick (après discussion avec Claude Chat) : **Android passe sur le Google Play
+Store** (abandon du lien APK direct = friction + méfiance) ; iOS reste sur TestFlight.
+
+### Fait
+- **Vérifié** : Expo SDK 57 cible par défaut **API 36 (Android 16)** — exigence Google Play
+  depuis le 31/08/2026 — donc **aucune config à ajouter**. Le profil `production` produit un
+  **AAB signé sans outils de test**.
+- **Builds de production lancés** (EAS, profil `production`, env production avec Supabase) :
+  - Android **AAB** (versionCode auto 1→2) : build `e60d3ec4`.
+  - iOS pour TestFlight (credentials individuels OK) : build `8110c56b`.
+- **`PLAY-STORE.md`** créé : guide de lancement pas-à-pas (compte perso, règle 12 testeurs /
+  14 jours, stratégie double-voie internal+closed testing, contenu de fiche prêt, points de
+  politique Google — confidentialité, Data safety, catégorie Finance).
+- **GUIDE-MAINTENANCE.md** : section build refaite (3 profils, AAB vs APK, montée de version),
+  renvoi vers PLAY-STORE.md.
+
+### À signaler à Patrick
+- Le brief mentionnait `mymoneygest@mail.com` : c'est l'ancienne coquille. L'email réel dans
+  l'app est **`mymoneygest@gmail.com`** → à utiliser partout sur la fiche Play.
+- **Politique de confidentialité** : Google exige une **URL publique**. Le contenu existe dans
+  `legal.tsx` ; reste à le publier en page publique et coller l'URL. (Claude Code peut préparer
+  la page.)
+- Ce que Claude Code ne peut PAS faire : créer le compte développeur, payer, vérifier l'identité.
+
+### Ensuite
+- Patrick : créer le compte Google Play + valider identité, importer l'AAB en internal testing,
+  recruter 15-16 testeurs Android pour le closed testing.
+
+---
+
 ## 2026-08-11 — Claude Code — Session 60 : audit V2 avant production + bump version
 
 Audit complet de la V2 (`main..v2` : 28 commits, 59 fichiers, ~5000 lignes) demandé par Patrick
