@@ -325,8 +325,12 @@ Dernière mise à jour : 2026-08-10 (Codex).
   du tiroir sans afficher la fenêtre Fait / Modifier / Reporter.
   - **Contenu (batterie de messages, `src/lib/nudge-copy.ts`)** : le message unique creux a été
     remplacé par un **pool qui tourne**. Intention : reconnecter au « pourquoi » du projet +
-    micro-valorisation de l'épargne. Garde-fous : **aucun verbe d'action**, **aucun montant**,
-    aucun pointage du restant ; le **nom du projet** est toujours injecté. Trois pools avec
+    micro-valorisation de l'épargne. **Registre familier, parlé, concret** (pas « coach » /
+    développement personnel — une partie du public commence tout juste à épargner, Afrique
+    francophone incluse). Garde-fous : **aucun verbe d'action**, **aucun montant**, aucun
+    pointage du restant ; le **nom du projet** est toujours injecté, précédé de « ton projet »
+    là où un nom court le rendrait bancal (« ton projet Voyage »). Copie « assez bonne »,
+    destinée à être affinée avec les premiers testeurs sur place. Trois pools avec
     sélection *démarrage > libre > principal* : un sous-ensemble « démarrage » (projet de moins
     d'un cycle, 0-1 versement), un sous-ensemble « épargne libre » (sans cible ni échéance), et
     le pool principal. **Titres variés** tirés indépendamment du corps (sans « Coucou »).

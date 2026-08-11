@@ -14,6 +14,26 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Claude Code — Session 58 : révision du ton des messages (coup de pouce)
+
+Retour de Patrick sur la 1re version du pool : garde-fous OK, mais le **ton** était trop
+« coach / développement personnel » (« la preuve vivante », « nuance importante »), écrit pour
+être lu plutôt que reçu — hors-sol pour un public qui commence à épargner (Afrique francophone).
+
+### Fait
+- **`nudge-copy.ts`** : pool réécrit dans un **registre familier, parlé, concret**. Nom du
+  projet précédé de **« ton projet »** là où un nom court serait bancal (« ton projet Voyage »).
+  Pools démarrage/libre réécrits en cohérence ; titres inchangés.
+- Tests (`test-nudge-copy`) mis à jour sur les nouvelles formulations ; **10 suites vertes**,
+  `tsc` OK.
+- Doc : FEATURES (note de registre). Copie **« assez bonne »**, à affiner avec les testeurs sur
+  place — on ne la sur-travaille pas maintenant (notif secondaire, désactivée par défaut).
+
+### Ensuite
+- Rebuild Android `preview-test` pour test de la variété via « Voir un aperçu » (Samsung).
+
+---
+
 ## 2026-08-11 — Claude Code — Session 57 : batterie de messages du coup de pouce (Étape 1)
 
 Suite au retour de Patrick (le message unique du coup de pouce sonnait creux, « comme quelqu'un

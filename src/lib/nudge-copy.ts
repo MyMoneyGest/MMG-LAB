@@ -11,38 +11,43 @@
 
 const NAME_TOKEN = '{name}';
 
+// Ton familier, parlé, concret (pas « coach »/développement personnel) : le public
+// inclut des gens qui commencent tout juste à épargner (Afrique francophone, Gabon…).
+// Le nom du projet est précédé de « ton projet » là où un nom court le rendrait
+// bancal ; là où la phrase commence par « {name} », elle a été pensée pour tenir.
+// Version « assez bonne » — affinée ensuite avec les premiers testeurs sur place.
+
 /** Pool principal : projet avec au moins un cycle complet derrière lui. */
 const PRINCIPAL: string[] = [
-  "Ce projet « {name} », c'est toi qui l'as choisi — et tu es en train de le construire, tranquillement.",
-  "« {name} » avance dans le bon sens. Rien à courir après aujourd'hui, juste à le savoir.",
-  "Chaque mois, tu te rapproches un peu plus de « {name} ». C'est déjà en marche.",
-  "Tu as déjà commencé « {name} » — et commencer, c'est la partie que la plupart ne font jamais.",
-  "Épargner petit à petit bat épargner d'un coup : « {name} » en est la preuve vivante.",
-  "« {name} » n'est pas un rêve lointain, c'est un plan que tu suis. Nuance importante.",
-  "Ton rythme sur « {name} » t'appartient — vite ou doucement, l'important c'est que ça continue.",
-  "Un projet qu'on suit aboutit bien plus souvent qu'un projet gardé en tête — et « {name} », tu le suis.",
-  "Mettre de côté régulièrement, même un peu, c'est déjà une habitude précieuse pour « {name} ».",
-  "« {name} » est toujours là, et toi aussi. C'est tout ce qu'il faut pour y arriver.",
+  "Ton projet « {name} » suit son cours, tranquille. Rien à faire, on voulait juste te le dire.",
+  "Petit à petit, « {name} » se remplit. Et c'est toi qui fais ça.",
+  "Un mois de plus, un pas de plus vers « {name} ». Ça continue d'avancer.",
+  "Tu as lancé ton projet « {name} » — beaucoup y pensent, peu se lancent. Toi, tu l'as fait.",
+  "Mois après mois, « {name} » prend forme. C'est comme ça qu'on y arrive.",
+  "« {name} », tu ne fais pas qu'y penser : tu le construis pour de vrai.",
+  "Vite ou doucement, peu importe : tant que « {name} » avance, tu es sur la bonne voie.",
+  "Un projet qu'on suit finit par arriver. Et ton projet « {name} », tu le suis bien.",
+  "Mettre de côté un peu, souvent — c'est déjà une belle habitude pour « {name} ».",
+  "Ton projet « {name} » est toujours là, et toi aussi. C'est tout ce qu'il faut.",
 ];
 
 /** Sous-ensemble « démarrage » : les messages « sur ta lancée » sonnent faux au tout début. */
 const DEMARRAGE: string[] = [
-  "« {name} » vient de commencer — et le plus dur, c'était de s'y mettre.",
-  "Tu as posé la première pierre de « {name} ». La suite est déjà tracée.",
-  "« {name} » démarre à ton rythme. Pas de course, juste un cap.",
+  "Ton projet « {name} » démarre. Le plus dur — s'y mettre — c'est déjà fait.",
+  "Première pierre posée pour « {name} ». Le reste suit, à ton rythme.",
+  "« {name} » ne fait que commencer. Pas de course, juste un cap.",
 ];
 
 /** Sous-ensemble « épargne libre » : on écarte toute cible/échéance, on parle habitude. */
 const LIBRE: string[] = [
-  PRINCIPAL[0],
-  PRINCIPAL[3],
-  PRINCIPAL[4],
-  PRINCIPAL[6],
-  PRINCIPAL[7],
-  PRINCIPAL[8],
-  PRINCIPAL[9],
-  "Mettre de côté pour « {name} », mois après mois — c'est ça, la vraie régularité.",
-  "« {name} » avance au fil de tes versements, sans date butoir. À ton tempo.",
+  PRINCIPAL[0], // suit son cours
+  PRINCIPAL[1], // se remplit, c'est toi qui fais ça
+  PRINCIPAL[3], // tu as lancé
+  PRINCIPAL[5], // tu le construis pour de vrai
+  PRINCIPAL[8], // belle habitude
+  PRINCIPAL[9], // toujours là
+  "Mettre de côté pour « {name} », mois après mois — voilà la vraie régularité.",
+  "« {name} » avance à ton tempo, sans date limite. Comme tu veux.",
   "Pas d'objectif chiffré sur « {name} », juste une bonne habitude qui s'installe.",
 ];
 

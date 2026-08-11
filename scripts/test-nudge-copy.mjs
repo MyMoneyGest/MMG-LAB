@@ -43,22 +43,22 @@ const principalMessages = new Set(
 assert.ok(principalMessages.size >= 5, 'le pool principal doit offrir de la variété');
 
 // Sélection du pool : démarrage > libre > principal.
-// Un message « démarrage » (première pierre) n'apparaît QUE pour isStarting.
+// Un message « démarrage » n'apparaît QUE pour isStarting.
 const startingCorpus = Array.from({ length: 12 }, (_, i) => nudgeMessage(starting, i)).join(' ');
-assert.match(startingCorpus, /première pierre|vient de commencer|démarre à ton rythme/);
+assert.match(startingCorpus, /Première pierre|Le plus dur|ne fait que commencer/);
 const principalCorpus = Array.from({ length: 30 }, (_, i) => nudgeMessage(principal, i)).join(' ');
-assert.doesNotMatch(principalCorpus, /première pierre/, 'pas de message démarrage hors démarrage');
+assert.doesNotMatch(principalCorpus, /Première pierre/i, 'pas de message démarrage hors démarrage');
 
 // Épargne libre : on écarte toute cible/échéance, on parle habitude.
 const freeCorpus = Array.from({ length: 30 }, (_, i) => nudgeMessage(free, i)).join(' ');
-assert.match(freeCorpus, /sans date butoir|Pas d'objectif chiffré|vraie régularité/);
-assert.doesNotMatch(freeCorpus, /tu te rapproches|rêve lointain/, 'pas de cible en épargne libre');
+assert.match(freeCorpus, /sans date limite|Pas d'objectif chiffré|vraie régularité/);
+assert.doesNotMatch(freeCorpus, /un pas de plus vers|finit par arriver/, 'pas de cible en épargne libre');
 
 // isStarting l'emporte sur isFree (le plus spécifique gagne).
 const startingFree = { goalName: NAME, isStarting: true, isFree: true };
 assert.match(
   Array.from({ length: 12 }, (_, i) => nudgeMessage(startingFree, i)).join(' '),
-  /première pierre|vient de commencer/
+  /Première pierre|Le plus dur|ne fait que commencer/
 );
 
 // Titres : dans le set attendu, jamais « Coucou » (l'effet que Patrick voulait fuir).
