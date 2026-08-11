@@ -171,10 +171,32 @@ Google exige une **URL publique** vers une politique de confidentialité. On a d
 contenu dans l'app (écran Confidentialité : responsable du traitement, données locales,
 événements pseudonymisés, conservation 12 mois, droits RGPD, CNIL, contact
 **mymoneygest@gmail.com**). **Action** : la page est **déjà prête** — `web/confidentialite.html` (fichier autonome, reproduit
-fidèlement l'écran légal de l'app). À héberger sur **mymoneygest.com** (tu as le domaine sur
-IONOS), par ex. à l'URL `https://mymoneygest.com/confidentialite.html`, puis coller cette URL dans
-la console Play (champ « Politique de confidentialité »). Upload : espace d'hébergement IONOS →
-gestionnaire de fichiers → déposer le fichier.
+fidèlement l'écran légal de l'app). Il faut la mettre en ligne à une **URL publique**, puis coller
+cette URL dans le Play Console (champ « Politique de confidentialité ») et dans App Store Connect.
+
+> **Pas besoin de Vercel obligatoirement.** Google accepte n'importe quelle URL publique. Tu as
+> déjà le domaine sur IONOS → héberge-la là si ton offre inclut un espace web.
+
+**Option A — IONOS (si tu as un hébergement web, pas juste le domaine)** — recommandé :
+1. Connecte-toi à ton espace **IONOS** → section **Hébergement / Sites web**.
+2. Ouvre le **Gestionnaire de fichiers** (ou connecte-toi en **SFTP** avec les identifiants IONOS).
+3. Va dans le **dossier racine** du site (souvent `/`, `htdocs` ou `www`).
+4. **Dépose** le fichier `confidentialite.html`.
+5. C'est en ligne : `https://mymoneygest.com/confidentialite.html`. Vérifie dans un navigateur.
+
+**Option B — Tu n'as QUE le domaine (pas d'espace web)** :
+- Soit tu ajoutes une **offre d'hébergement IONOS** puis Option A.
+- Soit tu héberges **gratuitement** ailleurs :
+  - **Netlify (le plus rapide, ~2 min)** : va sur app.netlify.com, **glisse-dépose le dossier
+    `web/`** dans « Deploy ». Tu obtiens une URL publique immédiate (ex. `xxx.netlify.app/confidentialite.html`).
+  - **Vercel** : crée un compte, « Add New Project », connecte le repo GitHub ou importe `web/`,
+    déploie. URL immédiate (`xxx.vercel.app`).
+  - Pour utiliser **mymoneygest.com** ensuite : ajoute le domaine dans Netlify/Vercel, puis chez
+    IONOS modifie les **DNS** (enregistrement pointant vers l'hébergeur, selon leurs instructions).
+
+**Le plus rapide pour débloquer MAINTENANT** : Google accepte une URL `*.netlify.app` /
+`*.vercel.app`. Donc un glisser-déposer Netlify te donne une URL utilisable **tout de suite**, et
+tu brancheras `mymoneygest.com` plus tard sans bloquer le lancement.
 
 ### 5.2 Formulaire « Sécurité des données » (Data safety)
 À remplir honnêtement, cohérent avec notre réalité :

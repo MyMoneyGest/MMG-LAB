@@ -28,9 +28,15 @@ Store** (abandon du lien APK direct = friction + méfiance) ; iOS reste sur Test
   - iOS pour TestFlight (credentials individuels OK) : build `8110c56b`.
 - **`PLAY-STORE.md`** créé : guide de lancement pas-à-pas (compte perso, règle 12 testeurs /
   14 jours, stratégie double-voie internal+closed testing, contenu de fiche prêt, points de
-  politique Google — confidentialité, Data safety, catégorie Finance).
+  politique Google — confidentialité, Data safety, catégorie Finance) + **étapes d'hébergement**
+  de la page de confidentialité (IONOS, ou Netlify/Vercel en gratuit).
 - **GUIDE-MAINTENANCE.md** : section build refaite (3 profils, AAB vs APK, montée de version),
   renvoi vers PLAY-STORE.md.
+- **iOS soumis à TestFlight** : `eas submit -p ios` (auth via clé API ASC stockée sur EAS, aucun
+  mot de passe Apple à saisir), App v2.0.0 build 5. Soumission `ef78b08b` en cours ; puis
+  traitement Apple avant apparition dans TestFlight.
+- **`web/confidentialite.html`** créé : page de confidentialité publique autonome (reproduit
+  `legal.tsx`), à héberger sur mymoneygest.com (IONOS) — URL à coller dans Play Console + ASC.
 
 ### À signaler à Patrick
 - Le brief mentionnait `mymoneygest@mail.com` : c'est l'ancienne coquille. L'email réel dans
