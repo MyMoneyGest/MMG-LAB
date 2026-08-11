@@ -14,6 +14,35 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Claude Code — Session 60 : audit V2 avant production + bump version
+
+Audit complet de la V2 (`main..v2` : 28 commits, 59 fichiers, ~5000 lignes) demandé par Patrick
+avant les builds de production.
+
+### Vérifié — RAS
+- **Mécanique** : `tsc` OK, **11 suites de tests vertes**, `git diff --check main..v2` propre,
+  arbre de travail propre.
+- **Sécurité** : aucun secret tracké (`.env` ignoré, seul `.env.example` présent) ; Supabase via
+  variables d'env (jamais en dur) ; aucun `console.*` hors `__DEV__` ; aucun `@ts-ignore` /
+  `eslint-disable` / TODO / FIXME dans `src/`.
+- **Confidentialité analytics** : aucune donnée perso — que buckets/catégories/pays/devise ;
+  aucun montant en clair, aucun nom de projet, aucun lieu d'épargne. `nudge_shown` jamais compté
+  comme rétention.
+- **Outils de test** : gating `TEST_TOOLS_ENABLED` airtight — `EXPO_PUBLIC_MMG_TEST_TOOLS` n'est
+  QUE dans le profil `preview-test` ; `preview` (Android prod) et `production` (iOS) ne l'ont pas
+  → appui long M et aperçu du coup de pouce **absents** des builds de distribution.
+- **Env EAS** : clés Supabase présentes dans les environnements `preview` ET `production`.
+
+### Corrigé
+- **`app.json` version 1.0.0 → 2.0.0** : la V1 était taguée 1.0.0 ; sans bump, les événements V2
+  arriveraient avec `app_version=1.0.0`, indistinguables de la V1 dans la table `events`.
+
+### Verdict
+V2 **prête pour la production**. Reste à choisir la cible Android (APK direct façon V1 vs AAB
+Play Store) puis lancer les builds Android + iOS.
+
+---
+
 ## 2026-08-11 — Claude Code — Session 59 : coup de pouce Étape 2 (planificateur global)
 
 Implémentation de l'Étape 2 validée : plafond partagé + déclencheur d'inactivité + tracing A/B.
