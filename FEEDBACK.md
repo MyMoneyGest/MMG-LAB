@@ -75,6 +75,18 @@ a assez bien marché pour qu'il se projette en v2). Les 4 idées vont toutes ver
      déjà = le rappel mensuel, et c'est précisément ce qu'on teste.
    - *Verdict* : NE PAS ajouter pendant le test. À reconsidérer APRÈS, sobrement, seulement
      si la rétention mesurée est faible.
+   - **RECADRAGE 2026-08-11 (Patrick — décision)** : le projet n'est plus un *test de rétention
+     pur* mais un **mini-déploiement** (pivot FCFA, réseau Facebook, multi-pays euro + Afrique +
+     USD/Belgique). Dans ce cadre, **capter l'attention devient un objectif légitime**, pas
+     seulement mesurer l'implication. → une relance douce est **acceptée**, incarnée par le
+     **coup de pouce** (cf. [[EXCHANGES.md]] et FEATURES §Coup de pouce), en deux temps :
+     - *Étape 1 (faite)* : coup de pouce **mi-cycle calendaire** (neutre pour la mesure) avec
+       une batterie de messages motivants.
+     - *Étape 2 (à venir)* : ajout du déclenchement **par inactivité** (Logique B) — c'est la
+       vraie relance comportementale. Condition d'hygiène posée par Claude Code : **tracer le
+       déclencheur (A vs B)** pour pouvoir isoler les retours provoqués et garder le chiffre de
+       rétention *lisible* plutôt que silencieusement gonflé. Reste non-punitif : aucun impératif,
+       aucun montant, notification discrète.
    - **Décision V2 — 2026-08-10** : un compromis borné a été retenu après l'élargissement de la
      V2. Le **coup de pouce à mi-cycle** est facultatif, désactivé par défaut, sans action,
      streak ou culpabilisation. Son ouverture et l'ouverture d'app correspondante sont exclues

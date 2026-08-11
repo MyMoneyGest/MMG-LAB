@@ -316,12 +316,28 @@ Dernière mise à jour : 2026-08-10 (Codex).
   (« Tu as déjà mis X € ce mois-ci… »). Chaque nouveau surplus reprogramme les rappels afin que
   le message et le montant conseillé restent à jour.
 - **Coup de pouce facultatif** : depuis la fiche d'un projet, l'utilisateur peut activer un
-  message sobre à mi-chemin entre deux ancres mensuelles. Il est **désactivé par défaut**, se
-  règle séparément pour chaque projet, ne contient aucun bouton et ne demande aucune action.
+  message à mi-chemin entre deux ancres mensuelles. Il est **désactivé par défaut**, se règle
+  séparément pour chaque projet, ne contient aucun bouton et ne demande aucune action.
   Un report ponctuel ne déplace pas ce milieu de cycle. Aucun message n'est programmé avant la
-  date de démarrage du projet ni pour un cycle déjà soldé ; tout versement qui solde le cycle
-  annule aussi son coup de pouce. Un tap ouvre simplement le bon projet. Une ouverture normale
-  de MMG retire le message du tiroir sans afficher la fenêtre Fait / Modifier / Reporter.
+  date de démarrage du projet, pour un cycle déjà soldé, ni à moins de 4 jours du rappel mensuel
+  (évite deux notifs rapprochées) ; tout versement qui solde le cycle annule aussi son coup de
+  pouce. Un tap ouvre simplement le bon projet. Une ouverture normale de MMG retire le message
+  du tiroir sans afficher la fenêtre Fait / Modifier / Reporter.
+  - **Contenu (batterie de messages, `src/lib/nudge-copy.ts`)** : le message unique creux a été
+    remplacé par un **pool qui tourne**. Intention : reconnecter au « pourquoi » du projet +
+    micro-valorisation de l'épargne. Garde-fous : **aucun verbe d'action**, **aucun montant**,
+    aucun pointage du restant ; le **nom du projet** est toujours injecté. Trois pools avec
+    sélection *démarrage > libre > principal* : un sous-ensemble « démarrage » (projet de moins
+    d'un cycle, 0-1 versement), un sous-ensemble « épargne libre » (sans cible ni échéance), et
+    le pool principal. **Titres variés** tirés indépendamment du corps (sans « Coucou »).
+    Rotation **déterministe** par `hashSeed(installId + cycle)` : varie d'un cycle et d'un
+    utilisateur à l'autre sans rien persister. L'aperçu de test (`scheduleTestNudge`) pioche au
+    hasard pour montrer la variété. Module autonome, prêt à être complété un jour par une source
+    distante (spec §7) sans réécriture.
+  - **À venir (Étape 2, décidé — cf. FEEDBACK.md)** : second déclencheur **par inactivité**
+    (relance comportementale), **plafond d'un coup de pouce / quinzaine tous projets confondus**,
+    et **tracing du déclencheur (A vs B)** pour garder la rétention analysable. Le cadre a évolué
+    d'un test de rétention pur vers un mini-déploiement où capter l'attention est légitime.
 - **Ouverture normale de l'app** : si un rappel est encore dans le tiroir Android, MMG le retire
   puis affiche une fenêtre compacte au-dessus de l'écran courant avec **Fait**, **Modifier**,
   **Reporter** et **Fermer pour le moment**. Plusieurs rappels sont mis en file sans doublon.
@@ -344,9 +360,10 @@ Dernière mise à jour : 2026-08-10 (Codex).
   fichier absent du binaire.
   ⚠️ expo-notifications est chargé **paresseusement** : indisponible sur web et Expo Go
   Android (crash à l'import sinon) — support complet sur iOS Expo Go et dev builds.
-- **Où** : `src/lib/notifications.ts` (unique point d'accès au module), `src/app/_layout.tsx`,
-  `src/lib/notification-model.ts`, `src/components/pending-reminder-modal.tsx`,
-  `src/components/app-header.tsx`, `src/app/goal/[id].tsx`.
+- **Où** : `src/lib/notifications.ts` (unique point d'accès au module), `src/lib/nudge-copy.ts`
+  (pool de messages du coup de pouce), `src/app/_layout.tsx`, `src/lib/notification-model.ts`,
+  `src/components/pending-reminder-modal.tsx`, `src/components/app-header.tsx`,
+  `src/app/goal/[id].tsx`.
 
 ## 10. Menu / switcher de projets (⋯)
 

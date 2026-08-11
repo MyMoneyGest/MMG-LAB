@@ -14,6 +14,38 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Claude Code — Session 57 : batterie de messages du coup de pouce (Étape 1)
+
+Suite au retour de Patrick (le message unique du coup de pouce sonnait creux, « comme quelqu'un
+qui sonne juste pour dire coucou »). Décision stratégique associée : recadrage vers un
+mini-déploiement, relance douce acceptée en 2 temps (cf. [[EXCHANGES.md]] et FEEDBACK.md).
+
+### Fait (Étape 1 — le correctif du contenu)
+- **`src/lib/nudge-copy.ts`** (module autonome, testable) : pool de messages qui tournent, avec
+  sélection *démarrage > libre > principal*, injection systématique du nom du projet, **aucun
+  verbe d'action ni montant**, titres variés (sans « Coucou »), rotation déterministe
+  `hashSeed(installId + cycle)` (varie par cycle/utilisateur, rien à persister).
+- **`notifications.ts`** : le vrai coup de pouce (`scheduleGoalReminders`) et l'aperçu
+  (`scheduleTestNudge`) tirent titre+corps du pool ; l'aperçu utilise un index aléatoire pour
+  montrer la variété. Contexte (isStarting/isFree) calculé depuis le projet. Nouveau garde-fou :
+  rien à moins de 4 j du rappel mensuel.
+- **Tests** : nouveau `test-nudge-copy` (injection du nom, garde-fous de contenu, pools
+  démarrage/libre, titres, hash) ; `test-notifications` verrouille le câblage dynamique.
+  `tsc` OK, **10 suites vertes**.
+- **Docs** : FEATURES §9 (contenu du coup de pouce + Étape 2 à venir), FEEDBACK (recadrage),
+  EXCHANGES (décision).
+
+### Étape 2 (validée, à venir)
+Déclencheur par **inactivité** (Logique B), **plafond 1/quinzaine tous projets confondus**, et
+**tracing du déclencheur A/B** (hygiène de mesure). C'est le gros morceau technique (coordination
+inter-projets).
+
+### Ensuite
+- Rebuild Android `preview-test` pour que Patrick teste la variété des messages via « Voir un
+  aperçu » sur son Samsung.
+
+---
+
 ## 2026-08-10 — Claude Code — Session 56 : drapeau d'outils de test + build Android
 
 Prépare le plan de build en deux temps voulu par Patrick : d'abord un APK Android de test (avec

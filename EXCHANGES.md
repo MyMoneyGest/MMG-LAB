@@ -9,6 +9,38 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-08-11 — Patrick / Claude Code — [DÉCISION] Recadrage : mini-déploiement + relance douce
+
+**Contexte** : à partir d'une spec détaillée (rédigée par Claude Chat, via Patrick) sur le
+« coup de pouce », Patrick a tranché un point stratégique de fond. On **ne se limite plus à un
+test de rétention pur** : pivot FCFA, réseau Facebook, multi-pays (euro + Afrique francophone +
+USD + Belgique) → on est dans un **mini-déploiement**. Conséquence assumée : **capter l'attention
+devient un objectif légitime**, pas seulement mesurer l'implication. Cela **qualifie** la
+décision anti-relance (« type Duolingo ») actée dans FEEDBACK.md.
+
+**Ce que ça change concrètement — le coup de pouce, en deux temps :**
+- **Étape 1 (FAITE, ce commit)** : le message unique creux (« …est toujours là, rien à faire »)
+  est remplacé par une **batterie de messages** (`src/lib/nudge-copy.ts`) motivants/liés à
+  l'épargne, avec sous-ensembles démarrage/libre, rotation déterministe et titres variés. Reste
+  sur le **déclencheur mi-cycle calendaire** — neutre pour la mesure. Garde-fous de contenu
+  stricts (aucun impératif, aucun montant). Guardrail « pas de notif à < 4 j du rappel ».
+- **Étape 2 (À FAIRE, validée par Patrick)** : ajouter le **déclencheur par inactivité**
+  (Logique B, ~10 j sans ouvrir l'app), le **plafond 1 coup de pouce / quinzaine tous projets
+  confondus**, et le **tracing du déclencheur (A vs B)** en metadata.
+
+**Réserve d'hygiène posée par Claude Code (acceptée)** : la Logique B est une vraie relance
+comportementale — si elle fait revenir quelqu'un qui verse ensuite, ce versement compte en
+rétention. Donc on l'assume, MAIS on **trace A vs B** pour pouvoir *isoler* les retours provoqués
+et garder le chiffre de rétention lisible plutôt que silencieusement gonflé (cf. spec §8).
+
+**Points de la spec écartés / nuancés** : titre « Coucou de MMG » retiré (c'est l'effet que
+Patrick voulait fuir). Le reste de la spec (garde-fous, cas « ne rien envoyer », ouverture
+future à une source distante) est adopté.
+
+— Claude Code
+
+---
+
 ## 2026-08-10 — Claude Code — [CRITIQUE] Audit indépendant du Lot C (Codex) : conforme
 
 Audit complet de `80349c7..abbd4e1` (mode épargne libre, estimation des dépenses, démarrage

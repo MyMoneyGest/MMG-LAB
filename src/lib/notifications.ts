@@ -20,6 +20,7 @@ import {
   REMINDER_ACTION_IDENTIFIERS,
   reminderActionFromIdentifier,
 } from './notification-model';
+import { hashSeed, nudgeMessage, nudgeTitle } from './nudge-copy';
 import type {
   PendingReminder,
   ReminderKind,
@@ -266,12 +267,29 @@ export async function scheduleGoalReminders(
       if (goal.midCycleNudgeEnabled) {
         const nudgeAt = midCycleNudgeAt(cycle);
         const activationAt = goalActivationDate(goal);
-        if (nudgeAt > now && nudgeAt >= activationAt) {
+        // Ne rien envoyer trop près du rappel mensuel : évite deux notifs rapprochées.
+        const daysBeforeReminder = (when.getTime() - nudgeAt.getTime()) / (24 * 60 * 60 * 1000);
+        if (nudgeAt > now && nudgeAt >= activationAt && daysBeforeReminder >= 4) {
           try {
+            const anchor = new Date(cycle.anchorAt);
+            // Rotation déterministe par utilisateur ET par cycle : varie sans rien persister.
+            const cycleIndex = anchor.getFullYear() * 12 + anchor.getMonth();
+            const installId = useStore.getState().installId ?? '';
+            const bodySeed = hashSeed(`${installId}:${cycleIndex}`);
+            const titleSeed = hashSeed(`${installId}:${cycleIndex}:title`);
+            const deposits = goal.contributions.filter((c) => c.type === 'deposit').length;
+            const ageDays =
+              (anchor.getTime() - new Date(goal.startDate ?? goal.createdAt).getTime()) /
+              (24 * 60 * 60 * 1000);
+            const nudgeContext = {
+              goalName: goal.name,
+              isStarting: deposits <= 1 && ageDays < 35,
+              isFree: goalSavingsMode(goal) === 'free',
+            };
             const midCycleNotificationId = await N.scheduleNotificationAsync({
               content: {
-                title: 'MMG — un petit point',
-                body: `Ton projet « ${goal.name} » est toujours là. Tu avances à ton rythme — rien à faire maintenant.`,
+                title: nudgeTitle(titleSeed),
+                body: nudgeMessage(nudgeContext, bodySeed),
                 // iOS : livraison discrète au centre de notifications, sans réveiller
                 // l'écran ni sonner ; côté Android : canal dédié à importance basse.
                 interruptionLevel: 'passive',
@@ -378,10 +396,21 @@ export async function scheduleTestNudge(goal: Goal): Promise<TestReminderResult>
     if (lastTestNotificationId) {
       await N.cancelScheduledNotificationAsync(lastTestNotificationId).catch(() => {});
     }
+    // Aperçu : index aléatoire pour montrer la variété du pool à chaque essai.
+    const previewSeed = Math.floor(Math.random() * 100000);
+    const deposits = goal.contributions.filter((c) => c.type === 'deposit').length;
+    const ageDays =
+      (Date.now() - new Date(goal.startDate ?? goal.createdAt).getTime()) /
+      (24 * 60 * 60 * 1000);
+    const nudgeContext = {
+      goalName: goal.name,
+      isStarting: deposits <= 1 && ageDays < 35,
+      isFree: goalSavingsMode(goal) === 'free',
+    };
     lastTestNotificationId = await N.scheduleNotificationAsync({
       content: {
-        title: 'MMG — un petit point',
-        body: `Ton projet « ${goal.name} » est toujours là. Tu avances à ton rythme — rien à faire maintenant.`,
+        title: nudgeTitle(previewSeed + 1),
+        body: nudgeMessage(nudgeContext, previewSeed),
         interruptionLevel: 'passive',
         data: {
           goalId: goal.id,

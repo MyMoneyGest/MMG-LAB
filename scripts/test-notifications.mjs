@@ -116,9 +116,16 @@ assert.doesNotMatch(
   /categoryIdentifier/,
   'le coup de pouce ne doit proposer aucune action native',
 );
-// Canal dédié à importance basse + niveau iOS passif : message sobre « rien à faire ».
+// Canal dédié à importance basse + niveau iOS passif : notification discrète.
 assert.match(nudgeSchedule, /channelId: NUDGE_CHANNEL_ID/, 'le coup de pouce utilise son canal dédié');
 assert.match(nudgeSchedule, /interruptionLevel: 'passive'/, 'le coup de pouce est passif sur iOS');
+// Contenu = batterie de messages qui tournent (corps + titre), plus de texte figé.
+assert.match(nudgeSchedule, /body: nudgeMessage\(nudgeContext, bodySeed\)/, 'corps tiré du pool');
+assert.match(nudgeSchedule, /title: nudgeTitle\(titleSeed\)/, 'titre varié tiré indépendamment');
+assert.doesNotMatch(nudgeSchedule, /est toujours là\. Tu avances/, 'plus de message unique figé');
+// Garde-fou « ne rien envoyer trop près du rappel » (spec §5).
+assert.match(nudgeSchedule, /daysBeforeReminder >= 4/);
+assert.match(notificationsSource, /import \{ hashSeed, nudgeMessage, nudgeTitle \} from '\.\/nudge-copy'/);
 assert.match(notificationsSource, /NUDGE_CHANNEL_ID = 'mid_cycle_nudges'/);
 assert.match(
   notificationsSource,
@@ -140,6 +147,9 @@ assert.ok(nudgeTest, 'scheduleTestNudge doit exister');
 assert.match(nudgeTest, /reminderKind: 'mid_cycle_nudge'/);
 assert.match(nudgeTest, /interruptionLevel: 'passive'/);
 assert.match(nudgeTest, /channelId: NUDGE_CHANNEL_ID/, 'l’aperçu utilise le canal discret réel');
+// L'aperçu pioche dans le même pool, avec un aléa pour montrer la variété.
+assert.match(nudgeTest, /body: nudgeMessage\(nudgeContext, previewSeed\)/);
+assert.match(nudgeTest, /title: nudgeTitle\(previewSeed \+ 1\)/);
 assert.match(nudgeTest, /isTest: true/, 'l’aperçu ne doit jamais alimenter la mesure');
 assert.match(nudgeTest, /seconds: 5/);
 assert.doesNotMatch(nudgeTest, /categoryIdentifier/, 'l’aperçu ne propose aucune action native');
