@@ -21,13 +21,15 @@ import {
   reminderActionFromIdentifier,
 } from './notification-model';
 import { hashSeed, nudgeMessage, nudgeTitle } from './nudge-copy';
+import { planNudges } from './nudge-planner';
+import { track } from './analytics';
 import type {
   PendingReminder,
   ReminderKind,
   ReminderNotificationAction,
 } from './notification-model';
 import { useStore } from './store';
-import { Goal, ReminderCycle } from './types';
+import { Goal, ReminderCycle, ScheduledNudge } from './types';
 
 // Des rappels datés par cycle, programmés à 9h : un éventuel report ponctuel
 // et plusieurs ancres mensuelles indépendantes. Le tap ouvre l'app en deep link
@@ -220,7 +222,6 @@ export async function scheduleGoalReminders(
     }
     await ensureAndroidChannel(N);
     await ensureReminderActions(N);
-    if (goal.midCycleNudgeEnabled) await ensureAndroidNudgeChannel(N);
     const currencyCode = useStore.getState().currencyCode ?? DEFAULT_CURRENCY;
     const scheduleCycle = async (cycle: ReminderCycle): Promise<ReminderCycle> => {
       if (cycle.settledAt) return cycle;
@@ -263,55 +264,8 @@ export async function scheduleGoalReminders(
           // Un cycle qui échoue ne doit pas empêcher les autres échéances d'être programmées.
         }
       }
-
-      if (goal.midCycleNudgeEnabled) {
-        const nudgeAt = midCycleNudgeAt(cycle);
-        const activationAt = goalActivationDate(goal);
-        // Ne rien envoyer trop près du rappel mensuel : évite deux notifs rapprochées.
-        const daysBeforeReminder = (when.getTime() - nudgeAt.getTime()) / (24 * 60 * 60 * 1000);
-        if (nudgeAt > now && nudgeAt >= activationAt && daysBeforeReminder >= 4) {
-          try {
-            const anchor = new Date(cycle.anchorAt);
-            // Rotation déterministe par utilisateur ET par cycle : varie sans rien persister.
-            const cycleIndex = anchor.getFullYear() * 12 + anchor.getMonth();
-            const installId = useStore.getState().installId ?? '';
-            const bodySeed = hashSeed(`${installId}:${cycleIndex}`);
-            const titleSeed = hashSeed(`${installId}:${cycleIndex}:title`);
-            const deposits = goal.contributions.filter((c) => c.type === 'deposit').length;
-            const ageDays =
-              (anchor.getTime() - new Date(goal.startDate ?? goal.createdAt).getTime()) /
-              (24 * 60 * 60 * 1000);
-            const nudgeContext = {
-              goalName: goal.name,
-              isStarting: deposits <= 1 && ageDays < 35,
-              isFree: goalSavingsMode(goal) === 'free',
-            };
-            const midCycleNotificationId = await N.scheduleNotificationAsync({
-              content: {
-                title: nudgeTitle(titleSeed),
-                body: nudgeMessage(nudgeContext, bodySeed),
-                // iOS : livraison discrète au centre de notifications, sans réveiller
-                // l'écran ni sonner ; côté Android : canal dédié à importance basse.
-                interruptionLevel: 'passive',
-                data: {
-                  goalId: goal.id,
-                  cycleId: cycle.id,
-                  url: `mmg://goal/${goal.id}`,
-                  reminderKind: 'mid_cycle_nudge',
-                },
-              },
-              trigger: {
-                type: N.SchedulableTriggerInputTypes.DATE,
-                date: nudgeAt,
-                channelId: NUDGE_CHANNEL_ID,
-              },
-            });
-            scheduledCycle = { ...scheduledCycle, midCycleNotificationId };
-          } catch {
-            // Le rappel mensuel reste valide même si ce message facultatif échoue.
-          }
-        }
-      }
+      // Les coups de pouce sont désormais programmés globalement (plafond partagé
+      // entre projets) par scheduleNudges(), pas cycle par cycle.
       return scheduledCycle;
     };
     const reminderCycles = await Promise.all(cleanCycles.map(scheduleCycle));
@@ -428,6 +382,128 @@ export async function scheduleTestNudge(goal: Goal): Promise<TestReminderResult>
     return { ok: true };
   } catch {
     return { ok: false, reason: 'error' };
+  }
+}
+
+const NUDGE_DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Reprogramme TOUS les coups de pouce d'un coup — le plafond « un par quinzaine »
+ * étant partagé entre projets, aucun projet ne peut le décider seul. Annule les
+ * précédents, trace (une seule fois) ceux dont l'heure est passée, puis programme
+ * la liste décidée par le planificateur pur `planNudges`. À appeler après toute
+ * mutation de projet et à chaque ouverture de l'app (réarme l'inactivité).
+ */
+export async function scheduleNudges(): Promise<void> {
+  const N = getNotifications();
+  const store = useStore.getState();
+  const now = Date.now();
+  const previous = store.nudgePlan ?? [];
+
+  // 1. Tracer une seule fois les coups de pouce dont l'heure est passée (approx.
+  //    d'un « affiché »). Jamais compté comme rétention (event dédié nudge_shown).
+  let lastNudgeAt = store.lastNudgeAt ? new Date(store.lastNudgeAt).getTime() : 0;
+  for (const scheduled of previous) {
+    const at = new Date(scheduled.at).getTime();
+    if (at <= now) {
+      track('nudge_shown', { goalId: scheduled.goalId, metadata: { trigger: scheduled.trigger } });
+      if (at > lastNudgeAt) lastNudgeAt = at;
+    }
+  }
+  const lastNudgeIso = lastNudgeAt ? new Date(lastNudgeAt).toISOString() : undefined;
+
+  if (!N) {
+    // Web / Expo Go Android : pas de notifs, mais on garde la mémoire du plafond.
+    store.setNudgePlan([], lastNudgeIso);
+    return;
+  }
+
+  try {
+    // 2. Annuler les coups de pouce précédemment programmés (dont ceux déjà passés).
+    await Promise.all(
+      previous.map((scheduled) => N.cancelScheduledNotificationAsync(scheduled.id).catch(() => {}))
+    );
+
+    const goals = store.goals;
+    const anyEligible = goals.some((g) => g.midCycleNudgeEnabled && remainingAmount(g) > 0);
+    if (!anyEligible) {
+      store.setNudgePlan([], lastNudgeIso);
+      return;
+    }
+    await ensureAndroidNudgeChannel(N);
+
+    // 3. Construire l'entrée du planificateur depuis l'état courant.
+    const planInput = goals.map((goal) => {
+      const cycles = normalizedReminderCycles(goal, new Date(now));
+      const midCycleNudges = cycles.map((cycle) => ({
+        at: midCycleNudgeAt(cycle).getTime(),
+        reminderAt: reminderAtForCycle(cycle).getTime(),
+        settled: Boolean(cycle.settledAt),
+      }));
+      const deposits = goal.contributions.filter((c) => c.type === 'deposit');
+      const lastTouchedAt = deposits.length
+        ? Math.max(...deposits.map((c) => new Date(c.date).getTime()))
+        : new Date(goal.createdAt).getTime();
+      return {
+        goalId: goal.id,
+        nudgeEnabled: Boolean(goal.midCycleNudgeEnabled),
+        reached: remainingAmount(goal) <= 0,
+        activationAt: goalActivationDate(goal).getTime(),
+        lastTouchedAt,
+        midCycleNudges,
+      };
+    });
+
+    const planned = planNudges(planInput, {
+      now,
+      lastAppOpenAt: store.lastAppOpenAt ? new Date(store.lastAppOpenAt).getTime() : now,
+      lastNudgeAt,
+    });
+
+    // 4. Programmer chaque coup de pouce retenu (contenu tiré du pool qui tourne).
+    const installId = store.installId ?? '';
+    const scheduled: ScheduledNudge[] = [];
+    for (const nudge of planned) {
+      const goal = goals.find((g) => g.id === nudge.goalId);
+      if (!goal) continue;
+      const fireDate = new Date(Math.max(nudge.at, now + 5000));
+      const deposits = goal.contributions.filter((c) => c.type === 'deposit').length;
+      const ageDays =
+        (nudge.at - new Date(goal.startDate ?? goal.createdAt).getTime()) / NUDGE_DAY_MS;
+      const context = {
+        goalName: goal.name,
+        isStarting: deposits <= 1 && ageDays < 35,
+        isFree: goalSavingsMode(goal) === 'free',
+      };
+      const seed = hashSeed(`${installId}:${goal.id}:${nudge.at}`);
+      try {
+        const id = await N.scheduleNotificationAsync({
+          content: {
+            title: nudgeTitle(seed + 1),
+            body: nudgeMessage(context, seed),
+            interruptionLevel: 'passive',
+            data: {
+              goalId: goal.id,
+              url: `mmg://goal/${goal.id}`,
+              reminderKind: 'mid_cycle_nudge',
+              nudgeTrigger: nudge.trigger,
+            },
+          },
+          trigger: {
+            type: N.SchedulableTriggerInputTypes.DATE,
+            date: fireDate,
+            channelId: NUDGE_CHANNEL_ID,
+          },
+        });
+        scheduled.push({ id, at: fireDate.toISOString(), trigger: nudge.trigger, goalId: goal.id });
+      } catch {
+        // Un coup de pouce qui échoue n'empêche pas les autres.
+      }
+    }
+    store.setNudgePlan(scheduled, lastNudgeIso);
+  } catch {
+    // On garde au moins la mémoire du plafond en cas d'échec.
+    store.setNudgePlan(useStore.getState().nudgePlan ?? [], lastNudgeIso);
   }
 }
 

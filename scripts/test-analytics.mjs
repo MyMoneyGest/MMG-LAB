@@ -64,6 +64,9 @@ const nudgeAction = actions.match(
 )?.[0];
 assert.ok(nudgeAction, 'l’action du coup de pouce doit exister');
 assert.doesNotMatch(nudgeAction, /track\(/);
-assert.doesNotMatch(notifications, /track\(/);
+// notifications.ts ne trace QUE l'affichage d'un coup de pouce, et jamais un signal
+// de rétention (app_open / reminder_opened restent dans _layout).
+assert.match(notifications, /track\('nudge_shown'/);
+assert.doesNotMatch(notifications, /track\('reminder_opened'|track\('app_open'/);
 
 console.log('Tests analytics : rythme, solde, décisions et insert-only Supabase validés.');

@@ -17,6 +17,9 @@ export type EventType =
   | 'rebalance_decided'
   | 'reminder_opened'
   | 'reminder_postponed'
+  // Coup de pouce affiché (déclencheur A/B en metadata). JAMAIS un signal de
+  // rétention/engagement : à exclure des mesures d'activité (cf. retention-queries.sql).
+  | 'nudge_shown'
   | 'goal_deleted';
 
 export function track(

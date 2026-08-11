@@ -12,6 +12,7 @@ import {
   ContributionType,
   Goal,
   RebalanceReview,
+  ScheduledNudge,
 } from './types';
 
 // Le store est la seule source de vérité des données utilisateur, persistée
@@ -32,6 +33,12 @@ interface MMGState {
   goals: Goal[];
   lastViewedGoalId?: string;
   notifPermissionAsked: boolean;
+  /** Dernière ouverture de l'app (ISO) : base du déclencheur d'inactivité. */
+  lastAppOpenAt?: string;
+  /** Instant (ISO) du dernier coup de pouce dont l'heure est passée : plafond glissant. */
+  lastNudgeAt?: string;
+  /** Coups de pouce actuellement programmés (annulation + plafond + tracing). */
+  nudgePlan?: ScheduledNudge[];
 
   setLocale: (locale: { country?: string; currencyCode: CurrencyCode }) => void;
   convertLocale: (locale: {
@@ -54,6 +61,8 @@ interface MMGState {
   ) => Contribution;
   setLastViewed: (goalId: string) => void;
   setNotifPermissionAsked: () => void;
+  recordAppOpen: () => void;
+  setNudgePlan: (plan: ScheduledNudge[], lastNudgeAt?: string) => void;
 }
 
 export const useStore = create<MMGState>()(
@@ -123,6 +132,14 @@ export const useStore = create<MMGState>()(
       },
 
       setNotifPermissionAsked: () => set({ notifPermissionAsked: true }),
+
+      recordAppOpen: () => set({ lastAppOpenAt: new Date().toISOString() }),
+
+      setNudgePlan: (nudgePlan, lastNudgeAt) =>
+        set((state) => ({
+          nudgePlan,
+          lastNudgeAt: lastNudgeAt ?? state.lastNudgeAt,
+        })),
     }),
     {
       name: 'mmg-store-v1',

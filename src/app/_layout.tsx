@@ -13,6 +13,7 @@ import {
   addReminderOpenListener,
   addReminderReceivedListener,
   openedByMidCycleNudge,
+  scheduleNudges,
   takePresentedReminders,
 } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
@@ -57,6 +58,22 @@ export default function RootLayout() {
     if (useStore.persist.hasHydrated()) void send();
     else return useStore.persist.onFinishHydration(() => void send());
   }, [country, currencyCode]);
+
+  // Réarme le déclencheur d'inactivité et reprogramme tous les coups de pouce
+  // (plafond partagé) à chaque passage au premier plan. Trace aussi, une fois,
+  // ceux dont l'heure est passée depuis la dernière fois.
+  useEffect(() => {
+    const refresh = async () => {
+      await waitForStoreHydration();
+      useStore.getState().recordAppOpen();
+      await scheduleNudges();
+    };
+    void refresh();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refresh();
+    });
+    return () => subscription.remove();
+  }, []);
 
   // Boucle de rétention : notification → deep link vers le bon projet.
   useEffect(

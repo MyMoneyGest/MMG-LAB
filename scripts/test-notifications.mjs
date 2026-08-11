@@ -102,41 +102,48 @@ assert.match(notificationsSource, /goalSavingsMode\(goal\) === 'free'/);
 assert.match(notificationsSource, /Mets de côté le montant qui te convient aujourd'hui/);
 assert.match(notificationsSource, /remainingAmount\(goal\) <= 0/);
 assert.doesNotMatch(notificationsSource, /suggestedAmount <= 0/);
-assert.match(notificationsSource, /goal\.midCycleNudgeEnabled/);
-assert.match(notificationsSource, /midCycleNudgeAt\(cycle\)/);
-assert.match(notificationsSource, /reminderKind: 'mid_cycle_nudge'/);
-assert.match(notificationsSource, /midCycleNotificationId/);
 assert.match(notificationsSource, /reminder\.reminderKind !== 'mid_cycle_nudge'/);
-const nudgeSchedule = notificationsSource.match(
-  /if \(goal\.midCycleNudgeEnabled\) \{[\s\S]*?return scheduledCycle;/,
-)?.[0];
-assert.ok(nudgeSchedule, 'le bloc de programmation du coup de pouce doit exister');
-assert.doesNotMatch(
-  nudgeSchedule,
-  /categoryIdentifier/,
-  'le coup de pouce ne doit proposer aucune action native',
-);
-// Canal dédié à importance basse + niveau iOS passif : notification discrète.
-assert.match(nudgeSchedule, /channelId: NUDGE_CHANNEL_ID/, 'le coup de pouce utilise son canal dédié');
-assert.match(nudgeSchedule, /interruptionLevel: 'passive'/, 'le coup de pouce est passif sur iOS');
-// Contenu = batterie de messages qui tournent (corps + titre), plus de texte figé.
-assert.match(nudgeSchedule, /body: nudgeMessage\(nudgeContext, bodySeed\)/, 'corps tiré du pool');
-assert.match(nudgeSchedule, /title: nudgeTitle\(titleSeed\)/, 'titre varié tiré indépendamment');
-assert.doesNotMatch(nudgeSchedule, /est toujours là\. Tu avances/, 'plus de message unique figé');
-// Garde-fou « ne rien envoyer trop près du rappel » (spec §5).
-assert.match(nudgeSchedule, /daysBeforeReminder >= 4/);
+
+// Les coups de pouce sont programmés GLOBALEMENT (plafond partagé entre projets)
+// par scheduleNudges via le planificateur pur planNudges — plus cycle par cycle.
+assert.match(notificationsSource, /import \{ planNudges \} from '\.\/nudge-planner'/);
 assert.match(notificationsSource, /import \{ hashSeed, nudgeMessage, nudgeTitle \} from '\.\/nudge-copy'/);
+const scheduleNudges = notificationsSource.match(
+  /export async function scheduleNudges\(\)[\s\S]*?\n}/,
+)?.[0];
+assert.ok(scheduleNudges, 'scheduleNudges doit exister');
+assert.match(scheduleNudges, /planNudges\(/, 'la décision vient du planificateur pur');
+assert.match(scheduleNudges, /channelId: NUDGE_CHANNEL_ID/, 'canal dédié');
+assert.match(scheduleNudges, /interruptionLevel: 'passive'/, 'passif sur iOS');
+assert.match(scheduleNudges, /reminderKind: 'mid_cycle_nudge'/);
+assert.match(scheduleNudges, /nudgeTrigger: nudge\.trigger/, 'déclencheur A/B transmis dans les données');
+assert.match(scheduleNudges, /body: nudgeMessage\(context, seed\)/, 'corps tiré du pool qui tourne');
+assert.match(scheduleNudges, /title: nudgeTitle\(seed \+ 1\)/, 'titre varié');
+assert.doesNotMatch(scheduleNudges, /categoryIdentifier/, 'aucune action native');
+// Tracing des affichages avec le déclencheur — jamais compté comme rétention.
+assert.match(
+  scheduleNudges,
+  /track\('nudge_shown', \{ goalId: scheduled\.goalId, metadata: \{ trigger: scheduled\.trigger \}/
+);
+
+// scheduleGoalReminders ne programme plus AUCUN coup de pouce.
+const scheduleGoal = notificationsSource.match(
+  /export async function scheduleGoalReminders[\s\S]*?\n}/,
+)?.[0];
+assert.ok(scheduleGoal, 'scheduleGoalReminders doit exister');
+assert.doesNotMatch(
+  scheduleGoal,
+  /midCycleNudgeEnabled|nudgeMessage|NUDGE_CHANNEL_ID/,
+  'plus de coup de pouce dans la programmation des rappels',
+);
+
+// Canal du coup de pouce en importance basse ; le rappel mensuel reste sur le canal HIGH.
 assert.match(notificationsSource, /NUDGE_CHANNEL_ID = 'mid_cycle_nudges'/);
 assert.match(
   notificationsSource,
   /ensureAndroidNudgeChannel[\s\S]*?importance: N\.AndroidImportance\.LOW/,
   'le canal du coup de pouce doit être en importance basse',
 );
-assert.match(
-  notificationsSource,
-  /if \(goal\.midCycleNudgeEnabled\) await ensureAndroidNudgeChannel\(N\)/,
-);
-// Le rappel mensuel, lui, reste sur le canal HIGH des vrais rappels.
 assert.match(notificationsSource, /channelId: CHANNEL_ID/);
 
 // Aperçu du coup de pouce (test rapide) : fidèle au vrai, sans action, hors mesure.

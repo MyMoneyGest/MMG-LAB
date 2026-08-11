@@ -14,6 +14,36 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Claude Code — Session 59 : coup de pouce Étape 2 (planificateur global)
+
+Implémentation de l'Étape 2 validée : plafond partagé + déclencheur d'inactivité + tracing A/B.
+Toute la logique délicate mise dans un **module pur et testé** (le comportement natif des notifs,
+lui, ne se vérifie que sur appareil).
+
+### Fait
+- **`src/lib/nudge-planner.ts`** (pur, 15 cas de test dans `test-nudge-planner`) : décide la
+  liste ordonnée des coups de pouce. Garantit **1 coup de pouce max / quinzaine, tous projets
+  confondus** ; deux déclencheurs (A mi-cycle, B inactivité ~10 j, réarmée à l'ouverture) ;
+  priorité au projet le plus anciennement touché ; tous les cas « ne rien envoyer ».
+- **`notifications.ts`** : le coup de pouce sort de `scheduleGoalReminders` ; nouveau
+  `scheduleNudges()` global (annule les précédents, trace une fois les passés, programme la
+  sortie du planificateur, contenu tiré du pool). Canal LOW + passif conservés.
+- **Store/types** : `lastAppOpenAt`, `lastNudgeAt`, `nudgePlan` (annulation + plafond + tracing),
+  `recordAppOpen`, `setNudgePlan`. Type `ScheduledNudge`.
+- **Appels** : `scheduleNudges()` après chaque mutation de projet (actions) et à chaque passage
+  au premier plan (`_layout.tsx` → `recordAppOpen` + `scheduleNudges`).
+- **Analytics** : nouvel event `nudge_shown` (déclencheur A/B en metadata), **jamais** compté
+  comme rétention ; `retention-queries.sql` documenté en conséquence.
+- **Tests** : `test-nudge-planner` (nouveau), `test-notifications` et `test-analytics` alignés
+  sur la nouvelle architecture. `tsc` OK, **11 suites vertes**.
+
+### ⚠️ À vérifier sur appareil (non testable ailleurs)
+Le comportement natif : que les coups de pouce se programment bien, que le plafond tienne avec
+plusieurs projets, que l'inactivité se déclenche/réarme, et que `nudge_shown` remonte. À valider
+par Patrick sur un build `preview-test`.
+
+---
+
 ## 2026-08-11 — Claude Code — Session 58 : révision du ton des messages (coup de pouce)
 
 Retour de Patrick sur la 1re version du pool : garde-fous OK, mais le **ton** était trop

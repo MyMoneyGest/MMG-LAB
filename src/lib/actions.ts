@@ -24,6 +24,7 @@ import {
   hasNotificationPermission,
   requestNotificationPermission,
   scheduleGoalReminders,
+  scheduleNudges,
 } from './notifications';
 import { newGoalId, useStore } from './store';
 import { Goal, GoalCategory, SavingsMode, SavingsRhythm } from './types';
@@ -63,6 +64,7 @@ export async function changeLocale(
     const scheduled = await scheduleGoalReminders(goal, suggestedAmount(goal));
     useStore.getState().updateGoal(goal.id, scheduled);
   }
+  await scheduleNudges();
 }
 
 export async function createGoal(input: NewGoalInput): Promise<Goal> {
@@ -96,6 +98,7 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
   state.addGoal(goal);
   const scheduled = await scheduleGoalReminders(goal, suggestedAmount(goal, now));
   state.updateGoal(goal.id, scheduled);
+  await scheduleNudges();
 
   track('goal_created', {
     goalId: goal.id,
@@ -152,6 +155,7 @@ export async function confirmContribution(
     canIgnoreCurrentReminder: false,
   });
   await reschedule(goal.id);
+  await scheduleNudges();
   // Le test modifie bien le plan, mais n'alimente pas la mesure de rétention.
   if (source !== 'test_notification') {
     track('contribution_logged', {
@@ -173,6 +177,7 @@ export async function withdraw(goal: Goal, amount: number): Promise<void> {
   const currencyCode = useStore.getState().currencyCode;
   useStore.getState().logContribution(goal.id, 'withdrawal', amount);
   await reschedule(goal.id);
+  await scheduleNudges();
   track('contribution_logged', {
     goalId: goal.id,
     metadata: {
@@ -206,6 +211,7 @@ export async function reconcileGlobalBalance(
   state.addBalanceSnapshot(snapshot);
   track('balance_confirmed');
   for (const goal of state.goals) await reschedule(goal.id);
+  await scheduleNudges();
   const updatedGoals = useStore.getState().goals;
   const budget = useStore.getState().budget;
   return budget ? buildGlobalRebalanceProposal(updatedGoals, budget, now) : null;
@@ -237,6 +243,7 @@ export async function applyGlobalRebalance(
     state.updateGoal(item.goalId, { targetDate: item.proposedTargetDate });
   }
   for (const item of proposal.goals) await reschedule(item.goalId);
+  await scheduleNudges();
   clearGlobalRebalanceReview();
   track('rebalance_decided', { metadata: { choice: 'applied' } });
 }
@@ -263,6 +270,7 @@ export async function postponeReminder(
     skippedRegularReminderAt: undefined,
   });
   await reschedule(goal.id);
+  await scheduleNudges();
   if (options.source !== 'test_notification') {
     track('reminder_postponed', { goalId: goal.id, metadata: { goalId: goal.id } });
   }
@@ -284,6 +292,7 @@ export async function changeReminderDay(goal: Goal, reminderDay: number): Promis
     skippedRegularReminderAt: undefined,
   });
   await reschedule(goal.id);
+  await scheduleNudges();
 }
 
 /** Active ou coupe le coup de pouce du projet, sans produire d'événement analytics. */
@@ -297,11 +306,13 @@ export async function changeMidCycleNudge(
   }
   useStore.getState().updateGoal(goal.id, { midCycleNudgeEnabled: enabled });
   await reschedule(goal.id);
+  await scheduleNudges();
   return { ok: true };
 }
 
 export async function removeGoal(goal: Goal): Promise<void> {
   await cancelGoalReminder(goal);
   useStore.getState().deleteGoal(goal.id);
+  await scheduleNudges();
   track('goal_deleted', { goalId: goal.id, metadata: { goalId: goal.id } });
 }

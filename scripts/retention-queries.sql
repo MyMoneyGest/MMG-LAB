@@ -8,7 +8,13 @@
 --
 --  Rappel des événements enregistrés (table `events`) :
 --    app_open, goal_created, contribution_logged, reminder_opened,
---    reminder_postponed, balance_confirmed, rebalance_decided, goal_deleted.
+--    reminder_postponed, balance_confirmed, rebalance_decided, goal_deleted,
+--    nudge_shown.
+--  ⚠️ nudge_shown = affichage d'un coup de pouce (relance douce). Ce N'EST PAS un
+--     signal d'activité/rétention : ne JAMAIS le compter comme un retour. Les
+--     requêtes de rétention ci-dessous s'appuient sur contribution_logged (dépôt),
+--     donc l'excluent déjà ; il sert seulement à analyser l'effet des coups de pouce
+--     (par déclencheur A/B), pas à mesurer l'implication.
 --  Colonnes utiles : install_id (qui), event_type (quoi), created_at (quand),
 --    platform, app_version, metadata (détails en JSON).
 --  Clés metadata connues :
@@ -20,6 +26,7 @@
 --        pour rester comparable entre devises — un versement FCFA n'atterrit donc
 --        plus systématiquement dans « 250_plus ». Buckets : 0_50/50_100/100_250/250_plus.)
 --    rebalance_decided    → choice ('applied'/'kept'/'deferred')
+--    nudge_shown          → trigger ('mid_cycle'/'inactivity')
 --
 --  Principe de mesure (brief §5) : rétention au 3e rappel mensuel.
 --    Dénominateur = personnes ayant créé un projet.

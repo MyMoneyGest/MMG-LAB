@@ -24,9 +24,10 @@ décision anti-relance (« type Duolingo ») actée dans FEEDBACK.md.
   l'épargne, avec sous-ensembles démarrage/libre, rotation déterministe et titres variés. Reste
   sur le **déclencheur mi-cycle calendaire** — neutre pour la mesure. Garde-fous de contenu
   stricts (aucun impératif, aucun montant). Guardrail « pas de notif à < 4 j du rappel ».
-- **Étape 2 (À FAIRE, validée par Patrick)** : ajouter le **déclencheur par inactivité**
-  (Logique B, ~10 j sans ouvrir l'app), le **plafond 1 coup de pouce / quinzaine tous projets
-  confondus**, et le **tracing du déclencheur (A vs B)** en metadata.
+- **Étape 2 (FAITE — session 59)** : **déclencheur par inactivité** (Logique B, ~10 j), **plafond
+  1 coup de pouce / quinzaine tous projets confondus**, **tracing A/B** (`nudge_shown`). Toute la
+  décision est dans un module pur testé (`nudge-planner.ts`, 15 cas) ; `scheduleNudges()` global
+  remplace la programmation cycle par cycle. **Reste la validation native** (Patrick).
 
 **Réserve d'hygiène posée par Claude Code (acceptée)** : la Logique B est une vraie relance
 comportementale — si elle fait revenir quelqu'un qui verse ensuite, ce versement compte en

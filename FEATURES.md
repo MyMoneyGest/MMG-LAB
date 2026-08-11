@@ -338,10 +338,20 @@ Dernière mise à jour : 2026-08-10 (Codex).
     utilisateur à l'autre sans rien persister. L'aperçu de test (`scheduleTestNudge`) pioche au
     hasard pour montrer la variété. Module autonome, prêt à être complété un jour par une source
     distante (spec §7) sans réécriture.
-  - **À venir (Étape 2, décidé — cf. FEEDBACK.md)** : second déclencheur **par inactivité**
-    (relance comportementale), **plafond d'un coup de pouce / quinzaine tous projets confondus**,
-    et **tracing du déclencheur (A vs B)** pour garder la rétention analysable. Le cadre a évolué
-    d'un test de rétention pur vers un mini-déploiement où capter l'attention est légitime.
+  - **Planification globale (Étape 2, `src/lib/nudge-planner.ts`)** : un module PUR décide la
+    liste des coups de pouce à programmer, garantissant un **plafond partagé d'un coup de pouce
+    par quinzaine, TOUS projets confondus** (un utilisateur à 4 projets n'en reçoit jamais 4
+    éparpillés). Deux déclencheurs alimentent ce plafond : **(A) mi-cycle** calendaire et **(B)
+    inactivité** (l'app pas ouverte depuis ~10 j — relance comportementale ciblant ceux qui
+    décrochent, sur le projet le plus anciennement touché ; réarmée à chaque ouverture). Cas
+    « ne rien envoyer » : projet atteint, cycle soldé, avant activation, à moins de 4 j du rappel,
+    hors horizon. `scheduleNudges()` (notifications) annule les précédents, trace une fois ceux
+    dont l'heure est passée, puis programme la sortie du planificateur.
+  - **Tracing (`nudge_shown`)** : chaque affichage est tracé avec son déclencheur (A/B) en
+    metadata, **jamais compté comme rétention** (cf. `retention-queries.sql`). Permet d'analyser
+    l'effet des coups de pouce sans polluer la mesure d'implication.
+  - *Cadre* : on est passés d'un test de rétention pur à un mini-déploiement où capter l'attention
+    est légitime (décision Patrick, cf. FEEDBACK.md + EXCHANGES.md).
 - **Ouverture normale de l'app** : si un rappel est encore dans le tiroir Android, MMG le retire
   puis affiche une fenêtre compacte au-dessus de l'écran courant avec **Fait**, **Modifier**,
   **Reporter** et **Fermer pour le moment**. Plusieurs rappels sont mis en file sans doublon.
@@ -365,7 +375,8 @@ Dernière mise à jour : 2026-08-10 (Codex).
   ⚠️ expo-notifications est chargé **paresseusement** : indisponible sur web et Expo Go
   Android (crash à l'import sinon) — support complet sur iOS Expo Go et dev builds.
 - **Où** : `src/lib/notifications.ts` (unique point d'accès au module), `src/lib/nudge-copy.ts`
-  (pool de messages du coup de pouce), `src/app/_layout.tsx`, `src/lib/notification-model.ts`,
+  (pool de messages du coup de pouce), `src/lib/nudge-planner.ts` (décision pure : plafond,
+  déclencheurs, cas « ne rien envoyer »), `src/app/_layout.tsx`, `src/lib/notification-model.ts`,
   `src/components/pending-reminder-modal.tsx`, `src/components/app-header.tsx`,
   `src/app/goal/[id].tsx`.
 

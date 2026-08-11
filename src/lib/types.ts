@@ -106,6 +106,19 @@ export interface Budget {
   variableExpenses: number;
 }
 
+/**
+ * Un coup de pouce programmé (planificateur global). Persisté pour pouvoir
+ * l'annuler à la prochaine reprogrammation, alimenter le plafond glissant et
+ * tracer (une seule fois) les coups de pouce dont l'heure est passée.
+ */
+export interface ScheduledNudge {
+  id: string;
+  /** ISO datetime de déclenchement. */
+  at: string;
+  trigger: 'mid_cycle' | 'inactivity';
+  goalId: string;
+}
+
 export const CATEGORY_LABELS: Record<GoalCategory, string> = {
   emergency: "Fonds d'urgence",
   car: 'Voiture',
