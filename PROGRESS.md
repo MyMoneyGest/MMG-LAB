@@ -14,6 +14,29 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Claude Code — Session 56 : drapeau d'outils de test + build Android
+
+Prépare le plan de build en deux temps voulu par Patrick : d'abord un APK Android de test (avec
+les outils de test), puis plus tard les builds de distribution Android + iOS SANS ces outils.
+
+### Fait
+- `src/lib/test-tools.ts` : `TEST_TOOLS_ENABLED = __DEV__ || EXPO_PUBLIC_MMG_TEST_TOOLS === '1'`.
+- Les **deux** affordances de test passent sous ce drapeau (au lieu de `__DEV__` / toujours
+  visible) : le rappel de test (appui long sur le M, `app-header.tsx`) et l'aperçu du coup de
+  pouce (`goal/[id].tsx`). Absents des builds de distribution.
+- `eas.json` : profil **`preview-test`** (`extends: preview` + `env EXPO_PUBLIC_MMG_TEST_TOOLS=1`)
+  → APK autonome AVEC outils de test. `preview` / `production` restent sans le drapeau.
+- Tests : `test-design` verrouille le gating (header en `TEST_TOOLS_ENABLED`, plus de `__DEV__` ;
+  aperçu du coup de pouce gardé par le drapeau) ; `tsc` OK, 9 suites vertes.
+
+### Build
+- **Maintenant** : `eas build -p android --profile preview-test` (APK, test perso Patrick sur
+  Samsung, avec le M et l'aperçu).
+- **Plus tard (distribution)** : `eas build -p android --profile preview` + `eas build -p ios
+  --profile production` → sans outils de test.
+
+---
+
 ## 2026-08-10 — Claude Code — Session 55 : aperçu rapide du coup de pouce
 
 Patrick doit pouvoir vérifier la petite notif discrète en quelques secondes (impossible à

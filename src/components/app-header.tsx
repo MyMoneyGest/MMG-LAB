@@ -6,6 +6,7 @@ import { colors } from '@/constants/theme';
 import { scheduleTestReminder } from '@/lib/notifications';
 import { remainingAmount, suggestedAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import { TEST_TOOLS_ENABLED } from '@/lib/test-tools';
 import { AppDialog } from './app-dialog';
 import type { AppDialogTone } from './app-dialog';
 import { MenuModal } from './menu-modal';
@@ -104,7 +105,7 @@ export function AppHeader({
           <Text style={styles.iconLabel}>‹</Text>
         </Pressable>
       ) : showTestMark ? (
-        __DEV__ ? (
+        TEST_TOOLS_ENABLED ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Programmer un rappel test"
@@ -116,9 +117,9 @@ export function AppHeader({
             <Text style={styles.logoLetter}>M</Text>
           </Pressable>
         ) : (
-          // Production : le M reste un simple élément de marque. Le rappel de test
-          // (appui long) est réservé aux builds de développement, car ses actions
-          // Fait/Modifier/Reporter modifieraient le vrai plan de l'utilisateur.
+          // Distribution : le M reste un simple élément de marque. Le rappel de test
+          // (appui long) est réservé au dev et aux builds de test explicites, car ses
+          // actions Fait/Modifier/Reporter modifieraient le vrai plan de l'utilisateur.
           <View style={styles.logo}>
             <Text style={styles.logoLetter}>M</Text>
           </View>

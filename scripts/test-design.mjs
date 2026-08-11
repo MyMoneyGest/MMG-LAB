@@ -249,6 +249,14 @@ assert.match(goal, /Coup de pouce à mi-parcours/);
 assert.match(goal, /Un message entre deux rappels, sans action demandée/);
 assert.match(goal, /Boolean\(goal\.midCycleNudgeEnabled\)/);
 assert.match(goal, /changeMidCycleNudge\(currentGoal, enabled\)/);
+// Outils de test (M + aperçu du coup de pouce) gardés par le même drapeau, absents en distribution.
+assert.match(header, /TEST_TOOLS_ENABLED \?/);
+assert.doesNotMatch(header, /__DEV__/);
+assert.match(goal, /TEST_TOOLS_ENABLED && goal\.midCycleNudgeEnabled && notificationsSupported/);
+assert.match(
+  read('src/lib/test-tools.ts'),
+  /EXPO_PUBLIC_MMG_TEST_TOOLS === '1'/,
+);
 assert.match(goalTypes, /midCycleNudgeEnabled\?: boolean/);
 assert.doesNotMatch(newGoal, /midCycleNudgeEnabled|Coup de pouce à mi-parcours/);
 assert.doesNotMatch(goal, /Solde global (?:pas encore )?confirmé/);

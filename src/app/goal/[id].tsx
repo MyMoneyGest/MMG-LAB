@@ -29,6 +29,7 @@ import {
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
 import { fitFontSize, formatDate, formatReminderDay } from '@/lib/format';
+import { TEST_TOOLS_ENABLED } from '@/lib/test-tools';
 import {
   hasNotificationPermission,
   notificationsSupported,
@@ -367,7 +368,7 @@ export default function GoalScreen() {
           ios_backgroundColor={colors.border}
         />
       </View>
-      {goal.midCycleNudgeEnabled && notificationsSupported ? (
+      {TEST_TOOLS_ENABLED && goal.midCycleNudgeEnabled && notificationsSupported ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Voir un aperçu du coup de pouce"

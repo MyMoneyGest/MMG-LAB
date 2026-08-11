@@ -23,6 +23,12 @@
         "buildType": "apk"
       }
     },
+    "preview-test": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_MMG_TEST_TOOLS": "1"
+      }
+    },
     "production": {
       "autoIncrement": true
     }
