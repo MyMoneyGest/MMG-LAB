@@ -46,9 +46,18 @@ Store** (abandon du lien APK direct = friction + méfiance) ; iOS reste sur Test
   la page.)
 - Ce que Claude Code ne peut PAS faire : créer le compte développeur, payer, vérifier l'identité.
 
+### État final (builds V2 de production)
+- **Android AAB** : ✅ fini (build `e60d3ec4`), prêt à importer dans le Play Console.
+- **iOS** : ✅ fini + **uploadé sur App Store Connect** (soumission `ef78b08b`), en traitement Apple
+  puis dispo dans TestFlight (v2.0.0, build 5).
+- **Politique de confidentialité** : ✅ en ligne et publique → `https://mymoneygest.netlify.app/`
+  (déployée sur Netlify ; à brancher sur mymoneygest.com plus tard). Réponses Data safety prêtes
+  (PLAY-STORE.md §5.2), fiche prête (§4).
+
 ### Ensuite
 - Patrick : créer le compte Google Play + valider identité, importer l'AAB en internal testing,
-  recruter 15-16 testeurs Android pour le closed testing.
+  recruter 15-16 testeurs Android pour le closed testing. Côté iOS : rien à faire, TestFlight suit
+  son cours (attention à la question de conformité export/chiffrement au 1er build TestFlight).
 
 ---
 
