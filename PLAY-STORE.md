@@ -198,15 +198,51 @@ cette URL dans le Play Console (champ « Politique de confidentialité ») et da
 `*.vercel.app`. Donc un glisser-déposer Netlify te donne une URL utilisable **tout de suite**, et
 tu brancheras `mymoneygest.com` plus tard sans bloquer le lancement.
 
-### 5.2 Formulaire « Sécurité des données » (Data safety)
-À remplir honnêtement, cohérent avec notre réalité :
-- Données collectées et **envoyées** : uniquement des **événements d'usage pseudonymisés**
-  (ouvertures, création de projet, versements en **tranches anonymes** — jamais les montants en
-  clair, jamais les noms de projets). Déclarer : identifiant d'installation + événements
-  d'usage. **Pas** de données financières transmises, **pas** de données personnelles.
-- Données **stockées localement** (budget, projets, versements) : ne quittent pas l'appareil →
-  ne sont pas « collectées » au sens Google (rester cohérent avec la page Confidentialité).
-- Chiffrement en transit : oui (HTTPS/Supabase). Suppression des données : possible sur demande.
+### 5.2 Formulaire « Sécurité des données » (Data safety) — RÉPONSES PRÊTES
+
+Principe Google : « collecter » = **transmettre hors de l'appareil**. Tout ce qui reste en local
+(budget, montants, noms de projets, solde) **n'est PAS collecté**. MMG ne transmet que des
+**événements d'usage pseudonymisés** reliés à un **identifiant d'installation aléatoire**.
+
+**Écran « Collecte et partage des données » :**
+- « Ton application collecte-t-elle ou partage-t-elle un des types de données requis ? » → **OUI**
+  (on transmet des événements d'usage).
+- « Toutes les données sont-elles chiffrées en transit ? » → **OUI** (HTTPS vers Supabase et
+  Frankfurter).
+- « Fournis-tu un moyen de demander la suppression des données ? » → **OUI** (email
+  mymoneygest@gmail.com ; suppression d'un projet dans l'app ; désinstaller retire les données
+  locales).
+- Partage avec des tiers : **NON** pour tout. Supabase est un **sous-traitant/hébergeur** (traite
+  pour notre compte) → au sens Google ce n'est **pas** du « partage ».
+
+**Types de données à déclarer COLLECTÉS (collecté = Oui / partagé = Non) :**
+
+| Catégorie | Type précis | But | Détails |
+|---|---|---|---|
+| **Activité dans l'application** | Interactions avec l'app | **Analyse** (+ fonctionnalité) | Ouvertures, création/suppression de projet, versement confirmé, rappel ouvert/reporté, confirmation de solde, choix de réajustement. Inclut le contexte de config (catégorie de projet, rythme, mode guidé/libre, **pays et devise choisis**) et une **tranche anonyme** de montant (jamais le montant exact). |
+| **Identifiants (Device or other IDs)** | Identifiant d'installation aléatoire | **Analyse** | Sert seulement à relier entre eux les événements d'une même installation. Ce n'est ni l'ID publicitaire, ni l'IMEI, ni l'Android ID. |
+
+Pour ces deux types : **Collecté = Oui**, **Partagé = Non**, **Traité de façon éphémère = Non**
+(conservés ≤ 12 mois), **Collecte obligatoire** (pas de bouton d'activation dans l'app ;
+l'opposition se fait par email — base légale : intérêt légitime).
+
+**Types de données à déclarer NON COLLECTÉS (ne rien cocher) :**
+- **Informations financières** : NON. Les montants exacts, le budget, le solde et les noms de
+  projets **ne quittent jamais l'appareil**. (La seule info liée à l'argent transmise est une
+  *tranche anonyme* déclarée en « Activité dans l'application », pas une donnée de compte/paiement.)
+- **Localisation** : NON. MMG **ne demande aucune permission de localisation** et n'accède à aucun
+  capteur. (Le *pays* est **choisi manuellement** par l'utilisateur pour la devise → déclaré en
+  config d'app sous « Activité dans l'application », ce n'est pas de la localisation appareil.)
+- **Informations personnelles** (nom, email, adresse, téléphone) : NON (aucun compte ; l'email ne
+  sert qu'au contact, à l'initiative de l'utilisateur).
+- **Messages, Photos/Vidéos, Audio, Fichiers, Agenda, Contacts, Santé, Navigation web** : NON.
+
+> **Deux points de jugement** (à valider selon ta prudence — je recommande ci-dessus la version
+> honnête et cohérente avec la page Confidentialité) : (1) la *tranche de montant* est classée en
+> « Activité », pas en « Infos financières », car anonyme et sans lien avec un compte ; (2) le
+> *pays* est classé en config d'app, pas en « Localisation », car auto-déclaré et sans permission
+> GPS. Si un jour tu ajoutes un vrai opt-in analytics dans l'app, repasse la « collecte
+> obligatoire » en « optionnelle ».
 
 ### 5.3 Catégorie Finance — mentions
 - **Ne PAS se présenter comme un établissement financier** ni promettre un rendement : on est
@@ -221,8 +257,8 @@ diffusion reste bloquée.
 ---
 
 ## 6. Ce dont Claude Code peut t'aider ensuite
+- ✅ **Page de confidentialité publique** : faite (`web/confidentialite.html`), voir §5.1.
+- ✅ **Réponses au formulaire Data safety** : prêtes, voir §5.2.
 - Exporter/préparer l'**icône 512** et l'**image de mise en avant 1024×500** si tu fournis les
   sources.
-- Rédiger la **page de politique de confidentialité publique** à partir de `legal.tsx`.
-- Pré-remplir tes **réponses au formulaire Data safety** (texte à recopier).
 - La procédure technique de build/montée de version est dans **GUIDE-MAINTENANCE.md**.
