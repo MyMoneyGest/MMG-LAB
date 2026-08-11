@@ -170,9 +170,11 @@ connexion bancaire », « Tes données restent sur ton téléphone », « Sans p
 Google exige une **URL publique** vers une politique de confidentialité. On a déjà tout le
 contenu dans l'app (écran Confidentialité : responsable du traitement, données locales,
 événements pseudonymisés, conservation 12 mois, droits RGPD, CNIL, contact
-**mymoneygest@gmail.com**). **Action** : publier ce texte à une URL publique (une simple page,
-ex. un site gratuit / GitHub Pages / Notion public) et coller l'URL dans la console. Je peux te
-préparer la page à partir de `src/app/legal.tsx` quand tu veux.
+**mymoneygest@gmail.com**). **Action** : la page est **déjà prête** — `web/confidentialite.html` (fichier autonome, reproduit
+fidèlement l'écran légal de l'app). À héberger sur **mymoneygest.com** (tu as le domaine sur
+IONOS), par ex. à l'URL `https://mymoneygest.com/confidentialite.html`, puis coller cette URL dans
+la console Play (champ « Politique de confidentialité »). Upload : espace d'hébergement IONOS →
+gestionnaire de fichiers → déposer le fichier.
 
 ### 5.2 Formulaire « Sécurité des données » (Data safety)
 À remplir honnêtement, cohérent avec notre réalité :
