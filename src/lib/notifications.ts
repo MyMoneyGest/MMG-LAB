@@ -360,6 +360,48 @@ export async function scheduleTestReminder(
   }
 }
 
+/**
+ * Programme un coup de pouce de test quelques secondes après le geste. Il est
+ * volontairement IDENTIQUE au vrai (canal dédié à importance basse + niveau iOS
+ * passif, aucune action native, `reminderKind: 'mid_cycle_nudge'`) : le but est
+ * justement de laisser vérifier son caractère discret en quelques secondes.
+ * `isTest` garantit qu'il n'alimente jamais la mesure de rétention.
+ */
+export async function scheduleTestNudge(goal: Goal): Promise<TestReminderResult> {
+  const N = getNotifications();
+  if (!N) return { ok: false, reason: 'unsupported' };
+  try {
+    if (!(await hasNotificationPermission()) && !(await requestNotificationPermission())) {
+      return { ok: false, reason: 'permission' };
+    }
+    await ensureAndroidNudgeChannel(N);
+    if (lastTestNotificationId) {
+      await N.cancelScheduledNotificationAsync(lastTestNotificationId).catch(() => {});
+    }
+    lastTestNotificationId = await N.scheduleNotificationAsync({
+      content: {
+        title: 'MMG — un petit point',
+        body: `Ton projet « ${goal.name} » est toujours là. Tu avances à ton rythme — rien à faire maintenant.`,
+        interruptionLevel: 'passive',
+        data: {
+          goalId: goal.id,
+          url: `mmg://goal/${goal.id}`,
+          reminderKind: 'mid_cycle_nudge',
+          isTest: true,
+        },
+      },
+      trigger: {
+        type: N.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+        channelId: NUDGE_CHANNEL_ID,
+      },
+    });
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: 'error' };
+  }
+}
+
 /** Retire du tiroir système les rappels MMG déjà présentés et les retourne à l'interface. */
 export async function takePresentedReminders(): Promise<PendingReminder[]> {
   const N = getNotifications();

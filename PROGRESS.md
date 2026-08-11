@@ -14,6 +14,29 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-10 — Claude Code — Session 55 : aperçu rapide du coup de pouce
+
+Patrick doit pouvoir vérifier la petite notif discrète en quelques secondes (impossible à
+juger sans la voir arriver sur l'appareil).
+
+### Fait
+- `notifications.ts` : `scheduleTestNudge(goal)` — programme un coup de pouce **identique au
+  vrai** (canal `mid_cycle_nudges` LOW + `interruptionLevel: 'passive'`, aucune action,
+  `reminderKind: 'mid_cycle_nudge'`) **5 secondes** après le geste. `isTest: true` → jamais
+  dans la mesure. Réutilise `lastTestNotificationId` (un seul test à la fois).
+- `goal/[id].tsx` : sous le toggle, un lien **« Voir un aperçu (5 s) »** visible seulement quand
+  le coup de pouce est activé ET les notifications supportées. Sans effet de bord (contrairement
+  au rappel de test `__DEV__`, dont les actions modifient le vrai plan), donc exposable hors dev.
+- Tests : `test-notifications` verrouille la fidélité de l'aperçu (canal, passif, kind, isTest,
+  5 s, aucune action).
+
+### Vérifié
+`tsc` OK, **9 suites vertes**. Ligne du toggle restructurée sans régression (web, sans erreur
+console) ; le lien d'aperçu est masqué sur web (notifs non supportées) et apparaîtra sur build
+natif — à confirmer par Patrick.
+
+---
+
 ## 2026-08-10 — Claude Code — Session 54 : validation à l'écran des parcours Lot C (web)
 
 Vérification visuelle sur le preview web (store Gabon/FCFA) des parcours du Lot C qui sont

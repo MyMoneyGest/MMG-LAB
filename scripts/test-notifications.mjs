@@ -132,4 +132,16 @@ assert.match(
 // Le rappel mensuel, lui, reste sur le canal HIGH des vrais rappels.
 assert.match(notificationsSource, /channelId: CHANNEL_ID/);
 
+// Aperçu du coup de pouce (test rapide) : fidèle au vrai, sans action, hors mesure.
+const nudgeTest = notificationsSource.match(
+  /export async function scheduleTestNudge[\s\S]*?\n}/,
+)?.[0];
+assert.ok(nudgeTest, 'scheduleTestNudge doit exister');
+assert.match(nudgeTest, /reminderKind: 'mid_cycle_nudge'/);
+assert.match(nudgeTest, /interruptionLevel: 'passive'/);
+assert.match(nudgeTest, /channelId: NUDGE_CHANNEL_ID/, 'l’aperçu utilise le canal discret réel');
+assert.match(nudgeTest, /isTest: true/, 'l’aperçu ne doit jamais alimenter la mesure');
+assert.match(nudgeTest, /seconds: 5/);
+assert.doesNotMatch(nudgeTest, /categoryIdentifier/, 'l’aperçu ne propose aucune action native');
+
 console.log('Tests notifications : routage, déduplication, retrait et configuration sonore validés.');

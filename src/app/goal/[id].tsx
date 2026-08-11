@@ -29,7 +29,11 @@ import {
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
 import { fitFontSize, formatDate, formatReminderDay } from '@/lib/format';
-import { hasNotificationPermission, notificationsSupported } from '@/lib/notifications';
+import {
+  hasNotificationPermission,
+  notificationsSupported,
+  scheduleTestNudge,
+} from '@/lib/notifications';
 import {
   hasPendingAction,
   balanceCheckDue,
@@ -112,6 +116,7 @@ export default function GoalScreen() {
   const [notifBlocked, setNotifBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [nudgeSaving, setNudgeSaving] = useState(false);
+  const [nudgeTestPending, setNudgeTestPending] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(null);
   const [confirmation, setConfirmation] = useState<{
     amount: number;
@@ -315,22 +320,66 @@ export default function GoalScreen() {
       setNudgeSaving(false);
     }
   };
+  // Aperçu du coup de pouce : sans effet (notification passive, aucune action, jamais
+  // dans la mesure), pour vérifier son caractère discret en quelques secondes.
+  const previewMidCycleNudge = async () => {
+    if (nudgeTestPending) return;
+    setNudgeTestPending(true);
+    try {
+      const result = await scheduleTestNudge(goal);
+      if (result.ok) {
+        showFeedback(
+          'Aperçu envoyé',
+          'Le coup de pouce arrivera dans 5 secondes, tel qu’il apparaîtra vraiment.'
+        );
+      } else if (result.reason === 'unsupported') {
+        showFeedback(
+          'Aperçu indisponible ici',
+          'Les notifications ne sont pas disponibles sur le web ni dans Expo Go Android.'
+        );
+      } else if (result.reason === 'permission') {
+        showFeedback(
+          'Notifications désactivées',
+          'Autorise les notifications pour MMG avant de tester le coup de pouce.'
+        );
+      } else {
+        showFeedback('Aperçu non envoyé', 'Une erreur est survenue. Réessaie dans un instant.');
+      }
+    } finally {
+      setNudgeTestPending(false);
+    }
+  };
   const midCycleNudgeSetting = !reached ? (
     <View style={styles.nudgeSetting}>
-      <View style={styles.nudgeCopy}>
-        <Text style={styles.nudgeTitle}>Coup de pouce à mi-parcours</Text>
-        <Text style={styles.nudgeText}>Un message entre deux rappels, sans action demandée.</Text>
+      <View style={styles.nudgeRow}>
+        <View style={styles.nudgeCopy}>
+          <Text style={styles.nudgeTitle}>Coup de pouce à mi-parcours</Text>
+          <Text style={styles.nudgeText}>Un message entre deux rappels, sans action demandée.</Text>
+        </View>
+        <Switch
+          accessibilityLabel="Activer le coup de pouce à mi-parcours"
+          accessibilityState={{ checked: Boolean(goal.midCycleNudgeEnabled), disabled: nudgeSaving }}
+          value={Boolean(goal.midCycleNudgeEnabled)}
+          disabled={nudgeSaving}
+          onValueChange={(enabled) => void toggleMidCycleNudge(enabled)}
+          trackColor={{ false: colors.border, true: colors.cardSoftBorder }}
+          thumbColor={goal.midCycleNudgeEnabled ? colors.accent : colors.card}
+          ios_backgroundColor={colors.border}
+        />
       </View>
-      <Switch
-        accessibilityLabel="Activer le coup de pouce à mi-parcours"
-        accessibilityState={{ checked: Boolean(goal.midCycleNudgeEnabled), disabled: nudgeSaving }}
-        value={Boolean(goal.midCycleNudgeEnabled)}
-        disabled={nudgeSaving}
-        onValueChange={(enabled) => void toggleMidCycleNudge(enabled)}
-        trackColor={{ false: colors.border, true: colors.cardSoftBorder }}
-        thumbColor={goal.midCycleNudgeEnabled ? colors.accent : colors.card}
-        ios_backgroundColor={colors.border}
-      />
+      {goal.midCycleNudgeEnabled && notificationsSupported ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Voir un aperçu du coup de pouce"
+          disabled={nudgeTestPending}
+          hitSlop={8}
+          onPress={() => void previewMidCycleNudge()}
+          style={({ pressed }) => [styles.nudgePreview, pressed && styles.nudgePreviewPressed]}>
+          <Text style={styles.nudgePreviewLabel}>
+            {nudgeTestPending ? 'Aperçu en cours…' : 'Voir un aperçu (5 s)'}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   ) : null;
   const tabBar = (
@@ -984,15 +1033,16 @@ const styles = StyleSheet.create({
   nudgeSetting: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.cardSoftBorder,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     marginTop: 12,
     paddingTop: 12,
   },
+  nudgeRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   nudgeCopy: { flex: 1, minWidth: 0 },
   nudgeTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
   nudgeText: { color: colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  nudgePreview: { alignSelf: 'flex-start', marginTop: 10 },
+  nudgePreviewPressed: { opacity: 0.6 },
+  nudgePreviewLabel: { color: colors.accent, fontSize: 13, fontWeight: '800' },
   previewSchedule: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
