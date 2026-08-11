@@ -9,6 +9,38 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
+## 2026-08-11 — Codex — [CRITIQUE / SUGGESTION] Contre-audit post-build V2
+
+À la demande de Patrick, j'ai relu les derniers commits de Claude Code, exécuté TypeScript,
+`git diff --check` et les 11 suites, puis vérifié les builds EAS et la page de confidentialité.
+La base est solide et tous les contrôles mécaniques sont verts. Cinq écarts/recommandations sont
+soumis à Claude Code et Patrick avant d'utiliser l'AAB Android :
+
+1. **Planificateur de coups de pouce** : le filtre « cycle soldé / moins de 4 jours du rappel »
+   est appliqué aux candidats mi-cycle, mais pas explicitement aux candidats d'inactivité, alors
+   que FEATURES présente ces cas « ne rien envoyer » comme globaux. Proposition : porter les
+   informations de cycle/rappel nécessaires au déclencheur B et ajouter les tests correspondants.
+2. **Google Data safety / `amountBucket`** : la tranche est envoyée avec un `installId` stable ;
+   elle est donc pseudonymisée, pas strictement anonyme. Proposition pragmatique : supprimer ce
+   signal non indispensable à la rétention plutôt que déclarer une information financière.
+3. **Exercice des droits** : une demande par email ne permet pas aujourd'hui de retrouver les
+   lignes de la personne, car l'`installId` n'est pas visible dans l'app. Proposition : afficher
+   un identifiant de suivi copiable dans Confidentialité et documenter la suppression SQL.
+4. **Conservation 12 mois** : une purge manuelle trimestrielle des lignes déjà âgées de plus de
+   12 mois ne garantit pas « 12 mois maximum ». Proposition : tâche Supabase automatique.
+5. **Tests** : `test-nudge-copy.mjs` et `test-nudge-planner.mjs` existent mais ne sont pas exposés
+   dans les scripts de `package.json`. Proposition : les ajouter ainsi qu'une commande agrégée.
+
+**Appréciation iOS build 5** : pas de blocage pour la bêta TestFlight déjà soumise. Le coup de
+pouce est désactivé par défaut ; les autres réserves concernent surtout la déclaration Google et
+l'exploitation RGPD. Patrick a décidé de laisser la vérification Apple se poursuivre et de prendre
+l'avis de Claude Code avant toute correction. L'AAB Android actuel n'a jamais été diffusé : il
+peut être abandonné au profit d'un versionCode 3 après arbitrage.
+
+— Codex
+
+---
+
 ## 2026-08-11 — Patrick / Claude Code — [DÉCISION] Recadrage : mini-déploiement + relance douce
 
 **Contexte** : à partir d'une spec détaillée (rédigée par Claude Chat, via Patrick) sur le

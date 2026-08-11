@@ -14,6 +14,47 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Codex — Session 62 : contre-audit post-build et arbitrage avant Play Store
+
+Contre-audit demandé par Patrick après la préparation des builds V2 par Claude Code. Cette
+session est **documentaire uniquement** : aucune modification du code produit ni aucun nouveau
+build. Les recommandations ci-dessous doivent encore être relues/arbitrées avec Claude Code.
+
+### Vérifié
+- Branche `v2` propre et synchronisée avec `origin/v2`.
+- TypeScript, `git diff --check` et les **11 suites de tests** exécutés réellement : tout est vert.
+- EAS confirme les deux builds Store V2.0.0 terminés, tous deux issus du commit `b609ec9` :
+  Android AAB versionCode 2 (`e60d3ec4`) et iOS build 5 (`8110c56b`).
+- SDK 57 / cible Android API 36, outils de test absents de `production`, déclaration iOS de
+  chiffrement et page de confidentialité publique (`https://mymoneygest.netlify.app/`) : OK.
+
+### Points proposés à l'arbitrage Claude Code / Patrick
+1. Étendre au déclencheur d'inactivité les garde-fous déjà documentés pour le coup de pouce :
+   ne rien envoyer si le cycle concerné est soldé ni à moins de 4 jours du rappel mensuel.
+2. Pour simplifier et sécuriser la déclaration Google Data safety, retirer `amountBucket` des
+   événements Supabase plutôt que qualifier cette tranche pseudonymisée de donnée anonyme.
+3. Rendre l'`installId` visible/copiable pour qu'une demande d'opposition ou d'effacement par
+   email puisse être rattachée aux bonnes lignes Supabase.
+4. Remplacer la purge RGPD manuelle « tous les trois mois environ » par une purge automatique
+   garantissant réellement la promesse de conservation maximale de 12 mois.
+5. Ajouter les deux suites `test-nudge-copy` et `test-nudge-planner` aux scripts de `package.json`
+   afin qu'elles ne soient pas oubliées lors des prochains audits.
+
+### Décision de diffusion à ce stade
+- **iOS build 5** : laissé en vérification TestFlight. Aucun point relevé n'est considéré comme
+  gênant pour une bêta limitée : le coup de pouce est désactivé par défaut, la tranche de montant
+  est décrite dans la confidentialité, et les autres réserves sont opérationnelles/RGPD. Un build
+  6 pourra intégrer les arbitrages ultérieurement sans annuler le build 5.
+- **Android AAB versionCode 2** : jamais diffusé et ne sera pas importé dans Play Console avant
+  arbitrage. Si les corrections sont validées, produire un nouvel AAB V2.0.0 versionCode 3.
+
+### Ensuite
+- Patrick recueille l'avis de Claude Code sur les cinq propositions.
+- Après arbitrage : corrections retenues, mise à jour de la confidentialité/du guide, tests,
+  nouveau build Android ; build iOS 6 ultérieurement si le code ou le texte intégré change.
+
+---
+
 ## 2026-08-11 — Claude Code — Session 61 : builds de production + pivot Google Play
 
 Décision de Patrick (après discussion avec Claude Chat) : **Android passe sur le Google Play
