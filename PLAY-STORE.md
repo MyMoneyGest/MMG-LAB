@@ -219,7 +219,7 @@ Principe Google : « collecter » = **transmettre hors de l'appareil**. Tout ce 
 
 | Catégorie | Type précis | But | Détails |
 |---|---|---|---|
-| **Activité dans l'application** | Interactions avec l'app | **Analyse** (+ fonctionnalité) | Ouvertures, création/suppression de projet, versement confirmé, rappel ouvert/reporté, confirmation de solde, choix de réajustement. Inclut le contexte de config (catégorie de projet, rythme, mode guidé/libre, **pays et devise choisis**) et une **tranche anonyme** de montant (jamais le montant exact). |
+| **Activité dans l'application** | Interactions avec l'app | **Analyse** (+ fonctionnalité) | Ouvertures, création/suppression de projet, versement confirmé, rappel ouvert/reporté, confirmation de solde, choix de réajustement. Inclut le contexte de config (catégorie de projet, rythme, mode guidé/libre, **pays et devise choisis**). **Aucun montant**, même en tranche. |
 | **Identifiants (Device or other IDs)** | Identifiant d'installation aléatoire | **Analyse** | Sert seulement à relier entre eux les événements d'une même installation. Ce n'est ni l'ID publicitaire, ni l'IMEI, ni l'Android ID. |
 
 Pour ces deux types : **Collecté = Oui**, **Partagé = Non**, **Traité de façon éphémère = Non**
@@ -227,9 +227,9 @@ Pour ces deux types : **Collecté = Oui**, **Partagé = Non**, **Traité de faç
 l'opposition se fait par email — base légale : intérêt légitime).
 
 **Types de données à déclarer NON COLLECTÉS (ne rien cocher) :**
-- **Informations financières** : NON. Les montants exacts, le budget, le solde et les noms de
-  projets **ne quittent jamais l'appareil**. (La seule info liée à l'argent transmise est une
-  *tranche anonyme* déclarée en « Activité dans l'application », pas une donnée de compte/paiement.)
+- **Informations financières** : NON. **Aucune donnée liée à l'argent ne quitte l'appareil** —
+  ni les montants (même approximatifs/en tranches), ni le budget, ni le solde, ni les noms de
+  projets. (Depuis le contre-audit Codex, la tranche de montant a été **retirée** des événements.)
 - **Localisation** : NON. MMG **ne demande aucune permission de localisation** et n'accède à aucun
   capteur. (Le *pays* est **choisi manuellement** par l'utilisateur pour la devise → déclaré en
   config d'app sous « Activité dans l'application », ce n'est pas de la localisation appareil.)
@@ -237,12 +237,9 @@ l'opposition se fait par email — base légale : intérêt légitime).
   sert qu'au contact, à l'initiative de l'utilisateur).
 - **Messages, Photos/Vidéos, Audio, Fichiers, Agenda, Contacts, Santé, Navigation web** : NON.
 
-> **Deux points de jugement** (à valider selon ta prudence — je recommande ci-dessus la version
-> honnête et cohérente avec la page Confidentialité) : (1) la *tranche de montant* est classée en
-> « Activité », pas en « Infos financières », car anonyme et sans lien avec un compte ; (2) le
-> *pays* est classé en config d'app, pas en « Localisation », car auto-déclaré et sans permission
-> GPS. Si un jour tu ajoutes un vrai opt-in analytics dans l'app, repasse la « collecte
-> obligatoire » en « optionnelle ».
+> **Un point de jugement** (mineur) : le *pays* est classé en config d'app (« Activité »), pas en
+> « Localisation », car auto-déclaré et sans permission GPS. Si un jour tu ajoutes un vrai opt-in
+> analytics dans l'app, repasse la « collecte obligatoire » en « optionnelle ».
 
 ### 5.3 Catégorie Finance — mentions
 - **Ne PAS se présenter comme un établissement financier** ni promettre un rendement : on est

@@ -110,12 +110,23 @@ export function planNudges(
     );
     let fireAt = Math.max(config.lastAppOpenAt + inactivityDays * DAY, now, target.activationAt);
     for (let count = 0; count < maxInactivity && fireAt <= horizonEnd; count++) {
-      candidates.push({
-        goalId: target.goalId,
-        at: fireAt,
-        trigger: 'inactivity',
-        lastTouchedAt: target.lastTouchedAt,
-      });
+      // Mêmes cas « ne rien envoyer » que le mi-cycle (spec §5), appliqués globalement :
+      // rien à moins de `minBefore` jours d'un rappel, ni si le cycle courant est soldé.
+      const nearReminder = target.midCycleNudges.some(
+        (cycle) => Math.abs(cycle.reminderAt - fireAt) < minBefore * DAY
+      );
+      const currentCycle = target.midCycleNudges
+        .filter((cycle) => cycle.reminderAt >= fireAt)
+        .sort((a, b) => a.reminderAt - b.reminderAt)[0];
+      const currentSettled = currentCycle ? currentCycle.settled : false;
+      if (!nearReminder && !currentSettled) {
+        candidates.push({
+          goalId: target.goalId,
+          at: fireAt,
+          trigger: 'inactivity',
+          lastTouchedAt: target.lastTouchedAt,
+        });
+      }
       fireAt += capDays * DAY;
     }
   }

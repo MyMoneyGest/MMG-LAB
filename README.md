@@ -55,9 +55,9 @@ test sur téléphone sert ensuite de confirmation du comportement natif Android.
   sur web.
 - `src/lib/analytics.ts` — insertion d'événements dans la table Supabase `events`
   (tracking de rétention uniquement, aucune donnée utilisateur) : `app_open`, `goal_created`,
-  `contribution_logged` (montants bucketisés), `reminder_opened`, `reminder_postponed`,
-  `goal_deleted`. Le pays et la devise choisis sont joints aux ouvertures/créations afin de
-  lire la rétention par marché, sans transmettre de montant exact.
+  `contribution_logged` (sans aucun montant), `reminder_opened`, `reminder_postponed`,
+  `nudge_shown`, `goal_deleted`. Le pays et la devise choisis sont joints aux ouvertures/créations
+  afin de lire la rétention par marché ; aucune donnée liée à l'argent n'est transmise.
 - `src/lib/store.ts` — état persistant local (zustand + AsyncStorage), seule source de vérité
   des données utilisateur, y compris le repère facultatif indiquant où chaque épargne est gardée.
 - `src/lib/exchange-rate.ts` — taux de conversion proposé lors d'un changement de devise :

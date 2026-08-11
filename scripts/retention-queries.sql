@@ -21,10 +21,9 @@
 --    app_open             → country, currencyCode
 --    goal_created         → category, rhythm, savingsMode, activationDelayDays,
 --                           country, currencyCode
---    contribution_logged  → type ('deposit'/'withdrawal'), amountBucket, source
---       (amountBucket : montant ramené à une base euro commune avant bucketing,
---        pour rester comparable entre devises — un versement FCFA n'atterrit donc
---        plus systématiquement dans « 250_plus ». Buckets : 0_50/50_100/100_250/250_plus.)
+--    contribution_logged  → type ('deposit'/'withdrawal'), source
+--       (AUCUN montant transmis, même en tranche : seul le fait qu'un versement a
+--        eu lieu est enregistré. La mesure de rétention n'a besoin que de ça.)
 --    rebalance_decided    → choice ('applied'/'kept'/'deferred')
 --    nudge_shown          → trigger ('mid_cycle'/'inactivity')
 --
@@ -50,11 +49,35 @@
 --      (Décommente la ligne ci-dessus pour l'exécuter.)
 
 
--- 0.b  ENTRETIEN RGPD : purge trimestrielle des événements de plus de 12 mois.
---      La page Confidentialité annonce une conservation de 12 mois maximum.
---      Rien ne le fait automatiquement : lance ceci ~1 fois par trimestre.
+-- 0.b  ENTRETIEN RGPD : purge AUTOMATIQUE des événements de plus de 12 mois.
+--      La page Confidentialité annonce une conservation de 12 mois maximum. Une
+--      purge manuelle « de temps en temps » ne garantit pas cette promesse ; on
+--      l'automatise avec pg_cron (extension dispo sur Supabase). À FAIRE UNE FOIS :
 --
+--      -- 1) activer l'extension (Dashboard → Database → Extensions, ou SQL) :
+--      create extension if not exists pg_cron;
+--      -- 2) planifier une purge quotidienne à 3h UTC :
+--      select cron.schedule(
+--        'purge_events_12_mois', '0 3 * * *',
+--        $$ delete from events where created_at < now() - interval '12 months' $$
+--      );
+--
+--      Purge manuelle immédiate si besoin :
 --   delete from events where created_at < now() - interval '12 months';
+--
+--      Vérifier / retirer la tâche : select * from cron.job;
+--                                    select cron.unschedule('purge_events_12_mois');
+
+
+-- 0.d  DROIT À L'EFFACEMENT / OPPOSITION (RGPD) : suppression des lignes d'UNE personne.
+--      Quand quelqu'un écrit pour exercer ses droits, il joint son « identifiant de
+--      suivi » (affiché et copiable dans l'écran Confidentialité de l'app = install_id).
+--      Remplace la valeur ci-dessous par celui qu'il t'a communiqué :
+--
+--   delete from events where install_id = 'install-XXXXXXXXXXXX-xxxxxxxxxx';
+--
+--      Vérifier avant de supprimer (compter ses lignes) :
+--   select count(*) from events where install_id = 'install-XXXXXXXXXXXX-xxxxxxxxxx';
 
 
 -- 0.c  ⭐ À LANCER UNE FOIS : la vue « events_reels » (sans tes appareils de test).

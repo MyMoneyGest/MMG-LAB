@@ -52,7 +52,10 @@
     "test:analytics": "node scripts/test-analytics.mjs",
     "test:design": "node scripts/test-design.mjs",
     "test:currency": "node scripts/test-currency.mjs",
-    "test:exchange": "node scripts/test-exchange-rate.mjs"
+    "test:exchange": "node scripts/test-exchange-rate.mjs",
+    "test:nudge-copy": "node scripts/test-nudge-copy.mjs",
+    "test:nudge-planner": "node scripts/test-nudge-planner.mjs",
+    "test": "for f in scripts/test-*.mjs; do node \"$f\" || exit 1; done"
   },
   "private": true
 }

@@ -713,11 +713,3 @@ export function buildGlobalRebalanceProposal(
     goals: goalsProposal,
   };
 }
-
-/** Bucket anonymisé pour le tracking (mêmes valeurs que l'ancienne app). */
-export function bucketAmount(amount: number): string {
-  if (amount < 50) return '0_50';
-  if (amount < 100) return '50_100';
-  if (amount < 250) return '100_250';
-  return '250_plus';
-}

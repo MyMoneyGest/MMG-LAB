@@ -152,6 +152,30 @@ assert.deepEqual(
   }
 }
 
+// 14b. Inactivité écartée quand elle tombe à moins de 4 j d'un rappel (garde-fou global).
+{
+  const out = planNudges(
+    [goal({ midCycleNudges: [{ at: days(-1), reminderAt: days(2), settled: false }] })],
+    cfg({ lastAppOpenAt: days(-NUDGE_INACTIVITY_DAYS) }) // 1re inactivité ~ jour 0, rappel jour 2
+  );
+  assert.ok(
+    !out.some((n) => n.trigger === 'inactivity' && n.at === days(0)),
+    'inactivité trop près du rappel écartée'
+  );
+}
+
+// 14c. Inactivité écartée si le cycle courant du projet est soldé (garde-fou global).
+{
+  const out = planNudges(
+    [goal({ midCycleNudges: [{ at: days(6), reminderAt: days(20), settled: true }] })],
+    cfg({ lastAppOpenAt: days(-NUDGE_INACTIVITY_DAYS) })
+  );
+  assert.ok(
+    !out.some((n) => n.trigger === 'inactivity' && n.at === days(0)),
+    'inactivité écartée si cycle courant soldé'
+  );
+}
+
 // 15. Horizon : un mi-cycle au-delà de l'horizon est ignoré.
 assert.equal(
   mids(planNudges([goal({ midCycleNudges: [{ at: days(200), reminderAt: days(214), settled: false }] })], cfg({ horizonDays: 90 }))).length,

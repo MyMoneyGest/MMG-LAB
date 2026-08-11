@@ -1,6 +1,5 @@
 import { track } from './analytics';
 import {
-  bucketAmount,
   allocateGlobalBalance,
   buildGlobalRebalanceProposal,
   canPostponeReminderTo,
@@ -29,7 +28,7 @@ import {
 import { newGoalId, useStore } from './store';
 import { Goal, GoalCategory, SavingsMode, SavingsRhythm } from './types';
 import type { RebalanceReason } from './types';
-import { amountInEurReference, normalizeMoney } from './currency';
+import { normalizeMoney } from './currency';
 import type { CurrencyCode } from './currency';
 
 // Orchestration store + notifications + tracking, partagée entre les écrans.
@@ -160,31 +159,21 @@ export async function confirmContribution(
   if (source !== 'test_notification') {
     track('contribution_logged', {
       goalId: goal.id,
-      metadata: {
-        type: 'deposit',
-        goalId: goal.id,
-        // Bucket sur une base euro commune : sans normalisation, tout versement
-        // FCFA tomberait dans « 250_plus » et la métrique serait muette.
-        amountBucket: bucketAmount(amountInEurReference(normalizedAmount, state.currencyCode)),
-        source,
-      },
+      // Aucune donnée liée au montant n'est transmise (ni exact, ni tranche) :
+      // seul le fait qu'un versement a eu lieu compte pour la mesure de rétention.
+      metadata: { type: 'deposit', goalId: goal.id, source },
     });
   }
   return plan;
 }
 
 export async function withdraw(goal: Goal, amount: number): Promise<void> {
-  const currencyCode = useStore.getState().currencyCode;
   useStore.getState().logContribution(goal.id, 'withdrawal', amount);
   await reschedule(goal.id);
   await scheduleNudges();
   track('contribution_logged', {
     goalId: goal.id,
-    metadata: {
-      type: 'withdrawal',
-      goalId: goal.id,
-      amountBucket: bucketAmount(amountInEurReference(amount, currencyCode)),
-    },
+    metadata: { type: 'withdrawal', goalId: goal.id },
   });
 }
 

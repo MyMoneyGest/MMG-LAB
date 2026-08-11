@@ -6,8 +6,8 @@ import { supabase } from './supabase';
 
 // Nomenclature reprise de l'ancienne table events et étendue à la boucle réelle :
 // ouverture, projet, contribution, rappels, confirmation de solde et décision
-// de réajustement. Les montants ne partent jamais en clair : uniquement des
-// buckets pour les contributions (cf. plan.bucketAmount).
+// de réajustement. AUCUNE donnée liée au montant n'est transmise (ni exact, ni
+// tranche) : seul le fait qu'un versement a eu lieu compte pour la rétention.
 
 export type EventType =
   | 'app_open'

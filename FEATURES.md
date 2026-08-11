@@ -437,11 +437,13 @@ Dernière mise à jour : 2026-08-11 (Claude Code).
   (pays + devise sélectionnés), `goal_created` (catégorie générale + rythme + mode
   guidé/libre + délai d'activation en jours + pays/devise),
   `contribution_logged` (type
-  deposit/withdrawal + bucket de montant), `reminder_opened`, `reminder_postponed`,
+  deposit/withdrawal, **sans aucun montant**), `reminder_opened`, `reminder_postponed`,
   `balance_confirmed` (sans solde ni montant), `rebalance_decided` (choix `applied`, `kept` ou
-  `deferred`) et `goal_deleted`. Aucune donnée financière exacte.
-- **Comment** : `track()` fire-and-forget, no-op si `.env` absent. Montants bucketisés
-  (`0_50`, `50_100`, `100_250`, `250_plus`). RLS « anon insert only » → jamais de `.select()`.
+  `deferred`), `nudge_shown` (déclencheur A/B, jamais compté comme rétention) et `goal_deleted`.
+  Aucune donnée liée à l'argent.
+- **Comment** : `track()` fire-and-forget, no-op si `.env` absent. **Aucune donnée de montant
+  transmise** (la tranche `amountBucket` a été retirée au contre-audit Codex). RLS « anon insert
+  only » → jamais de `.select()`.
   Le premier `app_open` V2 attend l'hydratation et la confirmation du pays, puis n'est envoyé
   qu'une fois par lancement. `scripts/retention-queries.sql` fournit la répartition des
   installations et la rétention au 3e rappel regroupées par pays, ainsi qu'une lecture séparée
@@ -456,8 +458,8 @@ Dernière mise à jour : 2026-08-11 (Claude Code).
   volontairement exclus du tracking afin de ne pas fausser la mesure de rétention.
   Le coup de pouce de mi-cycle est lui aussi exclu : ni son ouverture ni le lancement de l'app
   qu'elle provoque ne produisent `reminder_opened` ou `app_open`.
-- **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`, buckets dans `src/lib/plan.ts`.
-  Contrat verrouillé par `scripts/test-analytics.mjs`, notamment l'absence de `.select()`.
+- **Où** : `src/lib/analytics.ts`, `src/lib/supabase.ts`. Contrat verrouillé par
+  `scripts/test-analytics.mjs`, notamment l'absence de `.select()` et l'absence de tout montant.
 
 ## 14. Thème et composants UI
 

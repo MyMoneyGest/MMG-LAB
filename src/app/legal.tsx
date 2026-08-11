@@ -3,8 +3,10 @@ import { StyleSheet, Text } from 'react-native';
 import { AppHeader } from '@/components/app-header';
 import { Card, Eyebrow, Screen } from '@/components/ui';
 import { colors } from '@/constants/theme';
+import { useStore } from '@/lib/store';
 
 export default function LegalScreen() {
+  const installId = useStore((s) => s.installId);
   return (
     <Screen>
       <AppHeader showBack />
@@ -56,10 +58,10 @@ export default function LegalScreen() {
           Les événements peuvent contenir l'identifiant technique du projet, sa catégorie
           générale, le rythme et le mode guidé ou libre choisis, le pays et la devise
           sélectionnés dans MMG, ainsi que le nombre de jours avant le démarrage d'un projet
-          différé — jamais sa date exacte. Ils peuvent aussi contenir la plateforme, la version
-          de l'app et, pour un mouvement, une tranche de montant. Les
-          montants exacts, le nom des projets et le détail du budget ne sont jamais transmis.
-          Ces données ne servent ni à la publicité ni à la revente.
+          différé — jamais sa date exacte. Ils peuvent aussi contenir la plateforme et la version
+          de l'app. Aucune donnée liée à l'argent n'est transmise : ni les montants, même
+          approximatifs, ni le nom des projets, ni le détail du budget. Ces données ne servent ni
+          à la publicité ni à la revente.
         </Text>
         <Text style={styles.paragraph}>
           La base légale de cette mesure est l'intérêt légitime de MyMoneyGest à vérifier la
@@ -101,6 +103,13 @@ export default function LegalScreen() {
           Pour toute question ou demande concernant les événements techniques pseudonymisés,
           contacte mymoneygest@gmail.com. Tu peux également adresser une réclamation à la CNIL.
         </Text>
+
+        <Text style={styles.section}>Ton identifiant de suivi</Text>
+        <Text style={styles.paragraph}>
+          Pour qu'une demande d'opposition ou d'effacement puisse être rattachée à tes événements,
+          joins cet identifiant à ton message (il ne révèle aucune donnée personnelle) :
+        </Text>
+        <Text selectable style={styles.trackingId}>{installId}</Text>
       </Card>
 
       <Card>
@@ -139,4 +148,14 @@ const styles = StyleSheet.create({
   section: { fontSize: 20, fontWeight: '800', color: colors.text, marginTop: 10, marginBottom: 8 },
   paragraph: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 12 },
   contact: { fontSize: 18, fontWeight: '800', color: colors.accent, marginBottom: 4 },
+  trackingId: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+    fontFamily: 'monospace',
+    backgroundColor: colors.cardSoft,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
 });

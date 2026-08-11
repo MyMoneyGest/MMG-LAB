@@ -14,6 +14,39 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Claude Code — Session 63 : application des 5 points du contre-audit Codex
+
+Patrick a arbitré : appliquer les **5 recommandations** de Codex (session 62), dont le **retrait
+d'`amountBucket`**. Fait, puis nouvel AAB Android versionCode 3.
+
+### Fait
+1. **Garde-fous inactivité** (`nudge-planner.ts`) : le déclencheur B respecte désormais les mêmes
+   cas « ne rien envoyer » que le mi-cycle — rien à < 4 j d'un rappel, ni si le cycle courant du
+   projet ciblé est soldé. +2 cas de test.
+2. **Retrait d'`amountBucket`** : plus AUCUNE donnée liée à l'argent transmise. Supprimé de
+   `actions.ts` (dépôt + retrait) ; fonctions mortes retirées (`bucketAmount` de `plan.ts`,
+   `amountInEurReference`/`EUR_REFERENCE_RATE` de `currency.ts`) ; tests, `analytics.ts`,
+   `retention-queries.sql`, `legal.tsx`, `confidentialite.html`, PLAY-STORE §5.2, FEATURES §13 et
+   README mis à jour (déclaration Data safety « aucune info financière », promesse renforcée).
+3. **`installId` visible** : affiché et copiable dans l'écran Confidentialité (« Ton identifiant
+   de suivi ») pour rattacher une demande RGPD ; page publique alignée ; requête de suppression
+   par `install_id` documentée dans `retention-queries.sql` (0.d).
+4. **Purge 12 mois automatique** : `retention-queries.sql` 0.b remplace la purge manuelle par une
+   tâche `pg_cron` quotidienne (à activer une fois côté Supabase).
+5. **Scripts `package.json`** : `test:nudge-copy`, `test:nudge-planner` ajoutés + script agrégé
+   `npm test` qui lance TOUS les `scripts/test-*.mjs` (plus d'oubli possible).
+
+### Vérifié
+`tsc` OK, **11 suites vertes** (via `npm test`), `git diff --check` propre, écran Confidentialité
+rendu sans erreur (identifiant de suivi affiché, texte « aucune donnée liée à l'argent »).
+
+### Ensuite
+- Nouvel **AAB Android versionCode 3** (l'ancien versionCode 2 n'a jamais été diffusé).
+- iOS build 5 reste en TestFlight ; un build 6 intégrera ces changements plus tard si besoin
+  (aucun n'est bloquant pour la bêta).
+
+---
+
 ## 2026-08-11 — Codex — Session 62 : contre-audit post-build et arbitrage avant Play Store
 
 Contre-audit demandé par Patrick après la préparation des builds V2 par Claude Code. Cette
