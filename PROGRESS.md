@@ -14,6 +14,29 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-11 — Codex / Claude Code — Session 64 : re-audit validé + actions externes restantes
+
+Codex a re-audité après les correctifs (session 63) : **code Android validé**, 5 points bien
+traités, `npm test` 11 suites OK, `tsc` sans erreur, branche `v2` propre sur `3135399`. AAB
+`2.0.0 (3)` bien issu de ce commit. **iOS build 5 mis à dispo par Apple** — des testeurs l'ont
+déjà installé (TestFlight : 2.0.0 (5) sur iPhone 17/13 Pro/17 Pro Max/16).
+
+### Actions externes restantes (côté Patrick, pas du code)
+1. **Redéployer la page Netlify** : `web/confidentialite.html` est corrigé dans le repo, mais la
+   page publique `https://mymoneygest.netlify.app/` affiche ENCORE « une tranche de montant »
+   (vérifié). À re-déposer sur Netlify pour refléter « aucune donnée liée à l'argent ».
+2. **Exécuter la purge `pg_cron`** dans Supabase (SQL prêt, `retention-queries.sql` §0.b) puis
+   vérifier avec `select * from cron.job;`.
+
+### À faire avant diffusion PUBLIQUE (pas avant la bêta)
+- **iOS build 6** : le build 5 (en bêta) repose sur `b609ec9` et contient encore la tranche de
+  montant — honnêtement annoncée dans SA propre page Confidentialité, donc cohérent pour la bêta.
+  Un build 6 intégrera le retrait avant une diffusion plus large. Ne pas interrompre le 5.
+- **Maintenance dépendances Expo 57** : `expo-doctor` 19/20 (mises à jour correctives signalées).
+  Non bloquant ; à faire + retester avant la vraie sortie publique, pas maintenant.
+
+---
+
 ## 2026-08-11 — Claude Code — Session 63 : application des 5 points du contre-audit Codex
 
 Patrick a arbitré : appliquer les **5 recommandations** de Codex (session 62), dont le **retrait
