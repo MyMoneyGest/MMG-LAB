@@ -22,11 +22,11 @@ traités, `npm test` 11 suites OK, `tsc` sans erreur, branche `v2` propre sur `3
 déjà installé (TestFlight : 2.0.0 (5) sur iPhone 17/13 Pro/17 Pro Max/16).
 
 ### Actions externes restantes (côté Patrick, pas du code)
-1. **Redéployer la page Netlify** : `web/confidentialite.html` est corrigé dans le repo, mais la
-   page publique `https://mymoneygest.netlify.app/` affiche ENCORE « une tranche de montant »
-   (vérifié). À re-déposer sur Netlify pour refléter « aucune donnée liée à l'argent ».
+1. ✅ **FAIT — page Netlify redéployée** : `https://mymoneygest.netlify.app/` affiche désormais
+   « Aucune donnée liée à l'argent n'est transmise » (vérifié en ligne). Politique publique
+   cohérente avec le code.
 2. **Exécuter la purge `pg_cron`** dans Supabase (SQL prêt, `retention-queries.sql` §0.b) puis
-   vérifier avec `select * from cron.job;`.
+   vérifier avec `select * from cron.job;`. *(Reste à faire, quand Patrick veut.)*
 
 ### À faire avant diffusion PUBLIQUE (pas avant la bêta)
 - **iOS build 6** : le build 5 (en bêta) repose sur `b609ec9` et contient encore la tranche de
