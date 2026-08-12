@@ -13,6 +13,25 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 2026-08-12 — Patrick : 2 ajustements pour la prochaine version (à grouper)
+
+Notés pendant le lancement Play Store (les builds V2 actuels sont déjà produits → à intégrer au
+**prochain build**, avec iOS build 6 + maintenance Expo 57).
+
+1. **Pays par ordre alphabétique** : la liste du sélecteur de pays est aujourd'hui **groupée par
+   région** (Afrique centrale, Afrique de l'Ouest, zone euro, dollar). Patrick veut un **tri
+   alphabétique** (plus simple à parcourir quand la liste s'allongera). Fichiers : `COUNTRIES`
+   dans `src/lib/currency.ts` et/ou l'affichage dans `src/app/onboarding/country.tsx` (trier par
+   `name`). ⚠️ Garder le pré-remplissage depuis la locale.
+
+2. **Aide à l'estimation des dépenses = TOUTES les dépenses** : le modal
+   `src/components/expense-estimate-modal.tsx` n'estime aujourd'hui que les **dépenses variables**.
+   Patrick veut que l'aide couvre **tout** (charges fixes ET variables), pas seulement le variable.
+   → étendre le modal pour aider à estimer l'ensemble du budget (ou au moins charges fixes +
+   variables) et remplir les champs correspondants de l'écran Budget.
+
+---
+
 ## 2026-08-10 — Patrick : retrouver où l'épargne de chaque projet est gardée
 
 **Statut V2 — implémenté le 2026-08-10** : un repère **Où ?** apparaît discrètement sous le
