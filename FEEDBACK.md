@@ -13,6 +13,28 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 2026-08-13 — Retours : « pas assez premium » vs positionnement sobre  ⭐ (direction UI)
+
+Des retours trouvent l'UI **pas assez premium**. Tension à ne pas mal résoudre : le sobre est un
+**choix assumé** (non-punitif, « pas une app de trading ») — on ne veut PAS lumières/animations
+partout ni cartes tape-à-l'œil. Patrick n'a pas de référence iPhone, d'où la difficulté à voir la
+cible.
+
+- *Analyse (Claude Code)* : « sobre » et « premium » ne s'opposent pas — les apps les plus
+  premium SONT sobres (Apple Wallet/Health, Monzo, Copilot Money, Things, Linear). Le premium
+  sobre ne vient pas d'effets ajoutés mais du **soin des détails invisibles** : typographie
+  (échelle de tailles, graisses, chiffres tabulaires alignés), **rythme d'espacement** (grille
+  8pt, respiration), **profondeur subtile** (ombres très douces ou filets fins, pas d'ombres
+  lourdes), **discipline de couleur** (gris légèrement teintés chauds, un seul accent maîtrisé),
+  **cohérence micro** (rayons, alignements au pixel, cibles tactiles), et **1-2 animations
+  parfaites** plutôt que partout. Le risque actuel = « plat » (peut sembler cheap) vs « minimal
+  raffiné » (premium). La différence est du craft, pas du flash.
+- *Verdict* : direction à travailler au **prochain build** (« lot premium polish »), en priorité
+  typographie + espacement (levier le plus fort, zéro flash). Claude Code propose de produire une
+  maquette avant/après d'UN écran (fiche projet) pour rendre la cible tangible avant d'implémenter.
+
+---
+
 ## 2026-08-12 — Patrick : 2 ajustements pour la prochaine version (à grouper)
 
 Notés pendant le lancement Play Store (les builds V2 actuels sont déjà produits → à intégrer au
