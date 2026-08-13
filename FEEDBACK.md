@@ -13,6 +13,22 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 2026-08-13 — Patrick : idées design « plus tard » (inspiré de Copilot Money)
+
+Notées pendant la discussion UI. **Pas pour maintenant** — pistes de fond, à prioriser plus tard.
+
+1. **Mode sombre** : à ajouter. L'app a déjà des moments sombres (overlay de confirmation,
+   `PlanSummaryDark`) et une palette centralisée (`src/constants/theme.ts` → `colors`). Un vrai
+   mode sombre = palette sombre + bascule de thème (clair/sombre/système). Attendu « premium »,
+   cohérent avec la sobriété. Chantier de theming non-trivial.
+2. **Choix du visuel de progression** : le **rond de progression** (façon Copilot Money) plaît.
+   Idée plus large : proposer **plusieurs représentations** (barre, rond, **sablier**, triangle…)
+   et laisser l'utilisateur **choisir** celle qui lui parle. Personnalisation douce, on-position
+   (agency, non-punitif). Le rond seul relèverait déjà l'écran principal (lié au « premium
+   polish »). Aujourd'hui : `ProgressBar` dans `src/components/ui`, utilisé sur la fiche projet.
+
+---
+
 ## 2026-08-13 — Retours : « pas assez premium » vs positionnement sobre  ⭐ (direction UI)
 
 Des retours trouvent l'UI **pas assez premium**. Tension à ne pas mal résoudre : le sobre est un
