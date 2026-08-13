@@ -14,6 +14,41 @@ ce qui vient ensuite.
 
 ---
 
+## 2026-08-13 — Codex — Session 65 : Google Play, test fermé Android V2 envoyé en examen
+
+### Fait
+- Canal **Tests fermés — Alpha** configuré dans Google Play Console pour la cohorte Android.
+- Ciblage activé dans 14 pays/régions correspondant au périmètre V2 : Belgique, Bénin,
+  Burkina Faso, Cameroun, Congo-Brazzaville, Côte d’Ivoire, États-Unis, France, Gabon, Mali,
+  Niger, Sénégal, Tchad et Togo.
+- Liste de diffusion `Diffusion internet - 01` associée au canal (2 adresses présentes à ce
+  stade) et adresse de retour testeurs définie sur `mymoneygest@gmail.com`.
+- AAB **MMG 2.0.0, versionCode 3** ajouté depuis la bibliothèque Google Play à la release
+  `MMG 2.0.0 — test fermé` ; notes de version françaises complétées.
+- Déclaration « Identifiant publicitaire » complétée avec **Non**, après vérification du bundle :
+  aucune permission `com.google.android.gms.permission.AD_ID` ni chaîne équivalente détectée.
+- Validation de la release : un unique avertissement non bloquant sur l’absence de fichier de
+  désobscurcissement R8/ProGuard ; symboles natifs bien joints au bundle.
+- Les **14 modifications** (release, pays, testeurs, fiche Store et déclarations) ont été
+  envoyées à Google. État confirmé dans la console : **Modifications en cours d’examen**.
+
+### En cours
+- Examen initial Google Play en attente. Google annonce habituellement jusqu’à 7 jours, parfois
+  davantage.
+- Le lien d’inscription au test fermé ne devient exploitable qu’après validation/publication du
+  canal par Google.
+
+### Ensuite
+1. Ajouter au moins 10 adresses Google supplémentaires à la liste afin d’atteindre le minimum
+   réglementaire de 12 testeurs — viser 15 à 16 pour conserver une marge.
+2. Après approbation, transmettre le lien Web d’inscription
+   `https://play.google.com/apps/testing/com.mymoneygest.mmglab` aux personnes autorisées.
+3. Vérifier que 12 personnes sont réellement **inscrites** au test (l’ajout à la liste ne suffit
+   pas), puis maintenir ce seuil sans interruption pendant 14 jours avant la demande d’accès à
+   la production.
+
+---
+
 ## 2026-08-11 — Codex / Claude Code — Session 64 : re-audit validé + actions externes restantes
 
 Codex a re-audité après les correctifs (session 63) : **code Android validé**, 5 points bien
