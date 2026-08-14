@@ -29,6 +29,55 @@ Notées pendant la discussion UI. **Pas pour maintenant** — pistes de fond, à
 
 ---
 
+## 2026-08-13 — Avis externe (IA Google) + Patrick : refonte de l'onboarding  ⭐⭐
+
+Suite à un descriptif complet de l'app soumis à l'IA de Google pour avis UX (voir échange
+complet, résumé ci-dessous). Deux de ses points étaient basés sur une lecture **obsolète** du
+produit (voir corrections) ; deux idées de Patrick issues de cet échange sont solides et à
+prioriser.
+
+### Corrections factuelles (pour ne pas ré-ouvrir un faux problème plus tard)
+- **Friction budget-avant-projet** : signalée comme un risque de décrochage par l'IA, mais
+  **déjà résolue** dans le code actuel — vérifié : depuis l'accueil, le CTA mène directement à
+  `/onboarding/mode` puis à la création du projet ; le budget est optionnel et différé, jamais
+  un préalable. La confusion venait de l'ordre des puces dans le descriptif fourni à l'IA, pas
+  du produit réel.
+- **Notification "Fait" qui court-circuiterait l'attachement à l'app** : **déjà résolue**,
+  vérifié dans `notifications.ts`/`goal/[id].tsx` — `opensAppToForeground: true` sur les 3
+  actions, et en mode guidé l'action "Fait" déclenche `confirm()` qui affiche bien l'écran
+  "moment marquant" (`ConfirmationOverlay`). L'app s'ouvre et célèbre déjà, même via notif.
+
+### Idée retenue et priorisée : retours haptiques (`expo-haptics`)
+Vibration subtile au moment de "Versement fait" — sensation physique de "devoir accompli",
+cohérent avec le premium sobre (pas d'effet visuel ajouté). `expo-haptics` n'est pas encore une
+dépendance. **À ajouter au lot premium** avec le cercle de progression déjà noté.
+
+### ⭐⭐ Idée structurante de Patrick : simplifier + inverser une partie de l'onboarding
+Née en réaction à l'échange, réflexion en cours ("bon à creuser, je réfléchis en écrivant") :
+
+1. **Retirer l'écran d'accueil actuel** ("Commencer" / "Voir un exemple" — Patrick le pensait
+   déjà peu utile). Nouveau flux pour un premier lancement : **pays → écran de création du
+   projet directement** (nom, objectif, délai, déjà disponible) → **projet créé** → **c'est
+   SEULEMENT ENSUITE** qu'on propose de vérifier le budget, cadré comme une validation
+   ("c'est beau, vérifions que c'est faisable pour toi") plutôt qu'une case du formulaire.
+   *Analyse Claude Code* : cohérent avec ce qui existe déjà (budget déjà optionnel/différé),
+   change surtout le cadrage et cible surtout le tout premier lancement (les retours vers un
+   projet existant sont déjà directs). Risque faible, bon candidat à spécifier proprement.
+2. **Double sens de calcul du plan** (idée encore à creuser, pas figée) : aujourd'hui on
+   saisit toujours objectif + date → l'app calcule la mensualité. Idée : permettre aussi le sens
+   inverse — l'utilisateur indique ce qu'il peut mettre de côté chaque mois → l'app dit ce qu'il
+   aura et/ou quand il atteindra son objectif. *Analyse Claude Code* : plus structurant qu'il n'y
+   paraît — touche le calcul (`plannedAmounts` ne résout aujourd'hui que dans un sens) et le
+   diagnostic "Confortable/Juste/Trop serré", qui devrait s'exprimer différemment selon le sens
+   choisi. Bonne intuition (cohérente avec le principe déjà acté "budget optionnel" — parfois on
+   connaît l'objectif, parfois la capacité), mais à **spécifier avant d'implémenter**, pas un
+   simple réordonnancement d'écrans.
+
+*Verdict* : les deux idées vont dans le lot **refonte onboarding**, à traiter avec le lot
+premium UI. Le point 2 nécessite une session de conception dédiée avant tout code.
+
+---
+
 ## 2026-08-13 — Patrick : aide à l'onboarding ciblée (étiquettes contextuelles)
 
 Idée pour une prochaine version : ajouter de petites **étiquettes/info-bulles** expliquant à
