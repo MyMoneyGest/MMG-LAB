@@ -29,6 +29,25 @@ Notées pendant la discussion UI. **Pas pour maintenant** — pistes de fond, à
 
 ---
 
+## 2026-08-13 — Patrick : aide à l'onboarding ciblée (étiquettes contextuelles)
+
+Idée pour une prochaine version : ajouter de petites **étiquettes/info-bulles** expliquant à
+l'utilisateur ce que fait un champ, un bouton, ou une étape — **pas partout**, seulement là où
+un doute peut freiner (ex. « Déjà disponible » à la création d'un projet, « Rythme » guidé,
+premier écran « Coup de pouce »). Patrick est explicite : pas un tutoriel intrusif généralisé,
+juste des points d'aide ciblés qui restent discrets tant qu'on ne les sollicite pas.
+
+- *Analyse (Claude Code)* : cohérent avec le positionnement sobre — l'app a déjà quelques
+  précédents (placeholders explicites, hints sous les champs comme « Aucun rappel ne partira
+  avant cette date »). Le risque à éviter : sur-mettre des `?` partout et recréer le bruit qu'on
+  fuit. Bon candidat pour un composant réutilisable (`InfoTooltip`/`FieldHint`) posé au cas par
+  cas, pas un moteur d'onboarding générique.
+- *Verdict* : à prioriser dans le lot « prochain build » (avec pays alphabétique, estimation des
+  dépenses complète, et le lot premium UI). Choisir 3-5 emplacements à fort doute AVANT
+  d'implémenter, plutôt que d'en semer partout.
+
+---
+
 ## 2026-08-13 — Retours : « pas assez premium » vs positionnement sobre  ⭐ (direction UI)
 
 Des retours trouvent l'UI **pas assez premium**. Tension à ne pas mal résoudre : le sobre est un
