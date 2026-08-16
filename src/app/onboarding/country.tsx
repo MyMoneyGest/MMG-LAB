@@ -325,7 +325,11 @@ const styles = StyleSheet.create({
   },
   logoLetter: { color: '#FFFFFF', fontSize: 21, fontWeight: '800' },
   brandName: { color: colors.text, fontSize: 19, fontWeight: '800' },
-  eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  // Alignement sur la ligne de base : l'eyebrow (12 px capitales) et le
+  // prénom (serif italique, plus grand) doivent poser sur la même ligne, pas
+  // être centrés l'un par rapport à l'autre. Les variantes encadrées (pill
+  // vide, champ en édition) repassent en centrage via alignSelf.
+  eyebrowRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 6 },
   eyebrow: {
     color: colors.accent,
     fontSize: 12,
@@ -334,6 +338,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   namePill: {
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
@@ -349,9 +354,12 @@ const styles = StyleSheet.create({
   // Une fois renseigné, le prénom se lit comme un mot de la phrase d'accueil
   // et non comme un champ : plus de cadre ni de crayon, il reste modifiable
   // au tap (l'affordance revient dès qu'on l'efface).
-  nameSet: { paddingVertical: 3 },
+  // Pas de padding vertical : il décalerait la ligne de base du prénom par
+  // rapport à l'eyebrow. La zone tactile est élargie par hitSlop.
+  nameSet: {},
   nameSetValue: { fontFamily: fonts.serifItalic, fontSize: 15, color: colors.text },
   nameInput: {
+    alignSelf: 'center',
     flex: 1,
     fontFamily: fonts.serifItalic,
     fontSize: 14,
