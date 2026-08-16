@@ -104,6 +104,12 @@ assert.match(country, /setPickerOpen\(false\)/);
 assert.match(country, /fontFamily: fonts\.serifBold/);
 assert.match(country, /accessibilityRole="radio"/);
 assert.match(country, /Où épargnes-tu/);
+// Le prénom facultatif se saisit ici, à côté de « Bienvenue » : c'est une
+// info sur la personne, pas sur un projet (retirée de l'écran de création).
+assert.match(country, /styles\.eyebrowRow/);
+assert.match(country, /setUserName\(nameDraft\)/);
+assert.match(country, /userName \?\? 'Ton prénom'/);
+assert.doesNotMatch(newGoal, /Comment doit-on t'appeler|setUserName/);
 // Bottom sheet : recherche, groupes par devise, radio, récap + Confirmer.
 assert.match(countryPicker, /Rechercher un pays…/);
 assert.match(countryPicker, /accessibilityRole="radio"/);
@@ -194,6 +200,22 @@ assert.match(newGoal, /CATEGORY_LABELS\[c\]/);
 assert.match(newGoal, /category === 'other' \? 'Choisis un nom pour ton projet'/);
 assert.doesNotMatch(newGoal, /editId|Ajuster le plan/);
 assert.match(newGoal, /Continuer vers le rythme/);
+// Erreurs de saisie en pop-up flottante auto-effaçable (via Modal : le
+// contenu des écrans vit dans un ScrollView, où `absolute` suivrait le
+// défilement), plus en texte inline sous les champs.
+const errorToast = read('src/components/error-toast.tsx');
+assert.match(errorToast, /<Modal visible transparent/);
+assert.match(errorToast, /setTimeout\(onFinished, duration\)/);
+assert.match(errorToast, /accessibilityRole="alert"/);
+assert.match(newGoal, /<ErrorToast key=\{error\.key\}/);
+assert.doesNotMatch(newGoal, /styles\.error\b/);
+// Retour depuis l'étape 2 : revient à l'étape 1 au lieu de quitter l'écran.
+assert.match(newGoal, /onBack=\{step === 2 \? \(\) => setStep\(1\) : undefined\}/);
+assert.match(header, /onBack\?: \(\) => void/);
+// Choisir un type dans la liste écrase le nom déjà saisi.
+assert.doesNotMatch(newGoal, /!name\.trim\(\) \|\| nameIsSuggested/);
+// Jour de rappel ordinal (« le 1er », pas « le 1 »).
+assert.match(newGoal, /Rappel le <Text style=\{styles\.dayHintAccent\}>\{formatReminderDay\(reminderDay\)\}/);
 assert.match(newGoal, /Continuer vers le rappel/);
 assert.match(newGoal, /savingsMode === 'free'/);
 assert.match(newGoal, /savingsMode,/);

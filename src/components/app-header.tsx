@@ -20,6 +20,7 @@ export function AppHeader({
   subtitle,
   showTestMark = !showBack,
   fallbackHref = '/',
+  onBack,
 }: {
   showBack?: boolean;
   currentGoalId?: string;
@@ -31,6 +32,9 @@ export function AppHeader({
   /** Destination du retour quand il n'y a pas d'historique de navigation
    * (écran atteint par un `replace`, ex. premier lancement). */
   fallbackHref?: Href;
+  /** Remplace la navigation arrière : pour un écran à étapes internes, où
+   * « retour » veut dire revenir à l'étape précédente, pas quitter l'écran. */
+  onBack?: () => void;
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -109,7 +113,13 @@ export function AppHeader({
           accessibilityRole="button"
           accessibilityLabel="Retour"
           style={styles.iconButton}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace(fallbackHref))}>
+          onPress={() =>
+            onBack
+              ? onBack()
+              : router.canGoBack()
+                ? router.back()
+                : router.replace(fallbackHref)
+          }>
           <Text style={styles.iconLabel}>‹</Text>
         </Pressable>
       ) : showTestMark ? (

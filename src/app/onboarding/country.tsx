@@ -1,7 +1,7 @@
 import { getLocales } from 'expo-localization';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
 import { CountryPickerModal } from '@/components/country-picker-modal';
@@ -43,6 +43,16 @@ export default function CountryScreen() {
   const [rateLoading, setRateLoading] = useState(false);
   const [rateError, setRateError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Prénom facultatif, saisi ici (à côté de « Bienvenue ») plutôt qu'à la
+  // création d'un projet : c'est une info sur la personne, pas sur le projet.
+  const userName = useStore((state) => state.userName);
+  const setUserName = useStore((state) => state.setUserName);
+  const [nameEditing, setNameEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const commitName = () => {
+    setUserName(nameDraft);
+    setNameEditing(false);
+  };
   const selectedCountry = useMemo(
     () => COUNTRIES.find((country) => country.code === selectedCode) ?? COUNTRIES[0],
     [selectedCode]
@@ -125,7 +135,42 @@ export default function CountryScreen() {
       )}
 
       <Card style={styles.heroCard}>
-        <Text style={styles.eyebrow}>{settings === '1' ? 'Réglages' : 'Bienvenue'}</Text>
+        <View style={styles.eyebrowRow}>
+          <Text style={styles.eyebrow}>{settings === '1' ? 'Réglages' : 'Bienvenue'}</Text>
+          {nameEditing ? (
+            <TextInput
+              autoFocus
+              selectTextOnFocus
+              value={nameDraft}
+              onChangeText={setNameDraft}
+              onBlur={commitName}
+              onSubmitEditing={commitName}
+              returnKeyType="done"
+              placeholder="Ton prénom"
+              placeholderTextColor={colors.textSecondary}
+              selectionColor={colors.accent}
+              maxLength={24}
+              style={styles.nameInput}
+            />
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                userName ? `Prénom : ${userName}. Modifier` : 'Ajouter ton prénom'
+              }
+              hitSlop={8}
+              onPress={() => {
+                setNameDraft(userName ?? '');
+                setNameEditing(true);
+              }}
+              style={userName ? styles.nameSet : styles.namePill}>
+              <Text style={userName ? styles.nameSetValue : styles.nameValue}>
+                {userName ?? 'Ton prénom'}
+              </Text>
+              {userName ? null : <Text style={styles.namePencil}>✎</Text>}
+            </Pressable>
+          )}
+        </View>
         <Text style={styles.title}>Où épargnes-tu ?</Text>
         <Text style={styles.body}>
           MMG adapte automatiquement l'application à ta devise locale.
@@ -280,13 +325,43 @@ const styles = StyleSheet.create({
   },
   logoLetter: { color: '#FFFFFF', fontSize: 21, fontWeight: '800' },
   brandName: { color: colors.text, fontSize: 19, fontWeight: '800' },
+  eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   eyebrow: {
     color: colors.accent,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1.1,
     textTransform: 'uppercase',
-    marginBottom: 6,
+  },
+  namePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 9,
+    backgroundColor: colors.background,
+  },
+  nameValue: { fontFamily: fonts.serifItalic, fontSize: 14, color: colors.text },
+  namePencil: { fontSize: 11, color: colors.textSecondary },
+  // Une fois renseigné, le prénom se lit comme un mot de la phrase d'accueil
+  // et non comme un champ : plus de cadre ni de crayon, il reste modifiable
+  // au tap (l'affordance revient dès qu'on l'efface).
+  nameSet: { paddingVertical: 3 },
+  nameSetValue: { fontFamily: fonts.serifItalic, fontSize: 15, color: colors.text },
+  nameInput: {
+    flex: 1,
+    fontFamily: fonts.serifItalic,
+    fontSize: 14,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    backgroundColor: colors.card,
   },
   title: { fontFamily: fonts.serifBold, color: colors.text, fontSize: 30, lineHeight: 36 },
   body: { fontFamily: fonts.sansRegular, color: colors.textSecondary, fontSize: 15, lineHeight: 22, marginTop: 10 },

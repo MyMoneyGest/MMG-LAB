@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppHeader } from '@/components/app-header';
+import { ErrorToast } from '@/components/error-toast';
 import { FeedbackBanner } from '@/components/feedback-banner';
 import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, DateField, Field, Screen, StepIndicator } from '@/components/ui';
@@ -12,6 +13,7 @@ import { colors, fonts, radius } from '@/constants/theme';
 import { createGoal } from '@/lib/actions';
 import {
   formatDate,
+  formatReminderDay,
   parseAmountInput,
   parseDateInput,
 } from '@/lib/format';
@@ -68,8 +70,6 @@ export default function NewGoalScreen() {
   const router = useRouter();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
-  const userName = useStore((s) => s.userName);
-  const setUserName = useStore((s) => s.setUserName);
   // Signal transitoire (cf. pending-feedback.ts) : ce champ est le point
   // d'entrée « nouveau projet » de l'app depuis le retrait de l'écran de
   // choix du mode, il porte donc la bannière de suppression à sa place.
@@ -94,7 +94,11 @@ export default function NewGoalScreen() {
     String(Math.min(28, new Date().getDate()))
   );
   const [rhythm, setRhythm] = useState<SavingsRhythm>('stable');
-  const [error, setError] = useState<string | null>(null);
+  // `errorKey` change à chaque signalement : il sert de `key` au toast, pour
+  // rejouer l'animation même quand l'utilisateur retombe sur la même erreur.
+  const [error, setError] = useState<{ key: string; text: string } | null>(null);
+  const showError = (text: string) => setError({ key: String(Date.now()), text });
+  const clearError = useCallback(() => setError(null), []);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -103,12 +107,15 @@ export default function NewGoalScreen() {
   const parsedStartDate = parseDateInput(startDateText);
   const reminderDay = Math.min(28, Math.max(1, Number(reminderDayText) || 1));
 
+  // Choisir un type dans la liste écrase le nom : le choix explicite de
+  // l'utilisateur prime sur ce qu'il avait déjà tapé (il peut toujours le
+  // réécrire ensuite). « Autre projet » n'a pas de nom à proposer, donc vide.
   const selectCategory = (nextCategory: GoalCategory) => {
     setCategory(nextCategory);
     if (nextCategory === 'other') {
       setName('');
       setNameIsSuggested(false);
-    } else if (!name.trim() || nameIsSuggested) {
+    } else {
       setName(CATEGORY_LABELS[nextCategory]);
       setNameIsSuggested(true);
     }
@@ -198,7 +205,7 @@ export default function NewGoalScreen() {
   const save = async () => {
     const problem = validate();
     if (problem) {
-      setError(problem);
+      showError(problem);
       return;
     }
     const loadingStartedAt = Date.now();
@@ -229,7 +236,7 @@ export default function NewGoalScreen() {
   const continueToRhythm = () => {
     const problem = validate();
     if (problem) {
-      setError(problem);
+      showError(problem);
       return;
     }
     setError(null);
@@ -243,6 +250,7 @@ export default function NewGoalScreen() {
         title={savingsMode === 'free' ? 'Créer mon projet' : 'Créer mon plan'}
         subtitle={`Étape ${step} sur 2`}
         fallbackHref={goals.length === 0 ? '/onboarding/country' : '/'}
+        onBack={step === 2 ? () => setStep(1) : undefined}
       />
       <StepIndicator
         current={step}
@@ -258,10 +266,13 @@ export default function NewGoalScreen() {
 
       {step === 1 ? (
         <Card style={styles.heroCard}>
-          <Text style={styles.title}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            style={styles.title}>
             Quel projet veux-tu préparer ?
           </Text>
-          <Text style={styles.body}>Choisis une suggestion ou donne-lui ton propre nom.</Text>
 
           <View style={styles.heroSpacer} />
 
@@ -407,7 +418,6 @@ export default function NewGoalScreen() {
             </View>
           ) : null}
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button
             label={savingsMode === 'free' ? 'Continuer vers le rappel' : 'Continuer vers le rythme'}
             onPress={continueToRhythm}
@@ -450,7 +460,8 @@ export default function NewGoalScreen() {
               })}
             </ScrollView>
             <Text style={styles.dayHint}>
-              Rappel le <Text style={styles.dayHintAccent}>{reminderDay}</Text> de chaque mois
+              Rappel le <Text style={styles.dayHintAccent}>{formatReminderDay(reminderDay)}</Text> de
+              chaque mois
             </Text>
 
             <View style={styles.freeModeToggleRow}>
@@ -650,26 +661,6 @@ export default function NewGoalScreen() {
             </>
           ) : null}
 
-          <View style={styles.nameFieldWrap}>
-            <View style={styles.nameFieldLabelRow}>
-              <Text style={styles.fieldLabel}>Comment doit-on t'appeler ?</Text>
-              <Text style={styles.nameFieldOptional}>Optionnel</Text>
-            </View>
-            <Field
-              value={userName ?? ''}
-              onChangeText={(t) => setUserName(t)}
-              placeholder="Ex : Marie"
-              style={styles.nameFieldInput}
-            />
-            {userName?.trim() ? (
-              <Text style={styles.nameHint}>
-                On t'appellera <Text style={styles.nameHintAccent}>{userName.trim()}</Text> dans
-                l'application.
-              </Text>
-            ) : null}
-          </View>
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.finalActions}>
             <Button
               label={savingsMode === 'free' ? 'Créer le projet' : 'Créer le plan'}
@@ -686,6 +677,7 @@ export default function NewGoalScreen() {
           </View>
         </>
       )}
+      {error ? <ErrorToast key={error.key} message={error.text} onFinished={clearError} /> : null}
       <ActionLoadingOverlay
         visible={saving}
         title={savingsMode === 'free' ? 'Création de ton projet…' : 'Création de ton plan…'}
@@ -743,9 +735,11 @@ export default function NewGoalScreen() {
 const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.serifBold,
-    fontSize: 26,
+    // Dimensionné pour que « Quel projet veux-tu préparer ? » tienne sur une
+    // seule ligne, y compris sur les écrans étroits.
+    fontSize: 20,
     color: colors.text,
-    lineHeight: 32,
+    lineHeight: 26,
     marginBottom: 5,
   },
   body: { fontSize: 15, color: colors.textSecondary, lineHeight: 21, marginBottom: 15 },
@@ -793,23 +787,6 @@ const styles = StyleSheet.create({
   advancedToggleLabel: { fontSize: 14, fontWeight: '800', color: colors.accent },
   advancedToggleChevron: { fontSize: 16, color: colors.accent, fontWeight: '700' },
   advancedSection: { marginBottom: 4 },
-  nameFieldWrap: { marginTop: 4 },
-  nameFieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  nameFieldOptional: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    backgroundColor: colors.cardSoft,
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    marginBottom: 7,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  nameFieldInput: { fontFamily: fonts.serifItalic, fontSize: 17 },
-  nameHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: -2 },
-  nameHintAccent: { fontFamily: fonts.serifItalic, color: colors.accent },
   dayPicker: { flexDirection: 'row', gap: 8, marginBottom: 8, paddingRight: 4 },
   dayChip: {
     width: 44,
