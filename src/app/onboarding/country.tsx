@@ -53,6 +53,7 @@ export default function CountryScreen() {
   // encore monté, donc sa position n'est pas connue.
   const settingsScrollRef = useRef<ScrollView | null>(null);
   const scrollToConversion = useRef(false);
+  const conversionTop = useRef(0);
   const [nameEditing, setNameEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const commitName = () => {
@@ -262,7 +263,16 @@ export default function CountryScreen() {
     if (hasFinancialData && country.currency !== currentCurrency) {
       // Ce bloc apparaît sous la liste, hors écran : sans ce défilement, le
       // tap semble sans effet et on repart en arrière sans avoir validé.
-      scrollToConversion.current = true;
+      // S'il est déjà à l'écran (changement de pays suivant), son onLayout ne
+      // se redéclenche pas : on défile tout de suite, avec la position déjà
+      // mesurée. Sinon on attend qu'il soit monté pour connaître la sienne.
+      if (changingExistingCurrency) {
+        requestAnimationFrame(() =>
+          settingsScrollRef.current?.scrollTo({ y: conversionTop.current, animated: true })
+        );
+      } else {
+        scrollToConversion.current = true;
+      }
       return;
     }
     setSaving(true);
@@ -287,10 +297,13 @@ export default function CountryScreen() {
           {changingExistingCurrency ? (
             <View
               onLayout={(event) => {
+                conversionTop.current = event.nativeEvent.layout.y;
                 if (!scrollToConversion.current) return;
                 scrollToConversion.current = false;
-                const { y } = event.nativeEvent.layout;
-                settingsScrollRef.current?.scrollTo({ y, animated: true });
+                settingsScrollRef.current?.scrollTo({
+                  y: conversionTop.current,
+                  animated: true,
+                });
               }}>
               {conversionBlock}
             </View>

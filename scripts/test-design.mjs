@@ -127,10 +127,14 @@ assert.match(country, /const selectInSettings = async/);
 // La liste s'intègre au défilement de l'écran (pas de ScrollView imbriqué),
 // pour pouvoir amener l'utilisateur sur le bloc à confirmer qui la suit.
 assert.match(countryList, /embedded \? \(\s*<View style=\{styles\.scrollContent\}>/);
-// Le défilement part de l'onLayout du bloc : au moment du tap il n'est pas
-// encore monté, sa position n'est donc pas connue.
+// Deux chemins, pour que le défilement ait lieu à chaque choix de pays :
+// bloc pas encore monté → on attend son onLayout (position inconnue au tap) ;
+// bloc déjà à l'écran → son onLayout ne se redéclenche pas, on défile tout de
+// suite avec la position mémorisée.
 assert.match(country, /scrollToConversion\.current = true;/);
-assert.match(country, /settingsScrollRef\.current\?\.scrollTo\(\{ y, animated: true \}\)/);
+assert.match(country, /conversionTop\.current = event\.nativeEvent\.layout\.y;/);
+assert.match(country, /if \(changingExistingCurrency\) \{/);
+assert.match(country, /scrollTo\(\{\s*y: conversionTop\.current,\s*animated: true,?\s*\}\)/);
 assert.match(ui, /scrollRef\?: MutableRefObject<ScrollView \| null>/);
 // Application immédiate, sauf si une décision de conversion est requise.
 assert.match(country, /if \(hasFinancialData && country\.currency !== currentCurrency\) \{/);
