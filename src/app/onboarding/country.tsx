@@ -103,8 +103,9 @@ export default function CountryScreen() {
       await changeLocale(selectedCountry.code, selectedCountry.currency, conversionRate);
       if (settings === '1' && router.canGoBack()) router.back();
       // Premier lancement : on va droit à la création du projet, sans écran
-      // d'accueil intermédiaire — c'est le but recherché par l'utilisateur.
-      else router.replace('/onboarding/mode');
+      // d'accueil ni de choix de mode intermédiaire — le mode se choisit
+      // désormais via le bascule « Épargne libre » sur l'écran de création.
+      else router.replace('/onboarding/new-goal');
     } finally {
       setSaving(false);
     }

@@ -84,7 +84,7 @@ export default function ExampleScreen() {
 
       <Button
         label="Créer mon projet"
-        onPress={() => router.push('/onboarding/mode')}
+        onPress={() => router.push('/onboarding/new-goal')}
       />
     </Screen>
   );

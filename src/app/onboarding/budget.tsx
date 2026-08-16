@@ -15,7 +15,6 @@ import {
 import { parseAmountInput } from '@/lib/format';
 import {
   buildGlobalRebalanceProposal,
-  goalSavingsMode,
   prudentCapacity,
   resteAVivre,
   SAFETY_MARGIN,
@@ -28,10 +27,9 @@ import { useMoney } from '@/lib/use-money';
 export default function BudgetScreen() {
   const { currency, currencyCode, money, amountInput } = useMoney();
   const router = useRouter();
-  const { returnToGoal, standalone, next } = useLocalSearchParams<{
+  const { returnToGoal, standalone } = useLocalSearchParams<{
     returnToGoal?: string;
     standalone?: string;
-    next?: 'guided';
   }>();
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
@@ -64,15 +62,10 @@ export default function BudgetScreen() {
       return;
     }
     setBudget(draft);
-    if (next === 'guided' && !goals.some((goal) => goalSavingsMode(goal) === 'guided')) {
-      clearGlobalRebalanceReview();
-      router.replace({ pathname: '/onboarding/new-goal', params: { mode: 'guided' } });
-      return;
-    }
     if (goals.length === 0) {
       clearGlobalRebalanceReview();
       if (returnToGoal === '1' || standalone === '1') router.back();
-      else router.push({ pathname: '/onboarding/new-goal', params: { mode: next ?? 'guided' } });
+      else router.push('/onboarding/new-goal');
       return;
     }
     const proposal = buildGlobalRebalanceProposal(goals, draft);

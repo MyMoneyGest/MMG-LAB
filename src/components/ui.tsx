@@ -527,7 +527,14 @@ const styles = StyleSheet.create({
   buttonLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   buttonLoadingContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   field: { marginBottom: 10 },
-  fieldLabel: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 5 },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
   fieldWrap: {
     flexDirection: 'row',
     alignItems: 'center',

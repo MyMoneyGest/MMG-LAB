@@ -16,7 +16,6 @@ const index = read('src/app/index.tsx');
 const budget = read('src/app/onboarding/budget.tsx');
 const country = read('src/app/onboarding/country.tsx');
 const countryPicker = read('src/components/country-picker-modal.tsx');
-const mode = read('src/app/onboarding/mode.tsx');
 const newGoal = read('src/app/onboarding/new-goal.tsx');
 const adjustGoal = read('src/app/adjust-goal.tsx');
 const goal = read('src/app/goal/[id].tsx');
@@ -60,18 +59,20 @@ assert.deepEqual(pngSize('assets/images/favicon.png'), [512, 512]);
 assert.match(iconGenerator, /let brand = NSColor\(hex: "#B5432A"\)/);
 assert.match(iconGenerator, /let monogram = "M"/);
 
-// Écran d'accueil retiré (home.tsx supprimé) : premier lancement et retour sans
-// projet vont désormais droit à la création (/onboarding/mode), sans étape
-// intermédiaire. La bannière « Projet supprimé » vit maintenant sur cet écran.
-assert.match(index, /return <Redirect href="\/onboarding\/mode" \/>/);
+// Écran d'accueil retiré (home.tsx supprimé) et écran de choix du mode retiré
+// (mode.tsx supprimé) : premier lancement et retour sans projet vont
+// désormais droit à la création (/onboarding/new-goal), sans étape
+// intermédiaire ; le mode guidé/libre se choisit via un bascule sur cet
+// écran. La bannière « Projet supprimé » vit maintenant sur cet écran.
+assert.match(index, /return <Redirect href="\/onboarding\/new-goal" \/>/);
 assert.match(header, /router\.replace\('\/'\)/);
-assert.match(mode, /<FeedbackBanner/);
+assert.match(newGoal, /<FeedbackBanner/);
 // Store Zustand dédié (pas de query params ni de simple useEffect au montage) :
 // sur web, expo-router garde l'écran cible déjà instancié d'une visite à
 // l'autre — seule une notification réactive traverse cette navigation de
 // façon fiable, indépendamment du cycle de montage/focus.
-assert.match(mode, /usePendingFeedbackStore\(\(s\) => s\.message\)/);
-assert.match(mode, /usePendingFeedbackStore\.getState\(\)\.take\(\)/);
+assert.match(newGoal, /usePendingFeedbackStore\(\(s\) => s\.message\)/);
+assert.match(newGoal, /usePendingFeedbackStore\.getState\(\)\.take\(\)/);
 const pendingFeedback = read('src/lib/pending-feedback.ts');
 assert.match(pendingFeedback, /export const usePendingFeedbackStore = create</);
 assert.match(pendingFeedback, /export function setPendingFeedback/);
@@ -107,12 +108,12 @@ assert.match(actions, /state\.setLocale\(\{ country, currencyCode \}\)/);
 assert.match(actions, /state\.convertLocale\(\{ country, currencyCode, rate: conversionRate \}\)/);
 assert.match(actions, /scheduleGoalReminders\(goal, suggestedAmount\(goal\)\)/);
 
-assert.match(mode, /Quel mode te convient/);
-assert.match(mode, /Plan guidé/);
-assert.match(mode, /Épargne libre/);
-assert.match(mode, /Aucun budget imposé ni montant calculé/);
-assert.match(mode, /pathname: '\/onboarding\/budget'/);
-assert.match(mode, /pathname: '\/onboarding\/new-goal'/);
+// Le choix guidé/libre n'est plus un écran séparé : un bascule inline sur
+// l'écran 2 (jour de rappel) remplace l'ancien /onboarding/mode.
+assert.match(newGoal, /Épargne libre/);
+assert.match(newGoal, /<Switch/);
+assert.match(newGoal, /setSavingsMode\(value \? 'free' : 'guided'\)/);
+assert.match(newGoal, /Aucun budget ni montant mensuel ne sera imposé/);
 
 assert.match(ui, /footer\?: ReactNode/);
 assert.match(ui, /styles\.screenFooter/);
@@ -210,8 +211,7 @@ assert.match(newGoal, /accessibilityLabel="Ajuster le budget"/);
 assert.match(newGoal, /params: \{ returnToGoal: '1' \}/);
 assert.match(budget, /returnToGoal === '1'/);
 assert.match(budget, /standalone === '1'/);
-assert.match(budget, /next === 'guided'/);
-assert.match(budget, /goalSavingsMode\(goal\) === 'guided'/);
+assert.doesNotMatch(budget, /goalSavingsMode/);
 
 assert.match(adjustGoal, /Les paramètres utiles, en un seul écran/);
 assert.match(adjustGoal, /Le nom et le type de projet restent inchangés/);
@@ -297,7 +297,7 @@ assert.match(menu, /\[activeGoal, \.\.\.goals\.filter/);
 assert.match(menu, /useSafeAreaInsets/);
 assert.match(menu, /Math\.max\(insets\.bottom \+ 8, 20\)/);
 assert.match(menu, /params: \{ standalone: '1' \}/);
-assert.match(menu, /router\.push\('\/onboarding\/mode'\)/);
+assert.match(menu, /router\.push\('\/onboarding\/new-goal'\)/);
 assert.match(menu, /pathname: '\/adjust-goal'/);
 assert.match(menu, /params: \{ id: currentGoalId \}/);
 assert.match(menu, /contentInsetAdjustmentBehavior="automatic"/);

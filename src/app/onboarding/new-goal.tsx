@@ -1,12 +1,13 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppHeader } from '@/components/app-header';
+import { FeedbackBanner } from '@/components/feedback-banner';
 import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, DateField, Field, Screen, StepIndicator } from '@/components/ui';
-import { colors, radius } from '@/constants/theme';
+import { colors, fonts, radius } from '@/constants/theme';
 import { createGoal } from '@/lib/actions';
 import {
   formatDate,
@@ -23,6 +24,7 @@ import {
   remainingAmount,
   scheduledMonths,
 } from '@/lib/plan';
+import { usePendingFeedbackStore } from '@/lib/pending-feedback';
 import { useStore } from '@/lib/store';
 import { waitForMinimumLoading } from '@/lib/timing';
 import {
@@ -63,13 +65,17 @@ const RHYTHMS: {
 export default function NewGoalScreen() {
   const { currency, currencyCode, money, amountInput } = useMoney();
   const router = useRouter();
-  const { mode } = useLocalSearchParams<{ mode?: SavingsMode }>();
-  const savingsMode: SavingsMode = mode === 'free' ? 'free' : 'guided';
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
   const userName = useStore((s) => s.userName);
   const setUserName = useStore((s) => s.setUserName);
+  // Signal transitoire (cf. pending-feedback.ts) : ce champ est le point
+  // d'entrée « nouveau projet » de l'app depuis le retrait de l'écran de
+  // choix du mode, il porte donc la bannière de suppression à sa place.
+  const feedbackMessage = usePendingFeedbackStore((s) => s.message);
+  const clearFeedback = useCallback(() => usePendingFeedbackStore.getState().take(), []);
 
+  const [savingsMode, setSavingsMode] = useState<SavingsMode>('guided');
   const [category, setCategory] = useState<GoalCategory>('emergency');
   const [name, setName] = useState('');
   const [nameIsSuggested, setNameIsSuggested] = useState(false);
@@ -238,10 +244,19 @@ export default function NewGoalScreen() {
         current={step}
         labels={savingsMode === 'free' ? ['Projet', 'Rappel'] : ['Projet', 'Rythme']}
       />
+      {feedbackMessage ? (
+        <FeedbackBanner
+          key={feedbackMessage.key}
+          message={feedbackMessage}
+          onFinished={clearFeedback}
+        />
+      ) : null}
 
       {step === 1 ? (
         <Card>
-          <Text style={styles.title}>Quel projet veux-tu préparer ?</Text>
+          <Text style={styles.title}>
+            Quel projet <Text style={styles.titleItalic}>veux-tu</Text> préparer ?
+          </Text>
           <Text style={styles.body}>Choisis une suggestion ou donne-lui ton propre nom.</Text>
 
           <View style={styles.chips}>
@@ -295,7 +310,7 @@ export default function NewGoalScreen() {
             placeholder="0"
             suffix={currency.symbol}
           />
-          <Text style={styles.fieldLabel}>Objectif atteint</Text>
+          <Text style={styles.fieldLabel}>Horizon de temps</Text>
           <View style={styles.durationChoices}>
             {DURATIONS.map((d) => {
               const selected = d.key === durationKey;
@@ -385,83 +400,6 @@ export default function NewGoalScreen() {
               ) : null}
             </View>
           ) : null}
-          {savingsMode === 'free' ? (
-            <View style={styles.freeModeCard}>
-              <Text style={styles.freeModeTitle}>Épargne libre</Text>
-              <Text style={styles.freeModeBody}>
-                Aucun budget ni montant mensuel ne sera imposé. Ton objectif avance avec les
-                sommes que tu choisis de mettre de côté.
-              </Text>
-            </View>
-          ) : budget ? (
-            <View style={styles.budgetSummary}>
-              <View style={styles.budgetSummaryHeader}>
-                <Text style={styles.budgetSummaryTitle}>Ton budget mensuel</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Ajuster le budget"
-                  hitSlop={8}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/onboarding/budget',
-                      params: { returnToGoal: '1' },
-                    })
-                  }>
-                  <Text style={styles.budgetAdjust}>Ajuster</Text>
-                </Pressable>
-              </View>
-              <View style={styles.budgetRow}>
-                <Text style={styles.budgetLabel}>Revenus</Text>
-                <Text style={styles.budgetValue}>{money(budget.income)}</Text>
-              </View>
-              <View style={styles.budgetRow}>
-                <Text style={styles.budgetLabel}>Charges fixes</Text>
-                <Text style={styles.budgetValue}>− {money(budget.fixedCharges)}</Text>
-              </View>
-              <View style={styles.budgetRow}>
-                <Text style={styles.budgetLabel}>Dépenses</Text>
-                <Text style={styles.budgetValue}>− {money(budget.variableExpenses)}</Text>
-              </View>
-              {activeExistingGoals.length ? (
-                <View style={styles.budgetRow}>
-                  <Text style={styles.budgetLabel}>
-                    Projets en cours ({activeExistingGoals.length})
-                  </Text>
-                  <Text style={styles.budgetValue}>− {money(existingEffort)}</Text>
-                </View>
-              ) : null}
-              <View style={[styles.budgetRow, styles.budgetResult]}>
-                <Text style={styles.budgetResultLabel}>Reste réellement disponible</Text>
-                <Text
-                  style={[
-                    styles.budgetResultValue,
-                    remainingAfterExistingGoals < 0 && styles.budgetResultWarning,
-                  ]}>
-                  {money(remainingAfterExistingGoals)}
-                </Text>
-              </View>
-              <Text style={styles.capacityChipMain}>
-                Capacité prudente encore disponible : {money(availablePrudentCapacity)} / mois
-              </Text>
-              {preview ? (
-                <Text style={styles.capacityChipDetail}>
-                  Effort total avec tes autres projets : {money(globalPeak)} au mois le plus élevé
-                </Text>
-              ) : null}
-            </View>
-          ) : (
-            <Text style={styles.capacityHint}>
-              Estime d'abord ta capacité depuis le menu Budget pour obtenir un diagnostic.
-            </Text>
-          )}
-          <View style={styles.nameFieldWrap}>
-            <Field
-              label="Comment doit-on t'appeler ? (optionnel)"
-              value={userName ?? ''}
-              onChangeText={(t) => setUserName(t)}
-              placeholder="Ex : Marie"
-            />
-          </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button
@@ -474,36 +412,131 @@ export default function NewGoalScreen() {
         <>
           <Card>
             <Text style={styles.title}>
-              {savingsMode === 'free' ? 'Choisis ton rappel' : 'Choisis ton rythme'}
+              Choisis ton <Text style={styles.titleItalic}>jour de rappel</Text>
             </Text>
             <Text style={styles.body}>
               {savingsMode === 'free'
                 ? "MMG garde ton rituel mensuel, sans t'imposer de montant."
                 : 'Le total ne change pas, seulement la façon d’avancer.'}
             </Text>
-        <Text style={styles.fieldLabel}>Jour du rappel dans le mois</Text>
-        <View style={styles.dayPicker}>
-          {DAYS.map((day) => {
-            const selected = day === reminderDay;
-            return (
-              <Pressable
-                key={day}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-                onPress={() => {
-                  setReminderDayText(String(day));
+            <Text style={styles.fieldLabel}>Jour du rappel dans le mois</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.dayPicker}>
+              {DAYS.map((day) => {
+                const selected = day === reminderDay;
+                return (
+                  <Pressable
+                    key={day}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
+                    onPress={() => {
+                      setReminderDayText(String(day));
+                      setError(null);
+                    }}
+                    style={[styles.dayChip, selected && styles.dayChipSelected]}>
+                    <Text style={[styles.dayChipLabel, selected && styles.dayChipLabelSelected]}>
+                      {day}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+            <Text style={styles.dayHint}>
+              Rappel le <Text style={styles.dayHintAccent}>{reminderDay}</Text> de chaque mois
+            </Text>
+
+            <View style={styles.freeModeToggleRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.freeModeToggleTitle}>Épargne libre</Text>
+                <Text style={styles.freeModeToggleBody}>
+                  Pas de montant mensuel imposé · Épargne à ton rythme
+                </Text>
+              </View>
+              <Switch
+                accessibilityLabel="Activer l'épargne libre"
+                value={savingsMode === 'free'}
+                onValueChange={(value) => {
+                  setSavingsMode(value ? 'free' : 'guided');
                   setError(null);
                 }}
-                style={[styles.dayChip, selected && styles.dayChipSelected]}>
-                <Text style={[styles.dayChipLabel, selected && styles.dayChipLabelSelected]}>
-                  {day}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+                trackColor={{ false: colors.border, true: colors.accent }}
+                thumbColor={colors.card}
+              />
+            </View>
 
-        {savingsMode === 'guided' ? (
+            {savingsMode === 'free' ? (
+              <View style={styles.freeModeCard}>
+                <Text style={styles.freeModeTitle}>Épargne libre</Text>
+                <Text style={styles.freeModeBody}>
+                  Aucun budget ni montant mensuel ne sera imposé. Ton objectif avance avec les
+                  sommes que tu choisis de mettre de côté.
+                </Text>
+              </View>
+            ) : budget ? (
+              <View style={styles.budgetSummary}>
+                <View style={styles.budgetSummaryHeader}>
+                  <Text style={styles.budgetSummaryTitle}>Ton budget mensuel</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Ajuster le budget"
+                    hitSlop={8}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/onboarding/budget',
+                        params: { returnToGoal: '1' },
+                      })
+                    }>
+                    <Text style={styles.budgetAdjust}>Ajuster</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.budgetRow}>
+                  <Text style={styles.budgetLabel}>Revenus</Text>
+                  <Text style={styles.budgetValue}>{money(budget.income)}</Text>
+                </View>
+                <View style={styles.budgetRow}>
+                  <Text style={styles.budgetLabel}>Charges fixes</Text>
+                  <Text style={styles.budgetValue}>− {money(budget.fixedCharges)}</Text>
+                </View>
+                <View style={styles.budgetRow}>
+                  <Text style={styles.budgetLabel}>Dépenses</Text>
+                  <Text style={styles.budgetValue}>− {money(budget.variableExpenses)}</Text>
+                </View>
+                {activeExistingGoals.length ? (
+                  <View style={styles.budgetRow}>
+                    <Text style={styles.budgetLabel}>
+                      Projets en cours ({activeExistingGoals.length})
+                    </Text>
+                    <Text style={styles.budgetValue}>− {money(existingEffort)}</Text>
+                  </View>
+                ) : null}
+                <View style={[styles.budgetRow, styles.budgetResult]}>
+                  <Text style={styles.budgetResultLabel}>Reste réellement disponible</Text>
+                  <Text
+                    style={[
+                      styles.budgetResultValue,
+                      remainingAfterExistingGoals < 0 && styles.budgetResultWarning,
+                    ]}>
+                    {money(remainingAfterExistingGoals)}
+                  </Text>
+                </View>
+                <Text style={styles.capacityChipMain}>
+                  Capacité prudente encore disponible : {money(availablePrudentCapacity)} / mois
+                </Text>
+                {preview ? (
+                  <Text style={styles.capacityChipDetail}>
+                    Effort total avec tes autres projets : {money(globalPeak)} au mois le plus élevé
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <Text style={styles.capacityHint}>
+                Estime d'abord ta capacité depuis le menu Budget pour obtenir un diagnostic.
+              </Text>
+            )}
+
+            {savingsMode === 'guided' ? (
           <>
             <Pressable
               accessibilityRole="button"
@@ -611,6 +644,25 @@ export default function NewGoalScreen() {
             </>
           ) : null}
 
+          <View style={styles.nameFieldWrap}>
+            <View style={styles.nameFieldLabelRow}>
+              <Text style={styles.fieldLabel}>Comment doit-on t'appeler ?</Text>
+              <Text style={styles.nameFieldOptional}>Optionnel</Text>
+            </View>
+            <Field
+              value={userName ?? ''}
+              onChangeText={(t) => setUserName(t)}
+              placeholder="Ex : Marie"
+              style={styles.nameFieldInput}
+            />
+            {userName?.trim() ? (
+              <Text style={styles.nameHint}>
+                On t'appellera <Text style={styles.nameHintAccent}>{userName.trim()}</Text> dans
+                l'application.
+              </Text>
+            ) : null}
+          </View>
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.finalActions}>
             <Button
@@ -642,9 +694,23 @@ export default function NewGoalScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 23, fontWeight: '800', color: colors.text, lineHeight: 28, marginBottom: 5 },
+  title: {
+    fontFamily: fonts.serifBold,
+    fontSize: 26,
+    color: colors.text,
+    lineHeight: 32,
+    marginBottom: 5,
+  },
+  titleItalic: { fontFamily: fonts.serifItalic },
   body: { fontSize: 15, color: colors.textSecondary, lineHeight: 21, marginBottom: 15 },
-  fieldLabel: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 7 },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 7,
+  },
   startChoices: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   startChoice: {
     flex: 1,
@@ -667,9 +733,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     backgroundColor: colors.card,
   },
-  durationChipSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
+  durationChipSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
   durationChipLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
-  durationChipLabelSelected: { color: colors.accent },
+  durationChipLabelSelected: { color: colors.textOnDark },
   durationHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 12 },
   advancedToggle: {
     flexDirection: 'row',
@@ -681,12 +747,28 @@ const styles = StyleSheet.create({
   advancedToggleLabel: { fontSize: 14, fontWeight: '800', color: colors.accent },
   advancedToggleChevron: { fontSize: 16, color: colors.accent, fontWeight: '700' },
   advancedSection: { marginBottom: 4 },
-  nameFieldWrap: { marginTop: 4, opacity: 0.85 },
-  dayPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 4 },
+  nameFieldWrap: { marginTop: 4 },
+  nameFieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  nameFieldOptional: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    backgroundColor: colors.cardSoft,
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    marginBottom: 7,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  nameFieldInput: { fontFamily: fonts.serifItalic, fontSize: 17 },
+  nameHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: -2 },
+  nameHintAccent: { fontFamily: fonts.serifItalic, color: colors.accent },
+  dayPicker: { flexDirection: 'row', gap: 8, marginBottom: 8, paddingRight: 4 },
   dayChip: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.card,
@@ -694,8 +776,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dayChipSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
-  dayChipLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
+  dayChipLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
   dayChipLabelSelected: { color: colors.textOnDark },
+  dayHint: { color: colors.textSecondary, fontSize: 14, marginBottom: 14 },
+  dayHintAccent: { color: colors.accent, fontWeight: '800' },
+  freeModeToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.field,
+    padding: 13,
+    marginBottom: 12,
+  },
+  freeModeToggleTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
+  freeModeToggleBody: { fontSize: 12, color: colors.textSecondary, marginTop: 2, lineHeight: 17 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 },
   chip: {
     flexDirection: 'row',

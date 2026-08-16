@@ -65,8 +65,8 @@ export function MenuModal({
       await waitForMinimumLoading(loadingStartedAt);
       if (!destination) {
         // Plus aucun projet après cette suppression : `index.tsx` a sa propre
-        // redirection réactive vers `/onboarding/mode` dès que le store passe
-        // à zéro projet — elle peut se déclencher avant notre propre
+        // redirection réactive vers `/onboarding/new-goal` dès que le store
+        // passe à zéro projet — elle peut se déclencher avant notre propre
         // router.replace() ci-dessous. Le signal doit donc être posé AVANT la
         // mutation du store (removeGoal), pour être présent quel que soit le
         // montage qui « gagne la course ». Route statique : expo-router ne
@@ -94,7 +94,7 @@ export function MenuModal({
         });
       } else {
         // Signal déjà posé plus haut, avant removeGoal (cf. commentaire).
-        router.replace('/onboarding/mode');
+        router.replace('/onboarding/new-goal');
       }
     } catch {
       setDeleteError('La suppression n’a pas abouti. Réessaie dans quelques instants.');
@@ -160,7 +160,7 @@ export function MenuModal({
             })}
 
             <View style={[styles.actions, { marginTop: goals.length ? 10 : 2 }]}>
-              <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/mode'))} />
+              <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/new-goal'))} />
               <View style={styles.actionList}>
                 {currentGoalId
                   ? action(activeGoal?.savingsMode === 'free' ? 'Ajuster le projet' : 'Ajuster le plan', () =>
