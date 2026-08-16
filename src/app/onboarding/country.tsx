@@ -136,7 +136,9 @@ export default function CountryScreen() {
 
       <Card style={styles.heroCard}>
         <View style={styles.eyebrowRow}>
-          <Text style={styles.eyebrow}>{settings === '1' ? 'Réglages' : 'Bienvenue'}</Text>
+          {/* En réglages, l'en-tête affiche déjà « Pays et devise » juste
+              au-dessus : un eyebrow « Réglages » ne ferait que le répéter. */}
+          {settings === '1' ? null : <Text style={styles.eyebrow}>Bienvenue</Text>}
           {nameEditing ? (
             <TextInput
               autoFocus
