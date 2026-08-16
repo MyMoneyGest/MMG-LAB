@@ -36,6 +36,19 @@ import { useMoney } from '@/lib/use-money';
 
 const CATEGORIES: GoalCategory[] = ['emergency', 'car', 'moving', 'travel', 'other'];
 type StartMode = 'now' | 'later';
+type DurationKey = '3m' | '6m' | '1y' | '2y' | 'custom';
+const DURATIONS: { key: DurationKey; label: string; months?: number }[] = [
+  { key: '3m', label: 'En 3 mois', months: 3 },
+  { key: '6m', label: 'En 6 mois', months: 6 },
+  { key: '1y', label: 'En 1 an', months: 12 },
+  { key: '2y', label: 'En 2 ans', months: 24 },
+  { key: 'custom', label: 'Date précise' },
+];
+function addMonths(date: Date, months: number): Date {
+  const result = new Date(date);
+  result.setMonth(result.getMonth() + months);
+  return result;
+}
 const RHYTHMS: {
   key: SavingsRhythm;
   title: string;
@@ -53,13 +66,17 @@ export default function NewGoalScreen() {
   const savingsMode: SavingsMode = mode === 'free' ? 'free' : 'guided';
   const budget = useStore((s) => s.budget);
   const goals = useStore((s) => s.goals);
+  const userName = useStore((s) => s.userName);
+  const setUserName = useStore((s) => s.setUserName);
 
   const [category, setCategory] = useState<GoalCategory>('emergency');
   const [name, setName] = useState('');
   const [nameIsSuggested, setNameIsSuggested] = useState(false);
   const [target, setTarget] = useState('');
   const [available, setAvailable] = useState('');
+  const [durationKey, setDurationKey] = useState<DurationKey>('6m');
   const [dateText, setDateText] = useState('');
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [startMode, setStartMode] = useState<StartMode>('now');
   const [startDateText, setStartDateText] = useState('');
   const [reminderDayText, setReminderDayText] = useState(
@@ -72,7 +89,6 @@ export default function NewGoalScreen() {
 
   const parsedTarget = parseAmountInput(target, currencyCode);
   const parsedAvailable = parseAmountInput(available, currencyCode) ?? 0;
-  const parsedDate = parseDateInput(dateText);
   const parsedStartDate = parseDateInput(startDateText);
   const reminderDay = Math.min(28, Math.max(1, Number(reminderDayText) || 1));
 
@@ -95,6 +111,15 @@ export default function NewGoalScreen() {
     startMode === 'now' || Boolean(parsedStartDate && parsedStartDate > today);
   const scheduleReference =
     startMode === 'later' && parsedStartDate ? parsedStartDate : now;
+  // La date cible dérive de la durée choisie (par rapport au démarrage) sauf
+  // en mode « Date précise », où elle reste saisie librement.
+  const selectedDuration = DURATIONS.find((d) => d.key === durationKey);
+  const parsedDate =
+    durationKey === 'custom'
+      ? parseDateInput(dateText)
+      : selectedDuration?.months
+        ? addMonths(scheduleReference, selectedDuration.months)
+        : null;
   const firstReminder = nextReminderAfter(scheduleReference, reminderDay);
   const previewValid =
     parsedTarget !== null &&
@@ -268,53 +293,95 @@ export default function NewGoalScreen() {
             placeholder="0"
             suffix={currency.symbol}
           />
-          <DateField
-            label="Date cible"
-            value={dateText}
-            onChangeText={(t) => {
-              setDateText(t);
-              setError(null);
-            }}
-          />
-          <Text style={styles.fieldLabel}>Quand veux-tu commencer ?</Text>
-          <View style={styles.startChoices}>
-            <Pressable
-              accessibilityRole="radio"
-              accessibilityState={{ checked: startMode === 'now' }}
-              onPress={() => {
-                setStartMode('now');
-                setError(null);
-              }}
-              style={[styles.startChoice, startMode === 'now' && styles.startChoiceSelected]}>
-              <Text style={styles.startChoiceTitle}>Dès maintenant</Text>
-              <Text style={styles.startChoiceBody}>Le plan commence ce mois-ci.</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="radio"
-              accessibilityState={{ checked: startMode === 'later' }}
-              onPress={() => {
-                setStartMode('later');
-                setError(null);
-              }}
-              style={[styles.startChoice, startMode === 'later' && styles.startChoiceSelected]}>
-              <Text style={styles.startChoiceTitle}>Plus tard</Text>
-              <Text style={styles.startChoiceBody}>Choisis une date future.</Text>
-            </Pressable>
+          <Text style={styles.fieldLabel}>Objectif atteint</Text>
+          <View style={styles.durationChoices}>
+            {DURATIONS.map((d) => {
+              const selected = d.key === durationKey;
+              return (
+                <Pressable
+                  key={d.key}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  onPress={() => {
+                    setDurationKey(d.key);
+                    setError(null);
+                  }}
+                  style={[styles.durationChip, selected && styles.durationChipSelected]}>
+                  <Text
+                    style={[
+                      styles.durationChipLabel,
+                      selected && styles.durationChipLabelSelected,
+                    ]}>
+                    {d.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-          {startMode === 'later' ? (
-            <>
-              <DateField
-                label="Date de démarrage"
-                value={startDateText}
-                onChangeText={(value) => {
-                  setStartDateText(value);
-                  setError(null);
-                }}
-              />
-              <Text style={styles.startHint}>
-                Aucun rappel ne partira avant cette date.
-              </Text>
-            </>
+          {durationKey === 'custom' ? (
+            <DateField
+              label="Date cible"
+              value={dateText}
+              onChangeText={(t) => {
+                setDateText(t);
+                setError(null);
+              }}
+            />
+          ) : parsedDate ? (
+            <Text style={styles.durationHint}>Objectif visé pour le {formatDate(parsedDate)}.</Text>
+          ) : null}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: advancedOpen }}
+            onPress={() => setAdvancedOpen((v) => !v)}
+            style={styles.advancedToggle}>
+            <Text style={styles.advancedToggleLabel}>Options avancées</Text>
+            <Text style={styles.advancedToggleChevron}>{advancedOpen ? '︿' : '⌄'}</Text>
+          </Pressable>
+          {advancedOpen ? (
+            <View style={styles.advancedSection}>
+              <Text style={styles.fieldLabel}>Quand veux-tu commencer ?</Text>
+              <View style={styles.startChoices}>
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: startMode === 'now' }}
+                  onPress={() => {
+                    setStartMode('now');
+                    setError(null);
+                  }}
+                  style={[styles.startChoice, startMode === 'now' && styles.startChoiceSelected]}>
+                  <Text style={styles.startChoiceTitle}>Dès maintenant</Text>
+                  <Text style={styles.startChoiceBody}>Le plan commence ce mois-ci.</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: startMode === 'later' }}
+                  onPress={() => {
+                    setStartMode('later');
+                    setError(null);
+                  }}
+                  style={[styles.startChoice, startMode === 'later' && styles.startChoiceSelected]}>
+                  <Text style={styles.startChoiceTitle}>Plus tard</Text>
+                  <Text style={styles.startChoiceBody}>Choisis une date future.</Text>
+                </Pressable>
+              </View>
+              {startMode === 'later' ? (
+                <>
+                  <DateField
+                    label="Date de démarrage"
+                    value={startDateText}
+                    onChangeText={(value) => {
+                      setStartDateText(value);
+                      setError(null);
+                    }}
+                  />
+                  <Text style={styles.startHint}>
+                    Aucun rappel ne partira avant cette date.
+                  </Text>
+                </>
+              ) : null}
+            </View>
           ) : null}
           {savingsMode === 'free' ? (
             <View style={styles.freeModeCard}>
@@ -385,6 +452,15 @@ export default function NewGoalScreen() {
               Estime d'abord ta capacité depuis le menu Budget pour obtenir un diagnostic.
             </Text>
           )}
+          <View style={styles.nameFieldWrap}>
+            <Field
+              label="Comment doit-on t'appeler ? (optionnel)"
+              value={userName ?? ''}
+              onChangeText={(t) => setUserName(t)}
+              placeholder="Ex : Marie"
+            />
+          </View>
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button
             label={savingsMode === 'free' ? 'Continuer vers le rappel' : 'Continuer vers le rythme'}
@@ -551,6 +627,30 @@ const styles = StyleSheet.create({
   startChoiceTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
   startChoiceBody: { color: colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
   startHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: -5, marginBottom: 12 },
+  durationChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  durationChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 22,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: colors.card,
+  },
+  durationChipSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
+  durationChipLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
+  durationChipLabelSelected: { color: colors.accent },
+  durationHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 12 },
+  advancedToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    marginBottom: 4,
+  },
+  advancedToggleLabel: { fontSize: 14, fontWeight: '800', color: colors.accent },
+  advancedToggleChevron: { fontSize: 16, color: colors.accent, fontWeight: '700' },
+  advancedSection: { marginBottom: 4 },
+  nameFieldWrap: { marginTop: 4, opacity: 0.85 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 },
   chip: {
     flexDirection: 'row',

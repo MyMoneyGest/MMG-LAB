@@ -33,6 +33,8 @@ interface MMGState {
   goals: Goal[];
   lastViewedGoalId?: string;
   notifPermissionAsked: boolean;
+  /** Prénom facultatif, saisi à la création d'un projet, pour personnaliser les salutations. */
+  userName?: string;
   /** Dernière ouverture de l'app (ISO) : base du déclencheur d'inactivité. */
   lastAppOpenAt?: string;
   /** Instant (ISO) du dernier coup de pouce dont l'heure est passée : plafond glissant. */
@@ -61,6 +63,7 @@ interface MMGState {
   ) => Contribution;
   setLastViewed: (goalId: string) => void;
   setNotifPermissionAsked: () => void;
+  setUserName: (userName?: string) => void;
   recordAppOpen: () => void;
   setNudgePlan: (plan: ScheduledNudge[], lastNudgeAt?: string) => void;
 }
@@ -132,6 +135,8 @@ export const useStore = create<MMGState>()(
       },
 
       setNotifPermissionAsked: () => set({ notifPermissionAsked: true }),
+
+      setUserName: (userName) => set({ userName: userName?.trim() || undefined }),
 
       recordAppOpen: () => set({ lastAppOpenAt: new Date().toISOString() }),
 
