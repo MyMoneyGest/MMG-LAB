@@ -237,7 +237,7 @@ export default function NewGoalScreen() {
   };
 
   return (
-    <Screen>
+    <Screen contentContainerStyle={step === 1 ? styles.heroScrollContent : undefined}>
       <AppHeader
         showBack
         title={savingsMode === 'free' ? 'Créer mon projet' : 'Créer mon plan'}
@@ -256,7 +256,7 @@ export default function NewGoalScreen() {
       ) : null}
 
       {step === 1 ? (
-        <Card>
+        <Card style={styles.heroCard}>
           <Text style={styles.title}>
             Quel projet veux-tu préparer ?
           </Text>
@@ -264,15 +264,6 @@ export default function NewGoalScreen() {
 
           <Text style={styles.fieldLabel}>Nom du projet</Text>
           <View style={styles.nameRow}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Type de projet : ${CATEGORY_LABELS[category]}. Modifier`}
-              onPress={() => setCategoryPickerOpen(true)}
-              style={styles.nameRowCategory}>
-              <View style={[styles.chipDot, { backgroundColor: colors.category[category] }]} />
-              <Text style={styles.nameRowChevron}>⌄</Text>
-            </Pressable>
-            <View style={styles.nameRowDivider} />
             <TextInput
               value={name}
               onChangeText={(t) => {
@@ -281,12 +272,20 @@ export default function NewGoalScreen() {
                 setError(null);
               }}
               placeholder={
-                category === 'other' ? 'Choisis un nom pour ton projet' : CATEGORY_LABELS[category]
+                category === 'other' ? 'Choisis un nom pour ton projet' : `Ex : ${CATEGORY_LABELS[category]}`
               }
               placeholderTextColor={colors.textSecondary}
               selectionColor={colors.accent}
               style={styles.nameRowInput}
             />
+            <View style={styles.nameRowDivider} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Type de projet : ${CATEGORY_LABELS[category]}. Modifier`}
+              onPress={() => setCategoryPickerOpen(true)}
+              style={styles.nameRowCategory}>
+              <Text style={styles.nameRowChevron}>⌄</Text>
+            </Pressable>
           </View>
 
           <Field
@@ -404,6 +403,8 @@ export default function NewGoalScreen() {
               ) : null}
             </View>
           ) : null}
+
+          <View style={styles.heroSpacer} />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button
@@ -845,12 +846,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.field,
-    paddingLeft: 12,
+    paddingRight: 12,
     marginBottom: 10,
   },
-  nameRowCategory: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 13 },
-  nameRowChevron: { fontSize: 14, color: colors.textSecondary },
-  nameRowDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.border, marginLeft: 11 },
+  nameRowCategory: { alignItems: 'center', justifyContent: 'center', paddingVertical: 13, paddingHorizontal: 4 },
+  nameRowChevron: { fontSize: 16, color: colors.textSecondary },
+  nameRowDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.border, marginRight: 11 },
   nameRowInput: {
     flex: 1,
     fontSize: 16,
@@ -992,4 +993,7 @@ const styles = StyleSheet.create({
   finalActions: { gap: 4, marginBottom: 8, alignItems: 'stretch' },
   backLink: { alignSelf: 'center', paddingVertical: 10 },
   backLinkLabel: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+  heroScrollContent: { flexGrow: 1 },
+  heroCard: { flex: 1 },
+  heroSpacer: { flex: 1, minHeight: 24 },
 });
