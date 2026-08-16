@@ -269,7 +269,6 @@ export default function CountryScreen() {
       <Screen contentContainerStyle={styles.settingsScrollContent}>
         <AppHeader showBack title="Pays et devise" showTestMark={false} />
         <Card style={styles.settingsCard}>
-          <View style={styles.eyebrowRow}>{nameField}</View>
           <CountryList selectedCode={selectedCode} onSelect={(code) => void selectInSettings(code)} />
           {changingExistingCurrency ? conversionBlock : null}
           {saveError ? <Text style={styles.warning}>{saveError}</Text> : null}
