@@ -242,7 +242,7 @@ export default function NewGoalScreen() {
         showBack
         title={savingsMode === 'free' ? 'Créer mon projet' : 'Créer mon plan'}
         subtitle={`Étape ${step} sur 2`}
-        fallbackHref={goals.length === 0 ? '/onboarding/country?settings=1' : '/'}
+        fallbackHref={goals.length === 0 ? '/onboarding/country' : '/'}
       />
       <StepIndicator
         current={step}

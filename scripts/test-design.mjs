@@ -71,7 +71,10 @@ assert.match(index, /return <Redirect href="\/onboarding\/new-goal" \/>/);
 // lui-même, index.tsx redirigeant tout projet manquant vers new-goal).
 assert.match(header, /fallbackHref = '\/'/);
 assert.match(header, /router\.replace\(fallbackHref\)/);
-assert.match(newGoal, /fallbackHref=\{goals\.length === 0 \? '\/onboarding\/country\?settings=1' : '\/'\}/);
+// Sans projet, le repli vise l'écran pays en mode accueil (logo + Bienvenue,
+// sans flèche retour) et non sa variante réglages : c'est lui qui fait office
+// d'écran d'entrée depuis le retrait de home.tsx.
+assert.match(newGoal, /fallbackHref=\{goals\.length === 0 \? '\/onboarding\/country' : '\/'\}/);
 assert.match(newGoal, /<FeedbackBanner/);
 // Store Zustand dédié (pas de query params ni de simple useEffect au montage) :
 // sur web, expo-router garde l'écran cible déjà instancié d'une visite à
