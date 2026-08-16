@@ -111,10 +111,8 @@ export default function CountryScreen() {
     }
   };
 
-  const isHero = settings !== '1';
-
   return (
-    <Screen contentContainerStyle={isHero ? styles.heroScrollContent : undefined}>
+    <Screen contentContainerStyle={styles.heroScrollContent}>
       {settings === '1' ? (
         <AppHeader showBack title="Pays et devise" showTestMark={false} />
       ) : (
@@ -126,14 +124,14 @@ export default function CountryScreen() {
         </View>
       )}
 
-      <Card style={isHero ? styles.heroCard : undefined}>
+      <Card style={styles.heroCard}>
         <Text style={styles.eyebrow}>{settings === '1' ? 'Réglages' : 'Bienvenue'}</Text>
         <Text style={styles.title}>Où épargnes-tu ?</Text>
         <Text style={styles.body}>
           MMG adapte automatiquement l'application à ta devise locale.
         </Text>
 
-        {isHero ? <View style={styles.heroSpacer} /> : null}
+        <View style={styles.heroSpacer} />
 
         <Pressable
           accessibilityRole="button"
