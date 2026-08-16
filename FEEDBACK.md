@@ -29,6 +29,18 @@ Notées pendant la discussion UI. **Pas pour maintenant** — pistes de fond, à
 
 ---
 
+## 2026-08-14 — Lot premium (1/2) livré : polices + anneau de progression
+
+Charte fournie par Patrick (Figma + autre IA) intégrée : fond `#F9F6F0`, accent `#C04A31`,
+Playfair Display (titres) + Inter (reste), `ProgressRing` (SVG animé) qui remplace la barre
+linéaire sur l'écran projet. Vérifié FCFA + EUR à l'écran, 11 suites vertes. Commit `cc18ea3`.
+
+**Reste à faire (2/2)** : balayage Serif-Bold/Italic sur les titres de question (accueil, pays,
+création de projet) et les noms de projet — fait aujourd'hui seulement au niveau
+polices/couleurs/ring, pas encore appliqué aux `<Text>` eux-mêmes à travers l'app.
+
+---
+
 ## 2026-08-13 — Avis externe (IA Google) + Patrick : refonte de l'onboarding  ⭐⭐
 
 Suite à un descriptif complet de l'app soumis à l'IA de Google pour avis UX (voir échange
