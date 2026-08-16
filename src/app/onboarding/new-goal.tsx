@@ -263,6 +263,8 @@ export default function NewGoalScreen() {
           </Text>
           <Text style={styles.body}>Choisis une suggestion ou donne-lui ton propre nom.</Text>
 
+          <View style={styles.heroSpacer} />
+
           <Text style={styles.fieldLabel}>Nom du projet</Text>
           <View style={styles.nameRow}>
             <TextInput
@@ -404,8 +406,6 @@ export default function NewGoalScreen() {
               ) : null}
             </View>
           ) : null}
-
-          <View style={styles.heroSpacer} />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button
@@ -996,5 +996,5 @@ const styles = StyleSheet.create({
   backLinkLabel: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
   heroScrollContent: { flexGrow: 1 },
   heroCard: { flex: 1 },
-  heroSpacer: { flex: 1, minHeight: 24 },
+  heroSpacer: { flex: 1, minHeight: 40 },
 });
