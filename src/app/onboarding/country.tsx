@@ -102,7 +102,9 @@ export default function CountryScreen() {
     try {
       await changeLocale(selectedCountry.code, selectedCountry.currency, conversionRate);
       if (settings === '1' && router.canGoBack()) router.back();
-      else router.replace('/');
+      // Premier lancement : on va droit à la création du projet, sans écran
+      // d'accueil intermédiaire — c'est le but recherché par l'utilisateur.
+      else router.replace('/onboarding/mode');
     } finally {
       setSaving(false);
     }
@@ -138,7 +140,7 @@ export default function CountryScreen() {
           onPress={() => setPickerOpen(true)}
           style={({ pressed }) => [styles.selectionSummary, pressed && styles.selectionPressed]}>
           <Text style={styles.selectionValue}>
-            {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].name}
+            {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].symbol}
           </Text>
           <Text style={styles.changeChevron}>⌄</Text>
         </Pressable>
@@ -250,7 +252,7 @@ export default function CountryScreen() {
         {saveError ? <Text style={styles.warning}>{saveError}</Text> : null}
 
         <Button
-          label={settings === '1' ? 'Enregistrer' : 'Continuer'}
+          label="Continuer"
           onPress={() => void save()}
           loading={saving}
           loadingLabel="Mise à jour…"

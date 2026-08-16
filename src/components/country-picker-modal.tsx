@@ -105,7 +105,7 @@ export function CountryPickerModal({
                           <Text style={styles.flag}>{country.flag}</Text>
                           <Text style={styles.countryName}>{country.name}</Text>
                           <Text style={styles.currencyName}>
-                            {CURRENCIES[country.currency].name}
+                            {CURRENCIES[country.currency].symbol}
                           </Text>
                           <View style={[styles.radio, selected && styles.radioSelected]}>
                             {selected ? <View style={styles.radioDot} /> : null}
@@ -126,7 +126,7 @@ export function CountryPickerModal({
             <View style={styles.footerSummary}>
               <Text style={styles.footerFlag}>{pendingCountry.flag}</Text>
               <Text numberOfLines={1} style={styles.footerText}>
-                {pendingCountry.name} · {CURRENCIES[pendingCountry.currency].name}
+                {pendingCountry.name} · {CURRENCIES[pendingCountry.currency].symbol}
               </Text>
             </View>
             <Button label="Confirmer" onPress={() => onConfirm(pendingCode)} style={styles.confirmButton} />
