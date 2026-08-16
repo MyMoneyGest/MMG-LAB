@@ -37,6 +37,7 @@ export const colors = {
     car: '#3A6EA5',
     moving: '#C08A2D',
     travel: '#8A3A62',
+    housing: '#4F8B5B',
     other: '#6E675C',
   },
 } as const;

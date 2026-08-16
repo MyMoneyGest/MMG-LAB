@@ -36,7 +36,7 @@ import {
 } from '@/lib/types';
 import { useMoney } from '@/lib/use-money';
 
-const CATEGORIES: GoalCategory[] = ['emergency', 'car', 'moving', 'travel', 'other'];
+const CATEGORIES: GoalCategory[] = ['emergency', 'car', 'moving', 'travel', 'housing', 'other'];
 type StartMode = 'now' | 'later';
 type DurationKey = '3m' | '6m' | '1y' | '2y' | 'custom';
 const DURATIONS: { key: DurationKey; label: string; months?: number }[] = [
@@ -311,7 +311,10 @@ export default function NewGoalScreen() {
             suffix={currency.symbol}
           />
           <Text style={styles.fieldLabel}>Horizon de temps</Text>
-          <View style={styles.durationChoices}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.durationChoices}>
             {DURATIONS.map((d) => {
               const selected = d.key === durationKey;
               return (
@@ -334,7 +337,7 @@ export default function NewGoalScreen() {
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
           {durationKey === 'custom' ? (
             <DateField
               label="Date cible"
@@ -724,7 +727,7 @@ const styles = StyleSheet.create({
   startChoiceTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
   startChoiceBody: { color: colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
   startHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: -5, marginBottom: 12 },
-  durationChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  durationChoices: { flexDirection: 'row', gap: 8, marginBottom: 6, paddingRight: 4 },
   durationChip: {
     borderWidth: 1,
     borderColor: colors.border,

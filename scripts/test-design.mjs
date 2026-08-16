@@ -173,7 +173,7 @@ assert.match(
   /labels=\{savingsMode === 'free' \? \['Projet', 'Rappel'\] : \['Projet', 'Rythme'\]\}/
 );
 assert.doesNotMatch(newGoal, /sur 3/);
-assert.match(newGoal, /\['emergency', 'car', 'moving', 'travel', 'other'\]/);
+assert.match(newGoal, /\['emergency', 'car', 'moving', 'travel', 'housing', 'other'\]/);
 assert.match(newGoal, /CATEGORY_LABELS\[c\]/);
 assert.match(newGoal, /category === 'other' \? 'Choisis un nom pour ton projet'/);
 assert.doesNotMatch(newGoal, /editId|Ajuster le plan/);
