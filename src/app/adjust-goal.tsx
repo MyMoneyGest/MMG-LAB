@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
+import { AppDialog } from '@/components/app-dialog';
 import { AppHeader } from '@/components/app-header';
 import { Button, Card, DateField, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { changeReminderDay } from '@/lib/actions';
+import { changeReminderDay, removeGoal } from '@/lib/actions';
 import { formatDate, formatReminderDay, parseAmountInput, parseDateInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
@@ -19,6 +20,7 @@ import {
   suggestedAmount,
 } from '@/lib/plan';
 import { scheduleGoalReminders } from '@/lib/notifications';
+import { setPendingFeedback } from '@/lib/pending-feedback';
 import { useStore } from '@/lib/store';
 import { waitForMinimumLoading } from '@/lib/timing';
 import type { Goal, SavingsRhythm } from '@/lib/types';
@@ -34,7 +36,9 @@ export default function AdjustGoalScreen() {
   const { currency, currencyCode, money, amountInput } = useMoney();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const goal = useStore((state) => state.goals.find((candidate) => candidate.id === id));
+  const goals = useStore((state) => state.goals);
+  const goal = goals.find((candidate) => candidate.id === id);
+  const lastViewedGoalId = useStore((state) => state.lastViewedGoalId);
   const updateGoal = useStore((state) => state.updateGoal);
 
   const [target, setTarget] = useState(goal ? amountInput(String(goal.targetAmount)) : '');
@@ -43,6 +47,9 @@ export default function AdjustGoalScreen() {
   const [rhythm, setRhythm] = useState<SavingsRhythm>(goal?.rhythm ?? 'stable');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (!goal) return <Redirect href="/" />;
 
@@ -171,6 +178,50 @@ export default function AdjustGoalScreen() {
     }
   };
 
+  const deleteThisGoal = async () => {
+    if (!goal || deletePending) return;
+    const remainingGoals = goals.filter((candidate) => candidate.id !== goal.id);
+    const destination =
+      remainingGoals.find((candidate) => candidate.id === lastViewedGoalId) ?? remainingGoals[0];
+    const feedbackId = String(Date.now());
+    const loadingStartedAt = Date.now();
+    setDeleteError(null);
+    setDeletePending(true);
+    try {
+      await waitForMinimumLoading(loadingStartedAt);
+      if (!destination) {
+        // Signal transitoire posé avant removeGoal : sur web, la redirection
+        // réactive d'index.tsx vers /onboarding/new-goal (dès que le store
+        // passe à zéro projet) peut gagner la course sur notre propre
+        // navigation ci-dessous (cf. pending-feedback.ts).
+        setPendingFeedback({
+          key: feedbackId,
+          title: 'Projet supprimé',
+          detail: `« ${goal.name} » et son historique ont été supprimés.`,
+        });
+      }
+      await removeGoal(goal);
+      setDeleteOpen(false);
+      if (destination) {
+        router.dismissTo({
+          pathname: '/goal/[id]',
+          params: {
+            id: destination.id,
+            feedback: 'deleted',
+            feedbackId,
+            feedbackName: goal.name,
+          },
+        });
+      } else {
+        router.dismissTo('/onboarding/new-goal');
+      }
+    } catch {
+      setDeleteError('La suppression n’a pas abouti. Réessaie dans quelques instants.');
+    } finally {
+      setDeletePending(false);
+    }
+  };
+
   return (
     <Screen>
       <AppHeader
@@ -282,6 +333,24 @@ export default function AdjustGoalScreen() {
         disabled={!hasChanges}
         style={styles.saveButton}
       />
+
+      <Card style={styles.dangerCard}>
+        <Text style={styles.dangerTitle}>Zone sensible</Text>
+        <Text style={styles.dangerBody}>
+          Supprimer ce projet efface aussi son historique de versements, sur ce téléphone. Cette
+          action est définitive.
+        </Text>
+        <Button
+          label="Supprimer ce projet"
+          variant="secondary"
+          onPress={() => {
+            setDeleteError(null);
+            setDeleteOpen(true);
+          }}
+          style={styles.dangerButton}
+        />
+      </Card>
+
       <ActionLoadingOverlay
         visible={saving}
         title="Mise à jour du plan…"
@@ -290,6 +359,26 @@ export default function AdjustGoalScreen() {
             ? 'Mise à jour de la cible et reprogrammation du rappel.'
             : 'Recalcul des montants et reprogrammation des rappels.'
         }
+      />
+      <AppDialog
+        visible={deleteOpen}
+        eyebrow="Action sensible"
+        title={deleteError ? 'Suppression interrompue' : 'Supprimer ce projet ?'}
+        message={
+          deleteError ??
+          `« ${goal.name} » et tout son historique seront supprimés de ce téléphone. Cette action est définitive.`
+        }
+        tone="danger"
+        cancelLabel="Annuler"
+        confirmLabel={deleteError ? 'Réessayer' : 'Supprimer'}
+        loading={deletePending}
+        loadingLabel="Suppression…"
+        onClose={() => {
+          if (deletePending) return;
+          setDeleteError(null);
+          setDeleteOpen(false);
+        }}
+        onConfirm={() => void deleteThisGoal()}
       />
     </Screen>
   );
@@ -345,4 +434,8 @@ const styles = StyleSheet.create({
   arrow: { fontSize: 15, fontWeight: '800', color: colors.accent },
   afterValue: { flex: 1, fontSize: 14, fontWeight: '800', color: colors.text, textAlign: 'right' },
   saveButton: { marginBottom: 8 },
+  dangerCard: { borderWidth: 1, borderColor: colors.border },
+  dangerTitle: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 4 },
+  dangerBody: { fontSize: 13, color: colors.textSecondary, lineHeight: 19, marginBottom: 12 },
+  dangerButton: { borderColor: colors.accent },
 });

@@ -1,20 +1,17 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
-import { removeGoal } from '@/lib/actions';
-import { setPendingFeedback } from '@/lib/pending-feedback';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
-import { waitForMinimumLoading } from '@/lib/timing';
-import type { Goal } from '@/lib/types';
 import { useMoney } from '@/lib/use-money';
-import { AppDialog } from './app-dialog';
 import { Button } from './ui';
 
 // Switcher de projets + navigation générale, accessible depuis tous les écrans.
+// La suppression d'un projet vit exclusivement sur son écran « Ajuster » —
+// aucun bouton de suppression ici, pour éviter une action définitive à un
+// tap accidentel depuis cette liste.
 
 export function MenuModal({
   visible,
@@ -28,9 +25,6 @@ export function MenuModal({
   const { money } = useMoney();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
-  const [deletePending, setDeletePending] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const goals = useStore((s) => s.goals);
   const activeGoal = currentGoalId ? goals.find((goal) => goal.id === currentGoalId) : undefined;
   const orderedGoals = activeGoal
@@ -41,66 +35,6 @@ export function MenuModal({
     onClose();
     // Laisse le modal se fermer avant de naviguer.
     setTimeout(fn, 50);
-  };
-
-  const confirmDelete = (goalId: string) => {
-    const goal = goals.find((g) => g.id === goalId);
-    if (!goal) return;
-    setDeleteError(null);
-    setGoalToDelete(goal);
-    onClose();
-  };
-
-  const deleteSelectedGoal = async () => {
-    if (!goalToDelete || deletePending) return;
-    const deletedGoal = goalToDelete;
-    const remainingGoals = goals.filter((goal) => goal.id !== deletedGoal.id);
-    const destination =
-      remainingGoals.find((goal) => goal.id === currentGoalId) ?? remainingGoals[0];
-    const feedbackId = String(Date.now());
-    const loadingStartedAt = Date.now();
-    setDeleteError(null);
-    setDeletePending(true);
-    try {
-      await waitForMinimumLoading(loadingStartedAt);
-      if (!destination) {
-        // Plus aucun projet après cette suppression : `index.tsx` a sa propre
-        // redirection réactive vers `/onboarding/new-goal` dès que le store
-        // passe à zéro projet — elle peut se déclencher avant notre propre
-        // router.replace() ci-dessous. Le signal doit donc être posé AVANT la
-        // mutation du store (removeGoal), pour être présent quel que soit le
-        // montage qui « gagne la course ». Route statique : expo-router ne
-        // propage pas les query params libres lors d'un router.replace() sur
-        // web (contrairement aux routes dynamiques comme /goal/[id]), d'où ce
-        // signal transitoire plutôt qu'un paramètre d'URL.
-        setPendingFeedback({
-          key: feedbackId,
-          title: 'Projet supprimé',
-          detail: `« ${deletedGoal.name} » et son historique ont été supprimés.`,
-        });
-      }
-      await removeGoal(deletedGoal);
-      setGoalToDelete(null);
-      onClose();
-      if (destination) {
-        router.replace({
-          pathname: '/goal/[id]',
-          params: {
-            id: destination.id,
-            feedback: 'deleted',
-            feedbackId,
-            feedbackName: deletedGoal.name,
-          },
-        });
-      } else {
-        // Signal déjà posé plus haut, avant removeGoal (cf. commentaire).
-        router.replace('/onboarding/new-goal');
-      }
-    } catch {
-      setDeleteError('La suppression n’a pas abouti. Réessaie dans quelques instants.');
-    } finally {
-      setDeletePending(false);
-    }
   };
 
   const action = (label: string, onPress: () => void) => (
@@ -116,8 +50,7 @@ export function MenuModal({
   );
 
   return (
-    <>
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable
           style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + 8, 20) }]}
@@ -144,16 +77,6 @@ export function MenuModal({
                   </View>
                   <View style={styles.goalActions}>
                     {active ? <Text style={styles.activeBadge}>Actif</Text> : null}
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`Supprimer ${g.name}`}
-                      onPress={(event) => {
-                        event.stopPropagation();
-                        confirmDelete(g.id);
-                      }}
-                      hitSlop={8}>
-                      <Text style={styles.deleteAction}>Supprimer</Text>
-                    </Pressable>
                   </View>
                 </Pressable>
               );
@@ -189,28 +112,7 @@ export function MenuModal({
           </ScrollView>
         </Pressable>
       </Pressable>
-      </Modal>
-      <AppDialog
-        visible={goalToDelete !== null}
-        eyebrow="Action sensible"
-        title={deleteError ? 'Suppression interrompue' : 'Supprimer ce projet ?'}
-        message={
-          deleteError ??
-          `« ${goalToDelete?.name ?? ''} » et tout son historique seront supprimés de ce téléphone. Cette action est définitive.`
-        }
-        tone="danger"
-        cancelLabel="Annuler"
-        confirmLabel={deleteError ? 'Réessayer' : 'Supprimer'}
-        loading={deletePending}
-        loadingLabel="Suppression…"
-        onClose={() => {
-          if (deletePending) return;
-          setDeleteError(null);
-          setGoalToDelete(null);
-        }}
-        onConfirm={() => void deleteSelectedGoal()}
-      />
-    </>
+    </Modal>
   );
 }
 
@@ -264,7 +166,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     overflow: 'hidden',
   },
-  deleteAction: { fontSize: 12, fontWeight: '700', color: colors.accent },
   actions: { gap: 8 },
   actionList: {
     borderWidth: 1,

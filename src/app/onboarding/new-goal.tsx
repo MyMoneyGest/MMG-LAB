@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppHeader } from '@/components/app-header';
@@ -75,8 +76,10 @@ export default function NewGoalScreen() {
   const feedbackMessage = usePendingFeedbackStore((s) => s.message);
   const clearFeedback = useCallback(() => usePendingFeedbackStore.getState().take(), []);
 
+  const insets = useSafeAreaInsets();
   const [savingsMode, setSavingsMode] = useState<SavingsMode>('guided');
   const [category, setCategory] = useState<GoalCategory>('emergency');
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [name, setName] = useState('');
   const [nameIsSuggested, setNameIsSuggested] = useState(false);
   const [target, setTarget] = useState('');
@@ -255,39 +258,37 @@ export default function NewGoalScreen() {
       {step === 1 ? (
         <Card>
           <Text style={styles.title}>
-            Quel projet <Text style={styles.titleItalic}>veux-tu</Text> préparer ?
+            Quel projet veux-tu préparer ?
           </Text>
           <Text style={styles.body}>Choisis une suggestion ou donne-lui ton propre nom.</Text>
 
-          <View style={styles.chips}>
-            {CATEGORIES.map((c) => {
-              const selected = c === category;
-              return (
-                <Pressable
-                  key={c}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  onPress={() => selectCategory(c)}
-                  style={[styles.chip, selected && styles.chipSelected]}>
-                  <View style={[styles.chipDot, { backgroundColor: colors.category[c] }]} />
-                  <Text style={styles.chipLabel}>{CATEGORY_LABELS[c]}</Text>
-                </Pressable>
-              );
-            })}
+          <Text style={styles.fieldLabel}>Nom du projet</Text>
+          <View style={styles.nameRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Type de projet : ${CATEGORY_LABELS[category]}. Modifier`}
+              onPress={() => setCategoryPickerOpen(true)}
+              style={styles.nameRowCategory}>
+              <View style={[styles.chipDot, { backgroundColor: colors.category[category] }]} />
+              <Text style={styles.nameRowChevron}>⌄</Text>
+            </Pressable>
+            <View style={styles.nameRowDivider} />
+            <TextInput
+              value={name}
+              onChangeText={(t) => {
+                setName(t);
+                setNameIsSuggested(false);
+                setError(null);
+              }}
+              placeholder={
+                category === 'other' ? 'Choisis un nom pour ton projet' : CATEGORY_LABELS[category]
+              }
+              placeholderTextColor={colors.textSecondary}
+              selectionColor={colors.accent}
+              style={styles.nameRowInput}
+            />
           </View>
 
-          <Field
-            label="Nom du projet"
-            value={name}
-            onChangeText={(t) => {
-              setName(t);
-              setNameIsSuggested(false);
-              setError(null);
-            }}
-            placeholder={
-              category === 'other' ? 'Choisis un nom pour ton projet' : CATEGORY_LABELS[category]
-            }
-          />
           <Field
             label="Montant cible"
             value={target}
@@ -415,7 +416,7 @@ export default function NewGoalScreen() {
         <>
           <Card>
             <Text style={styles.title}>
-              Choisis ton <Text style={styles.titleItalic}>jour de rappel</Text>
+              Choisis ton jour de rappel
             </Text>
             <Text style={styles.body}>
               {savingsMode === 'free'
@@ -692,6 +693,47 @@ export default function NewGoalScreen() {
             : 'Calcul de l’échéancier et programmation du premier rappel.'
         }
       />
+      <Modal
+        visible={categoryPickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCategoryPickerOpen(false)}>
+        <Pressable style={styles.pickerBackdrop} onPress={() => setCategoryPickerOpen(false)}>
+          <Pressable
+            accessibilityViewIsModal
+            style={[styles.pickerSheet, { paddingBottom: Math.max(insets.bottom + 8, 20) }]}
+            onPress={() => {}}>
+            <View style={styles.pickerGrabber} />
+            <Text style={styles.pickerTitle}>Type de projet</Text>
+            <View style={styles.pickerList}>
+              {CATEGORIES.map((c) => {
+                const selected = c === category;
+                return (
+                  <Pressable
+                    key={c}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
+                    onPress={() => {
+                      selectCategory(c);
+                      setCategoryPickerOpen(false);
+                    }}
+                    style={({ pressed }) => [
+                      styles.pickerRow,
+                      selected && styles.pickerRowSelected,
+                      pressed && styles.pickerRowPressed,
+                    ]}>
+                    <View style={[styles.chipDot, { backgroundColor: colors.category[c] }]} />
+                    <Text style={styles.pickerRowLabel}>{CATEGORY_LABELS[c]}</Text>
+                    <View style={[styles.pickerRadio, selected && styles.pickerRadioSelected]}>
+                      {selected ? <View style={styles.pickerRadioDot} /> : null}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }
@@ -704,7 +746,6 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     marginBottom: 5,
   },
-  titleItalic: { fontFamily: fonts.serifItalic },
   body: { fontSize: 15, color: colors.textSecondary, lineHeight: 21, marginBottom: 15 },
   fieldLabel: {
     fontSize: 11,
@@ -796,21 +837,81 @@ const styles = StyleSheet.create({
   },
   freeModeToggleTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
   freeModeToggleBody: { fontSize: 12, color: colors.textSecondary, marginTop: 2, lineHeight: 17 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 },
-  chip: {
+  chipDot: { width: 10, height: 10, borderRadius: 5 },
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 22,
-    paddingVertical: 10,
-    paddingHorizontal: 13,
-    backgroundColor: colors.card,
+    borderRadius: radius.field,
+    paddingLeft: 12,
+    marginBottom: 10,
   },
-  chipSelected: { backgroundColor: colors.cardSoft, borderColor: colors.accent },
-  chipDot: { width: 12, height: 12, borderRadius: 6 },
-  chipLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
+  nameRowCategory: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 13 },
+  nameRowChevron: { fontSize: 14, color: colors.textSecondary },
+  nameRowDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.border, marginLeft: 11 },
+  nameRowInput: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  pickerBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(30, 22, 16, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  pickerSheet: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: radius.card,
+    borderTopRightRadius: radius.card,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  pickerGrabber: {
+    width: 42,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  pickerTitle: { fontFamily: fonts.sansBold, fontSize: 20, color: colors.text, marginBottom: 12 },
+  pickerList: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.field,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  pickerRow: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.card,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  pickerRowSelected: { backgroundColor: colors.cardSoft },
+  pickerRowPressed: { opacity: 0.72 },
+  pickerRowLabel: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.text },
+  pickerRadio: {
+    width: 21,
+    height: 21,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pickerRadioSelected: { borderColor: colors.accent },
+  pickerRadioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.accent },
   budgetSummary: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,

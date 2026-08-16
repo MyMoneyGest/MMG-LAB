@@ -76,8 +76,13 @@ assert.match(newGoal, /usePendingFeedbackStore\.getState\(\)\.take\(\)/);
 const pendingFeedback = read('src/lib/pending-feedback.ts');
 assert.match(pendingFeedback, /export const usePendingFeedbackStore = create</);
 assert.match(pendingFeedback, /export function setPendingFeedback/);
-assert.match(menu, /setPendingFeedback\(\{/);
-assert.match(menu, /Projet supprimé/);
+// Écran 5 : la suppression vit exclusivement sur l'écran « Ajuster le
+// projet/plan », plus dans le menu (sécurité contre un tap accidentel).
+assert.match(adjustGoal, /setPendingFeedback\(\{/);
+assert.match(adjustGoal, /Projet supprimé/);
+assert.doesNotMatch(menu, /setPendingFeedback/);
+assert.doesNotMatch(menu, /Supprimer/);
+assert.doesNotMatch(menu, /<AppDialog/);
 
 assert.match(index, /if \(!country\) return <Redirect href="\/onboarding\/country"/);
 assert.match(country, /getLocales\(\)\[0\]\?\.regionCode/);
@@ -308,13 +313,15 @@ assert.match(menu, /styles\.actionList/);
 assert.match(menu, /minimumFontScale=\{0\.85\}/);
 assert.match(menu, /style=\{styles\.actionChevron\}>›/);
 assert.doesNotMatch(menu, /styles\.actionRow/);
-assert.match(menu, /event\.stopPropagation\(\)/);
-assert.match(menu, /<AppDialog/);
-assert.match(menu, /loadingLabel="Suppression…"/);
-assert.match(menu, /await waitForMinimumLoading\(loadingStartedAt\)/);
-assert.match(menu, /feedback: 'deleted'/);
-assert.match(menu, /setGoalToDelete\(goal\);\s*onClose\(\);/s);
 assert.doesNotMatch(menu, /Alert\.alert|\bAlert\b/);
+
+assert.match(adjustGoal, /<AppDialog/);
+assert.match(adjustGoal, /loadingLabel="Suppression…"/);
+assert.match(adjustGoal, /await waitForMinimumLoading\(loadingStartedAt\)/);
+assert.match(adjustGoal, /feedback: 'deleted'/);
+assert.match(adjustGoal, /removeGoal\(goal\)/);
+assert.match(adjustGoal, /Zone sensible/);
+assert.match(adjustGoal, /label="Supprimer ce projet"/);
 
 assert.match(appDialog, /export type AppDialogTone = 'info' \| 'success' \| 'danger'/);
 assert.match(appDialog, /accessibilityViewIsModal/);
