@@ -406,6 +406,7 @@ export default function GoalScreen() {
       <AppHeader
         currentGoalId={goal.id}
         title={goal.name}
+        titleSerif
         subtitle={
           waitingToStart
             ? `Prévu le ${formatDate(goal.startDate!)}`
@@ -553,7 +554,7 @@ export default function GoalScreen() {
               {freeMode ? (
                 <View style={{ gap: 12 }}>
                   <Button
-                    label="J'ai mis de côté"
+                    label="J'ai mis de côté ✓"
                     onPress={() => {
                       setModalFromTest(false);
                       setAmountModal('deposit');
@@ -573,7 +574,7 @@ export default function GoalScreen() {
               ) : (
                 <View style={{ gap: 12 }}>
                   <Button
-                    label={`Versement fait (${money(suggested)})`}
+                    label={`J'ai mis de côté ✓ (${money(suggested)})`}
                     onPress={() => confirm(suggested, 'one_tap')}
                     loading={actionLoading}
                     loadingLabel="Enregistrement…"

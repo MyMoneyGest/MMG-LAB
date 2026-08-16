@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '@/constants/theme';
+import { colors, fonts } from '@/constants/theme';
 import { scheduleTestReminder } from '@/lib/notifications';
 import { remainingAmount, suggestedAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
@@ -15,12 +15,15 @@ export function AppHeader({
   showBack,
   currentGoalId,
   title = 'MMG',
+  titleSerif = false,
   subtitle,
   showTestMark = !showBack,
 }: {
   showBack?: boolean;
   currentGoalId?: string;
   title?: string;
+  /** Titre en serif éditorial : réservé au nom du projet sur sa fiche. */
+  titleSerif?: boolean;
   subtitle?: string;
   showTestMark?: boolean;
 }) {
@@ -128,7 +131,9 @@ export function AppHeader({
         <View style={styles.iconPlaceholder} />
       )}
       <View style={styles.heading}>
-        <Text numberOfLines={1} style={styles.title}>{title}</Text>
+        <Text numberOfLines={1} style={[styles.title, titleSerif && styles.titleSerif]}>
+          {title}
+        </Text>
         {subtitle ? <Text numberOfLines={1} style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Ouvrir le menu" style={styles.iconButton} onPress={() => setMenuOpen(true)}>
@@ -168,6 +173,7 @@ const styles = StyleSheet.create({
   logoPending: { opacity: 0.65 },
   heading: { flex: 1 },
   title: { fontSize: 18, fontWeight: '800', color: colors.text },
+  titleSerif: { fontFamily: fonts.serifBold, fontSize: 20, fontWeight: '400' },
   subtitle: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 1 },
   iconButton: {
     width: 40,

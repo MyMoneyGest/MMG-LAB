@@ -232,8 +232,11 @@ assert.doesNotMatch(adjustGoal, /<StepIndicator|Quel projet veux-tu préparer/);
 
 assert.match(goal, /<Screen footer=\{tabBar\}>/);
 assert.match(goal, /schedule\.slice\(0, 2\)/);
-assert.match(goal, /label=\{`Versement fait \(\$\{money\(suggested\)\}\)`\}/);
-assert.match(goal, /label="J'ai mis de côté"/);
+assert.match(goal, /label=\{`J'ai mis de côté ✓ \(\$\{money\(suggested\)\}\)`\}/);
+assert.match(goal, /label="J'ai mis de côté ✓"/);
+assert.match(goal, /titleSerif/);
+assert.match(header, /titleSerif/);
+assert.match(header, /fonts\.serifBold/);
 assert.match(goal, /Aucun montant imposé/);
 assert.match(goal, /goalStartsInFuture\(goal\)/);
 assert.match(goal, /Tout est prêt pour le/);
