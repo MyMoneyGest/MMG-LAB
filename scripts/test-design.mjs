@@ -108,8 +108,10 @@ assert.match(country, /Où épargnes-tu/);
 assert.match(countryPicker, /Rechercher un pays…/);
 assert.match(countryPicker, /accessibilityRole="radio"/);
 assert.match(countryPicker, /accessibilityState=\{\{ checked: selected \}\}/);
-assert.match(countryPicker, /label="Confirmer"/);
-assert.match(countryPicker, /onConfirm\(pendingCode\)/);
+// Choisir une ligne vaut confirmation : plus d'état intermédiaire ni de
+// bouton « Confirmer » (un tap de moins pour changer de pays).
+assert.match(countryPicker, /onPress=\{\(\) => onConfirm\(country\.code\)\}/);
+assert.doesNotMatch(countryPicker, /label="Confirmer"|pendingCode/);
 assert.match(country, /Que faire de tes montants actuels/);
 assert.match(country, /Convertir mes montants/);
 assert.match(country, /Garder les mêmes valeurs/);

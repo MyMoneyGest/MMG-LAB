@@ -5,12 +5,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts, radius } from '@/constants/theme';
 import { COUNTRIES, CURRENCIES } from '@/lib/currency';
 import type { CurrencyCode } from '@/lib/currency';
-import { Button } from './ui';
 
 // Sélecteur de pays en vrai bottom sheet (recherche + liste groupée par
-// devise + récapitulatif fixe en bas). Sépare le choix du pays de l'écran
-// principal, pour que son bouton "Continuer" ne soit plus jamais poussé
-// par une liste qui s'étend en accordéon.
+// devise). Sépare le choix du pays de l'écran principal, pour que son
+// bouton "Continuer" ne soit plus jamais poussé par une liste qui s'étend
+// en accordéon.
+//
+// Choisir une ligne vaut confirmation : pas d'état intermédiaire ni de
+// bouton « Confirmer » (le choix reste réversible en rouvrant la feuille,
+// et l'écran appelant garde son propre bouton de validation).
 
 const COUNTRY_GROUPS: { currency: CurrencyCode; label: string }[] = [
   { currency: 'XAF', label: 'Afrique centrale · FCFA' },
@@ -31,16 +34,13 @@ export function CountryPickerModal({
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const [pendingCode, setPendingCode] = useState(selectedCode);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (!visible) return;
-    setPendingCode(selectedCode);
     setQuery('');
-  }, [visible, selectedCode]);
+  }, [visible]);
 
-  const pendingCountry = COUNTRIES.find((c) => c.code === pendingCode) ?? COUNTRIES[0];
   const normalizedQuery = query.trim().toLowerCase();
 
   return (
@@ -89,14 +89,14 @@ export function CountryPickerModal({
                   <Text style={styles.groupLabel}>{group.label}</Text>
                   <View style={styles.countryList}>
                     {countries.map((country) => {
-                      const selected = country.code === pendingCode;
+                      const selected = country.code === selectedCode;
                       return (
                         <Pressable
                           key={country.code}
                           accessibilityRole="radio"
                           accessibilityState={{ checked: selected }}
                           accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
-                          onPress={() => setPendingCode(country.code)}
+                          onPress={() => onConfirm(country.code)}
                           style={({ pressed }) => [
                             styles.row,
                             selected && styles.rowSelected,
@@ -121,16 +121,6 @@ export function CountryPickerModal({
               <Text style={styles.empty}>Aucun pays ne correspond à « {query} ».</Text>
             ) : null}
           </ScrollView>
-
-          <View style={styles.footer}>
-            <View style={styles.footerSummary}>
-              <Text style={styles.footerFlag}>{pendingCountry.flag}</Text>
-              <Text numberOfLines={1} style={styles.footerText}>
-                {pendingCountry.name} · {CURRENCIES[pendingCountry.currency].symbol}
-              </Text>
-            </View>
-            <Button label="Confirmer" onPress={() => onConfirm(pendingCode)} style={styles.confirmButton} />
-          </View>
         </Pressable>
       </Pressable>
     </Modal>
@@ -236,17 +226,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 20,
   },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    paddingTop: 12,
-    marginTop: 4,
-  },
-  footerSummary: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  footerFlag: { fontSize: 20 },
-  footerText: { fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.text, flexShrink: 1 },
-  confirmButton: { flex: 0, minWidth: 130 },
 });
