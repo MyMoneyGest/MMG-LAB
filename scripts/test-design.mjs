@@ -110,14 +110,22 @@ assert.match(country, /styles\.eyebrowRow/);
 assert.match(country, /setUserName\(nameDraft\)/);
 assert.match(country, /userName \?\? 'Ton prénom'/);
 assert.doesNotMatch(newGoal, /Comment doit-on t'appeler|setUserName/);
-// Bottom sheet : recherche, groupes par devise, radio, récap + Confirmer.
-assert.match(countryPicker, /Rechercher un pays…/);
-assert.match(countryPicker, /accessibilityRole="radio"/);
-assert.match(countryPicker, /accessibilityState=\{\{ checked: selected \}\}/);
+// Liste partagée (recherche + groupes par devise + radio) entre le bottom
+// sheet du premier lancement et l'écran de réglages, qui l'affiche à plat :
+// on y vient pour changer de pays, pas pour relire la page d'accueil.
+const countryList = read('src/components/country-list.tsx');
+assert.match(countryList, /Rechercher un pays…/);
+assert.match(countryList, /accessibilityRole="radio"/);
+assert.match(countryList, /accessibilityState=\{\{ checked: selected \}\}/);
 // Choisir une ligne vaut confirmation : plus d'état intermédiaire ni de
 // bouton « Confirmer » (un tap de moins pour changer de pays).
-assert.match(countryPicker, /onPress=\{\(\) => onConfirm\(country\.code\)\}/);
+assert.match(countryList, /onPress=\{\(\) => onSelect\(country\.code\)\}/);
 assert.doesNotMatch(countryPicker, /label="Confirmer"|pendingCode/);
+assert.match(countryPicker, /<CountryList selectedCode=\{selectedCode\} onSelect=\{onConfirm\}/);
+assert.match(country, /<CountryList selectedCode=\{selectedCode\}/);
+assert.match(country, /const selectInSettings = async/);
+// Application immédiate, sauf si une décision de conversion est requise.
+assert.match(country, /if \(hasFinancialData && country\.currency !== currentCurrency\) return;/);
 assert.match(country, /Que faire de tes montants actuels/);
 assert.match(country, /Convertir mes montants/);
 assert.match(country, /Garder les mêmes valeurs/);
