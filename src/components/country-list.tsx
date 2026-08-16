@@ -20,11 +20,16 @@ export function CountryList({
   selectedCode,
   onSelect,
   resetKey,
+  embedded = false,
 }: {
   selectedCode: string;
   onSelect: (code: string) => void;
   /** Change pour vider la recherche (ex. réouverture du bottom sheet). */
   resetKey?: unknown;
+  /** Rend la liste sans conteneur défilant propre : l'écran hôte défile
+   * d'un seul bloc, ce qui permet de l'amener sur une section située sous
+   * la liste (deux ScrollView imbriqués l'en empêcheraient). */
+  embedded?: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [lastReset, setLastReset] = useState(resetKey);
@@ -33,6 +38,52 @@ export function CountryList({
     setQuery('');
   }
   const normalizedQuery = query.trim().toLowerCase();
+
+  const rows = (
+    <>
+      {COUNTRY_GROUPS.map((group) => {
+        const countries = COUNTRIES.filter(
+          (country) =>
+            country.currency === group.currency &&
+            (!normalizedQuery || country.name.toLowerCase().includes(normalizedQuery))
+        );
+        if (!countries.length) return null;
+        return (
+          <View key={group.currency} style={styles.group}>
+            <Text style={styles.groupLabel}>{group.label}</Text>
+            <View style={styles.countryList}>
+              {countries.map((country) => {
+                const selected = country.code === selectedCode;
+                return (
+                  <Pressable
+                    key={country.code}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
+                    accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
+                    onPress={() => onSelect(country.code)}
+                    style={({ pressed }) => [
+                      styles.row,
+                      selected && styles.rowSelected,
+                      pressed && styles.rowPressed,
+                    ]}>
+                    <Text style={styles.flag}>{country.flag}</Text>
+                    <Text style={styles.countryName}>{country.name}</Text>
+                    <Text style={styles.currencyName}>{CURRENCIES[country.currency].symbol}</Text>
+                    <View style={[styles.radio, selected && styles.radioSelected]}>
+                      {selected ? <View style={styles.radioDot} /> : null}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        );
+      })}
+      {normalizedQuery && !COUNTRIES.some((c) => c.name.toLowerCase().includes(normalizedQuery)) ? (
+        <Text style={styles.empty}>Aucun pays ne correspond à « {query} ».</Text>
+      ) : null}
+    </>
+  );
 
   return (
     <>
@@ -45,54 +96,16 @@ export function CountryList({
         autoCorrect={false}
         style={styles.search}
       />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        {COUNTRY_GROUPS.map((group) => {
-          const countries = COUNTRIES.filter(
-            (country) =>
-              country.currency === group.currency &&
-              (!normalizedQuery || country.name.toLowerCase().includes(normalizedQuery))
-          );
-          if (!countries.length) return null;
-          return (
-            <View key={group.currency} style={styles.group}>
-              <Text style={styles.groupLabel}>{group.label}</Text>
-              <View style={styles.countryList}>
-                {countries.map((country) => {
-                  const selected = country.code === selectedCode;
-                  return (
-                    <Pressable
-                      key={country.code}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: selected }}
-                      accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
-                      onPress={() => onSelect(country.code)}
-                      style={({ pressed }) => [
-                        styles.row,
-                        selected && styles.rowSelected,
-                        pressed && styles.rowPressed,
-                      ]}>
-                      <Text style={styles.flag}>{country.flag}</Text>
-                      <Text style={styles.countryName}>{country.name}</Text>
-                      <Text style={styles.currencyName}>{CURRENCIES[country.currency].symbol}</Text>
-                      <View style={[styles.radio, selected && styles.radioSelected]}>
-                        {selected ? <View style={styles.radioDot} /> : null}
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          );
-        })}
-        {normalizedQuery &&
-        !COUNTRIES.some((c) => c.name.toLowerCase().includes(normalizedQuery)) ? (
-          <Text style={styles.empty}>Aucun pays ne correspond à « {query} ».</Text>
-        ) : null}
-      </ScrollView>
+      {embedded ? (
+        <View style={styles.scrollContent}>{rows}</View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          {rows}
+        </ScrollView>
+      )}
     </>
   );
 }

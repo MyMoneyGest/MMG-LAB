@@ -1,7 +1,7 @@
 import { getLocales } from 'expo-localization';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
 import { CountryList } from '@/components/country-list';
@@ -48,6 +48,11 @@ export default function CountryScreen() {
   // création d'un projet : c'est une info sur la personne, pas sur le projet.
   const userName = useStore((state) => state.userName);
   const setUserName = useStore((state) => state.setUserName);
+  // Défilement vers le bloc de conversion dès qu'il apparaît (mode réglages).
+  // Le déclencheur est son onLayout : au moment du tap, le bloc n'est pas
+  // encore monté, donc sa position n'est pas connue.
+  const settingsScrollRef = useRef<ScrollView | null>(null);
+  const scrollToConversion = useRef(false);
   const [nameEditing, setNameEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const commitName = () => {
@@ -254,7 +259,12 @@ export default function CountryScreen() {
     const country = COUNTRIES.find((c) => c.code === code) ?? COUNTRIES[0];
     setSelectedCode(code);
     setSaveError(null);
-    if (hasFinancialData && country.currency !== currentCurrency) return;
+    if (hasFinancialData && country.currency !== currentCurrency) {
+      // Ce bloc apparaît sous la liste, hors écran : sans ce défilement, le
+      // tap semble sans effet et on repart en arrière sans avoir validé.
+      scrollToConversion.current = true;
+      return;
+    }
     setSaving(true);
     try {
       await changeLocale(country.code, country.currency);
@@ -266,11 +276,25 @@ export default function CountryScreen() {
 
   if (settings === '1') {
     return (
-      <Screen contentContainerStyle={styles.settingsScrollContent}>
+      <Screen contentContainerStyle={styles.settingsScrollContent} scrollRef={settingsScrollRef}>
         <AppHeader showBack title="Pays et devise" showTestMark={false} />
         <Card style={styles.settingsCard}>
-          <CountryList selectedCode={selectedCode} onSelect={(code) => void selectInSettings(code)} />
-          {changingExistingCurrency ? conversionBlock : null}
+          <CountryList
+            embedded
+            selectedCode={selectedCode}
+            onSelect={(code) => void selectInSettings(code)}
+          />
+          {changingExistingCurrency ? (
+            <View
+              onLayout={(event) => {
+                if (!scrollToConversion.current) return;
+                scrollToConversion.current = false;
+                const { y } = event.nativeEvent.layout;
+                settingsScrollRef.current?.scrollTo({ y, animated: true });
+              }}>
+              {conversionBlock}
+            </View>
+          ) : null}
           {saveError ? <Text style={styles.warning}>{saveError}</Text> : null}
           {changingExistingCurrency ? (
             <Button

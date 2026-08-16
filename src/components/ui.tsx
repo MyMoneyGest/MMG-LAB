@@ -1,4 +1,13 @@
-import { ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  MutableRefObject,
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -44,7 +53,10 @@ const PROGRESS_COLORS = [
  * de l'animation du clavier. Le second passage évite d'attendre la première
  * frappe sur Android pour obtenir la bonne hauteur visible.
  */
-export function KeyboardSafeScrollView(props: ScrollViewProps) {
+export function KeyboardSafeScrollView({
+  scrollRef: externalRef,
+  ...props
+}: ScrollViewProps & { scrollRef?: MutableRefObject<ScrollView | null> }) {
   const scrollRef = useRef<ScrollView>(null);
   const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const revealFocusedField = useCallback((target: number) => {
@@ -68,7 +80,13 @@ export function KeyboardSafeScrollView(props: ScrollViewProps) {
 
   return (
     <KeyboardScrollContext.Provider value={revealFocusedField}>
-      <ScrollView {...props} ref={scrollRef} />
+      <ScrollView
+        {...props}
+        ref={(node) => {
+          scrollRef.current = node;
+          if (externalRef) externalRef.current = node;
+        }}
+      />
     </KeyboardScrollContext.Provider>
   );
 }
@@ -77,10 +95,13 @@ export function Screen({
   children,
   footer,
   contentContainerStyle,
+  scrollRef,
 }: {
   children: ReactNode;
   footer?: ReactNode;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  /** Pour amener l'utilisateur sur une section qui vient d'apparaître. */
+  scrollRef?: MutableRefObject<ScrollView | null>;
 }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
@@ -88,6 +109,7 @@ export function Screen({
         style={styles.keyboardAvoider}
         behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
         <KeyboardSafeScrollView
+          scrollRef={scrollRef}
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           contentInsetAdjustmentBehavior="automatic"
