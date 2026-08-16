@@ -4,13 +4,13 @@
 // aux moments marquants (récap de plan, confirmation de versement).
 
 export const colors = {
-  background: '#F4EFE6',
+  background: '#F9F6F0',
   card: '#FBF8F1',
   cardSoft: '#F6E0D5',
   cardSoftBorder: '#C97A5E',
 
-  accent: '#B5432A',
-  accentPressed: '#9C3823',
+  accent: '#C04A31',
+  accentPressed: '#A63F29',
 
   dark: '#2B211A',
   textOnDark: '#F7F2EA',
@@ -39,6 +39,16 @@ export const colors = {
     travel: '#8A3A62',
     other: '#6E675C',
   },
+} as const;
+
+// Titres de questions et noms de projet en serif éditorial ; tout le reste
+// (chiffres, libellés, paragraphes) en Sans, pour un rendu "rigoureux et bancaire".
+export const fonts = {
+  serifBold: 'Serif-Bold',
+  serifItalic: 'Serif-Italic',
+  sansRegular: 'Sans-Regular',
+  sansSemiBold: 'Sans-SemiBold',
+  sansBold: 'Sans-Bold',
 } as const;
 
 export const radius = {

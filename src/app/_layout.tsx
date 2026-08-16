@@ -1,4 +1,11 @@
+import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import {
+  PlayfairDisplay_400Regular_Italic,
+  PlayfairDisplay_700Bold,
+} from '@expo-google-fonts/playfair-display';
+import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
@@ -18,6 +25,8 @@ import {
 } from '@/lib/notifications';
 import { useStore } from '@/lib/store';
 
+SplashScreen.preventAutoHideAsync();
+
 function waitForStoreHydration(): Promise<void> {
   if (useStore.persist.hasHydrated()) return Promise.resolve();
   return new Promise((resolve) => {
@@ -34,6 +43,13 @@ function waitForStoreHydration(): Promise<void> {
 
 export default function RootLayout() {
   const router = useRouter();
+  const [fontsLoaded, fontError] = useFonts({
+    'Serif-Bold': PlayfairDisplay_700Bold,
+    'Serif-Italic': PlayfairDisplay_400Regular_Italic,
+    'Sans-Regular': Inter_400Regular,
+    'Sans-SemiBold': Inter_600SemiBold,
+    'Sans-Bold': Inter_700Bold,
+  });
   const country = useStore((state) => state.country);
   const currencyCode = useStore((state) => state.currencyCode);
   const appOpenTracked = useRef(false);
@@ -167,6 +183,10 @@ export default function RootLayout() {
     };
   }, [enqueueReminders]);
 
+  useEffect(() => {
+    if (fontsLoaded || fontError) void SplashScreen.hideAsync();
+  }, [fontsLoaded, fontError]);
+
   const handlePendingChoice = (choice: PendingReminderChoice) => {
     const reminder = pendingReminders[0];
     if (!reminder) return;
@@ -183,6 +203,8 @@ export default function RootLayout() {
       },
     });
   };
+
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <>

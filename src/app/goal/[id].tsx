@@ -16,7 +16,7 @@ import { RecentContributionModal } from '@/components/recent-contribution-modal'
 import { RebalanceModal } from '@/components/rebalance-modal';
 import { ReminderDayModal } from '@/components/reminder-day-modal';
 import { SavingsLocationModal } from '@/components/savings-location-modal';
-import { Button, Card, Eyebrow, ProgressBar, Screen } from '@/components/ui';
+import { Button, Card, Eyebrow, ProgressRing, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import {
   applyGlobalRebalance,
@@ -466,18 +466,10 @@ export default function GoalScreen() {
       ) : null}
 
       <Card>
-        {/* Disposition verticale : le gros montant « mis de côté » prend toute la
-            largeur (avec fitFontSize pour tenir sur une ligne, y compris en FCFA),
-            et les informations secondaires (restant, cible) passent en dessous.
-            Deux gros montants côte à côte ne tiennent pas sur un écran étroit. */}
-        <Text style={styles.summaryLabel}>Mis de côté</Text>
-        <Text
-          style={[styles.savedAmount, { fontSize: fitFontSize(money(saved), 36) }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.5}>
-          {money(saved)}
-        </Text>
+        {/* L'anneau affiche le montant mis de côté et le pourcentage en son centre
+            (fitFontSize interne gère les gros montants FCFA sans déborder). Les
+            infos secondaires (restant, cible) restent en dessous. */}
+        <ProgressRing pct={pct} amount={money(saved)} />
         <Text style={styles.savedMeta}>
           {money(remaining)} restants · sur {money(goal.targetAmount)}
         </Text>
@@ -500,7 +492,6 @@ export default function GoalScreen() {
           </Text>
           <Text style={styles.savingsLocationArrow}>›</Text>
         </Pressable>
-        <ProgressBar pct={pct} label={`${pct} % atteint`} />
         <View style={styles.progressFooter}>
           <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
         </View>
@@ -899,11 +890,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   bannerText: { color: colors.accent, fontSize: 15, fontWeight: '600', lineHeight: 21 },
-  amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12 },
-  amountMain: { flex: 1, minWidth: 0 },
-  summaryLabel: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, marginBottom: 2 },
-  savedMeta: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginTop: 2, marginBottom: 6 },
-  savedAmount: { fontSize: 30, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  savedMeta: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 2,
+    marginBottom: 6,
+  },
   savingsLocation: {
     alignSelf: 'flex-start',
     maxWidth: '100%',

@@ -17,15 +17,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   interpolateColor,
   ReduceMotion,
+  useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
-import { colors, radius, spacing } from '@/constants/theme';
+import Svg, { Circle } from 'react-native-svg';
+
+import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { fitFontSize } from '@/lib/format';
 
 const KeyboardScrollContext = createContext<(target: number) => void>(() => {});
 const KEYBOARD_FIELD_GAP = 64;
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const PROGRESS_COLOR_STOPS = [0, 35, 70, 100];
 const PROGRESS_COLORS = [
   colors.progress.start,
@@ -405,6 +410,79 @@ export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
   );
 }
 
+/**
+ * Anneau de progression : le montant s'affiche en son centre, avec la taille
+ * dynamique de `fitFontSize` pour qu'un très gros montant (FCFA) reste sur une
+ * ligne sans déborder de l'anneau. Remplace ProgressBar sur l'écran projet.
+ */
+export function ProgressRing({
+  pct,
+  amount,
+  amountLabel = 'mis de côté',
+  size = 180,
+  strokeWidth = 14,
+}: {
+  pct: number;
+  amount: string;
+  amountLabel?: string;
+  size?: number;
+  strokeWidth?: number;
+}) {
+  const target = Math.min(100, Math.max(0, pct));
+  const radiusPx = (size - strokeWidth) / 2;
+  const circumference = radiusPx * 2 * Math.PI;
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    if (target >= 100) progress.value = 0;
+    progress.value = withTiming(target, {
+      duration: target >= 100 ? 1_400 : 650,
+      reduceMotion: ReduceMotion.System,
+    });
+  }, [target]);
+
+  const animatedCircleProps = useAnimatedProps(() => ({
+    strokeDashoffset: circumference - (progress.value / 100) * circumference,
+  }));
+
+  return (
+    <View style={[styles.ringContainer, { width: size, height: size }]}>
+      <Svg width={size} height={size}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radiusPx}
+          stroke={colors.border}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <AnimatedCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radiusPx}
+          stroke={colors.accent}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          animatedProps={animatedCircleProps}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View style={styles.ringTextContainer} pointerEvents="none">
+        <Text
+          numberOfLines={1}
+          style={[styles.ringAmount, { fontSize: fitFontSize(amount, 26) }]}>
+          {amount}
+        </Text>
+        <Text style={styles.ringAmountLabel}>{amountLabel}</Text>
+        <Text style={styles.ringPercentage}>{Math.round(target)}%</Text>
+        <Text style={styles.ringAttain}>ATTEINT</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   keyboardAvoider: { flex: 1 },
@@ -507,4 +585,30 @@ const styles = StyleSheet.create({
   stepTracks: { flexDirection: 'row', gap: 6 },
   stepTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.border },
   stepTrackActive: { backgroundColor: colors.accent },
+  ringContainer: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 12,
+  },
+  ringTextContainer: { position: 'absolute', alignItems: 'center' },
+  ringAmount: { fontFamily: fonts.sansBold, color: colors.text },
+  ringAmountLabel: {
+    fontFamily: fonts.sansRegular,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: -2,
+  },
+  ringPercentage: {
+    fontFamily: fonts.sansBold,
+    fontSize: 22,
+    color: colors.accent,
+    marginTop: 10,
+  },
+  ringAttain: {
+    fontFamily: fonts.sansSemiBold,
+    fontSize: 10,
+    color: colors.textSecondary,
+    letterSpacing: 1,
+  },
 });

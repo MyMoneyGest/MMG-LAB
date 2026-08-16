@@ -231,7 +231,7 @@ assert.match(goal, /MIN_INLINE_LOADING_MS/);
 assert.match(goal, /waitForMinimumLoading\(loadingStartedAt\)/);
 assert.match(goal, /accessibilityRole="tab"/);
 assert.match(goal, /tabActive: \{ backgroundColor: colors\.accent/);
-assert.match(goal, /<ProgressBar pct=\{pct\} label=\{`\$\{pct\} % atteint`\}/);
+assert.match(goal, /<ProgressRing pct=\{pct\} amount=\{money\(saved\)\}/);
 assert.match(goal, /styles\.progressFooter/);
 assert.match(goal, /Cible \{formatDate\(goal\.targetDate\)\}/);
 assert.match(goal, />Où \?</);
