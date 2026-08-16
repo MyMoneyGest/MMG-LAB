@@ -108,8 +108,10 @@ export default function CountryScreen() {
     }
   };
 
+  const isHero = settings !== '1';
+
   return (
-    <Screen>
+    <Screen contentContainerStyle={isHero ? styles.heroScrollContent : undefined}>
       {settings === '1' ? (
         <AppHeader showBack title="Pays et devise" showTestMark={false} />
       ) : (
@@ -121,26 +123,24 @@ export default function CountryScreen() {
         </View>
       )}
 
-      <Card>
+      <Card style={isHero ? styles.heroCard : undefined}>
         <Text style={styles.eyebrow}>{settings === '1' ? 'Réglages' : 'Bienvenue'}</Text>
         <Text style={styles.title}>Où épargnes-tu ?</Text>
         <Text style={styles.body}>
-          MMG adapte les montants à ta devise. Le pays proposé vient du réglage régional de ton
-          téléphone et tu peux le modifier.
+          MMG adapte automatiquement l'application à ta devise locale.
         </Text>
+
+        {isHero ? <View style={styles.heroSpacer} /> : null}
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Changer le pays, actuellement ${selectedCountry.name}`}
           onPress={() => setPickerOpen(true)}
           style={({ pressed }) => [styles.selectionSummary, pressed && styles.selectionPressed]}>
-          <View style={styles.selectionCopy}>
-            <Text style={styles.selectionLabel}>Pays et devise proposés</Text>
-            <Text style={styles.selectionValue}>
-              {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].name}
-            </Text>
-          </View>
-          <Text style={styles.changeLabel}>Changer</Text>
+          <Text style={styles.selectionValue}>
+            {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].name}
+          </Text>
+          <Text style={styles.changeChevron}>⌄</Text>
         </Pressable>
 
         <CountryPickerModal
@@ -288,7 +288,13 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: { fontFamily: fonts.serifBold, color: colors.text, fontSize: 30, lineHeight: 36 },
-  body: { color: colors.textSecondary, fontSize: 14, lineHeight: 21, marginTop: 10 },
+  body: { fontFamily: fonts.sansRegular, color: colors.textSecondary, fontSize: 15, lineHeight: 22, marginTop: 10 },
+  // Écran d'accueil (hors réglages) : le pill et le bouton restent ancrés en
+  // bas d'un grand espace respirant, comme dans la maquette. En réglages, la
+  // carte garde sa hauteur naturelle, plus compacte.
+  heroScrollContent: { flexGrow: 1 },
+  heroCard: { flex: 1 },
+  heroSpacer: { flex: 1, minHeight: 40 },
   radio: {
     width: 21,
     height: 21,
@@ -304,16 +310,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.cardSoft,
+    backgroundColor: colors.card,
     borderRadius: radius.field,
-    padding: 13,
-    marginTop: 28,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
   selectionPressed: { opacity: 0.8 },
-  selectionCopy: { flex: 1 },
-  selectionLabel: { fontFamily: fonts.sansBold, color: colors.textSecondary, fontSize: 12 },
-  selectionValue: { fontFamily: fonts.sansSemiBold, color: colors.text, fontSize: 14, marginTop: 3 },
-  changeLabel: { fontFamily: fonts.sansBold, color: colors.accent, fontSize: 13 },
+  selectionValue: { flex: 1, fontFamily: fonts.sansSemiBold, color: colors.text, fontSize: 15 },
+  changeChevron: { fontFamily: fonts.sansBold, color: colors.textSecondary, fontSize: 18 },
   conversionCard: {
     marginTop: 16,
     borderWidth: 1,
