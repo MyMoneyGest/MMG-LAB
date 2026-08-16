@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import type { Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -18,6 +19,7 @@ export function AppHeader({
   titleSerif = false,
   subtitle,
   showTestMark = !showBack,
+  fallbackHref = '/',
 }: {
   showBack?: boolean;
   currentGoalId?: string;
@@ -26,6 +28,9 @@ export function AppHeader({
   titleSerif?: boolean;
   subtitle?: string;
   showTestMark?: boolean;
+  /** Destination du retour quand il n'y a pas d'historique de navigation
+   * (écran atteint par un `replace`, ex. premier lancement). */
+  fallbackHref?: Href;
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -104,7 +109,7 @@ export function AppHeader({
           accessibilityRole="button"
           accessibilityLabel="Retour"
           style={styles.iconButton}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
+          onPress={() => (router.canGoBack() ? router.back() : router.replace(fallbackHref))}>
           <Text style={styles.iconLabel}>‹</Text>
         </Pressable>
       ) : showTestMark ? (

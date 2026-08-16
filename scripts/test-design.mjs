@@ -65,7 +65,13 @@ assert.match(iconGenerator, /let monogram = "M"/);
 // intermédiaire ; le mode guidé/libre se choisit via un bascule sur cet
 // écran. La bannière « Projet supprimé » vit maintenant sur cet écran.
 assert.match(index, /return <Redirect href="\/onboarding\/new-goal" \/>/);
-assert.match(header, /router\.replace\('\/'\)/);
+// Le retour d'un écran sans historique (replace) accepte une destination de
+// repli configurable : par défaut '/', mais new-goal.tsx pointe vers l'écran
+// pays quand aucun projet n'existe encore (sinon le retour rebouclerait sur
+// lui-même, index.tsx redirigeant tout projet manquant vers new-goal).
+assert.match(header, /fallbackHref = '\/'/);
+assert.match(header, /router\.replace\(fallbackHref\)/);
+assert.match(newGoal, /fallbackHref=\{goals\.length === 0 \? '\/onboarding\/country\?settings=1' : '\/'\}/);
 assert.match(newGoal, /<FeedbackBanner/);
 // Store Zustand dédié (pas de query params ni de simple useEffect au montage) :
 // sur web, expo-router garde l'écran cible déjà instancié d'une visite à
