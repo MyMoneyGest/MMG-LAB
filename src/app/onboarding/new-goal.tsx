@@ -49,6 +49,7 @@ function addMonths(date: Date, months: number): Date {
   result.setMonth(result.getMonth() + months);
   return result;
 }
+const DAYS = Array.from({ length: 28 }, (_, i) => i + 1);
 const RHYTHMS: {
   key: SavingsRhythm;
   title: string;
@@ -77,6 +78,7 @@ export default function NewGoalScreen() {
   const [durationKey, setDurationKey] = useState<DurationKey>('6m');
   const [dateText, setDateText] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [rhythmAdvancedOpen, setRhythmAdvancedOpen] = useState(false);
   const [startMode, setStartMode] = useState<StartMode>('now');
   const [startDateText, setStartDateText] = useState('');
   const [reminderDayText, setReminderDayText] = useState(
@@ -479,52 +481,77 @@ export default function NewGoalScreen() {
                 ? "MMG garde ton rituel mensuel, sans t'imposer de montant."
                 : 'Le total ne change pas, seulement la façon d’avancer.'}
             </Text>
-        <Field
-          label="Jour du rappel dans le mois (1 à 28)"
-          value={reminderDayText}
-          onChangeText={(t) => {
-            setReminderDayText(t.replace(/[^0-9]/g, ''));
-            setError(null);
-          }}
-          keyboardType="number-pad"
-          placeholder="1"
-        />
-
-        {savingsMode === 'guided' ? <View style={styles.rhythmChoices}>
-          {RHYTHMS.map((option) => {
-            const selected = rhythm === option.key;
-            const optionAmounts = preview
-              ? plannedAmounts(previewRemaining, preview.months, option.key)
-              : [];
-            const optionPeak = optionAmounts.length ? Math.max(...optionAmounts) : 0;
+        <Text style={styles.fieldLabel}>Jour du rappel dans le mois</Text>
+        <View style={styles.dayPicker}>
+          {DAYS.map((day) => {
+            const selected = day === reminderDay;
             return (
               <Pressable
-                key={option.key}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
+                key={day}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected }}
                 onPress={() => {
-                  setRhythm(option.key);
+                  setReminderDayText(String(day));
                   setError(null);
                 }}
-                style={[styles.rhythmCard, selected && styles.rhythmCardSelected]}>
-                <View style={styles.rhythmHeader}>
-                  <Text style={[styles.rhythmTitle, selected && styles.rhythmTextSelected]}>
-                    {option.title}
-                  </Text>
-                  {selected ? <Text style={styles.rhythmSelected}>Choisi</Text> : null}
-                </View>
-                {preview ? (
-                  <Text style={[styles.rhythmAmount, selected && styles.rhythmTextSelected]}>
-                    {money(preview.average)} moy. · pic {money(optionPeak)}
-                  </Text>
-                ) : null}
-                <Text style={[styles.rhythmBody, selected && styles.rhythmBodySelected]}>
-                  {option.description}
+                style={[styles.dayChip, selected && styles.dayChipSelected]}>
+                <Text style={[styles.dayChipLabel, selected && styles.dayChipLabelSelected]}>
+                  {day}
                 </Text>
               </Pressable>
             );
           })}
-        </View> : (
+        </View>
+
+        {savingsMode === 'guided' ? (
+          <>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: rhythmAdvancedOpen }}
+              onPress={() => setRhythmAdvancedOpen((v) => !v)}
+              style={styles.advancedToggle}>
+              <Text style={styles.advancedToggleLabel}>Options avancées · rythme</Text>
+              <Text style={styles.advancedToggleChevron}>{rhythmAdvancedOpen ? '︿' : '⌄'}</Text>
+            </Pressable>
+            {rhythmAdvancedOpen ? (
+              <View style={styles.rhythmChoices}>
+                {RHYTHMS.map((option) => {
+                  const selected = rhythm === option.key;
+                  const optionAmounts = preview
+                    ? plannedAmounts(previewRemaining, preview.months, option.key)
+                    : [];
+                  const optionPeak = optionAmounts.length ? Math.max(...optionAmounts) : 0;
+                  return (
+                    <Pressable
+                      key={option.key}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      onPress={() => {
+                        setRhythm(option.key);
+                        setError(null);
+                      }}
+                      style={[styles.rhythmCard, selected && styles.rhythmCardSelected]}>
+                      <View style={styles.rhythmHeader}>
+                        <Text style={[styles.rhythmTitle, selected && styles.rhythmTextSelected]}>
+                          {option.title}
+                        </Text>
+                        {selected ? <Text style={styles.rhythmSelected}>Choisi</Text> : null}
+                      </View>
+                      {preview ? (
+                        <Text style={[styles.rhythmAmount, selected && styles.rhythmTextSelected]}>
+                          {money(preview.average)} moy. · pic {money(optionPeak)}
+                        </Text>
+                      ) : null}
+                      <Text style={[styles.rhythmBody, selected && styles.rhythmBodySelected]}>
+                        {option.description}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
+          </>
+        ) : (
           <View style={styles.freeReminderNote}>
             <Text style={styles.freeReminderTitle}>Montant libre à chaque rappel</Text>
             <Text style={styles.freeReminderBody}>
@@ -586,14 +613,18 @@ export default function NewGoalScreen() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.finalActions}>
-            <Button label="Revenir au projet" variant="secondary" onPress={() => setStep(1)} style={{ flex: 1 }} />
             <Button
               label={savingsMode === 'free' ? 'Créer le projet' : 'Créer le plan'}
               onPress={save}
               loading={saving}
               loadingLabel="Création…"
-              style={{ flex: 1 }}
             />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setStep(1)}
+              style={styles.backLink}>
+              <Text style={styles.backLinkLabel}>← Retour</Text>
+            </Pressable>
           </View>
         </>
       )}
@@ -651,6 +682,20 @@ const styles = StyleSheet.create({
   advancedToggleChevron: { fontSize: 16, color: colors.accent, fontWeight: '700' },
   advancedSection: { marginBottom: 4 },
   nameFieldWrap: { marginTop: 4, opacity: 0.85 },
+  dayPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 4 },
+  dayChip: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayChipSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
+  dayChipLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
+  dayChipLabelSelected: { color: colors.textOnDark },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 },
   chip: {
     flexDirection: 'row',
@@ -743,5 +788,7 @@ const styles = StyleSheet.create({
   compatBody: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   error: { color: colors.accent, fontSize: 15, fontWeight: '700', marginBottom: 12, paddingHorizontal: 4 },
   primaryAction: { marginTop: 16 },
-  finalActions: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+  finalActions: { gap: 4, marginBottom: 8, alignItems: 'stretch' },
+  backLink: { alignSelf: 'center', paddingVertical: 10 },
+  backLinkLabel: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
 });
