@@ -12,7 +12,6 @@ const pngSize = (path) => {
 const appConfig = JSON.parse(read('app.json'));
 const ui = read('src/components/ui.tsx');
 const header = read('src/components/app-header.tsx');
-const home = read('src/app/home.tsx');
 const index = read('src/app/index.tsx');
 const budget = read('src/app/onboarding/budget.tsx');
 const country = read('src/app/onboarding/country.tsx');
@@ -61,13 +60,23 @@ assert.deepEqual(pngSize('assets/images/favicon.png'), [512, 512]);
 assert.match(iconGenerator, /let brand = NSColor\(hex: "#B5432A"\)/);
 assert.match(iconGenerator, /let monogram = "M"/);
 
-assert.match(home, /Un projet,/);
-assert.match(home, /un geste par mois\./);
-assert.doesNotMatch(home, /CHECKLIST/);
-assert.doesNotMatch(home, /<AppHeader/);
-assert.match(home, /<FeedbackBanner/);
-assert.match(home, /feedback !== 'deleted'/);
-assert.match(home, /router\.push\('\/onboarding\/mode'\)/);
+// Écran d'accueil retiré (home.tsx supprimé) : premier lancement et retour sans
+// projet vont désormais droit à la création (/onboarding/mode), sans étape
+// intermédiaire. La bannière « Projet supprimé » vit maintenant sur cet écran.
+assert.match(index, /return <Redirect href="\/onboarding\/mode" \/>/);
+assert.match(header, /router\.replace\('\/'\)/);
+assert.match(mode, /<FeedbackBanner/);
+// Store Zustand dédié (pas de query params ni de simple useEffect au montage) :
+// sur web, expo-router garde l'écran cible déjà instancié d'une visite à
+// l'autre — seule une notification réactive traverse cette navigation de
+// façon fiable, indépendamment du cycle de montage/focus.
+assert.match(mode, /usePendingFeedbackStore\(\(s\) => s\.message\)/);
+assert.match(mode, /usePendingFeedbackStore\.getState\(\)\.take\(\)/);
+const pendingFeedback = read('src/lib/pending-feedback.ts');
+assert.match(pendingFeedback, /export const usePendingFeedbackStore = create</);
+assert.match(pendingFeedback, /export function setPendingFeedback/);
+assert.match(menu, /setPendingFeedback\(\{/);
+assert.match(menu, /Projet supprimé/);
 
 assert.match(index, /if \(!country\) return <Redirect href="\/onboarding\/country"/);
 assert.match(country, /getLocales\(\)\[0\]\?\.regionCode/);

@@ -101,7 +101,7 @@ export function AppHeader({
           accessibilityRole="button"
           accessibilityLabel="Retour"
           style={styles.iconButton}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))}>
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
           <Text style={styles.iconLabel}>‹</Text>
         </Pressable>
       ) : showTestMark ? (

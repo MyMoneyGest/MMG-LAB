@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
 import { removeGoal } from '@/lib/actions';
+import { setPendingFeedback } from '@/lib/pending-feedback';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { waitForMinimumLoading } from '@/lib/timing';
@@ -56,13 +57,29 @@ export function MenuModal({
     const remainingGoals = goals.filter((goal) => goal.id !== deletedGoal.id);
     const destination =
       remainingGoals.find((goal) => goal.id === currentGoalId) ?? remainingGoals[0];
+    const feedbackId = String(Date.now());
     const loadingStartedAt = Date.now();
     setDeleteError(null);
     setDeletePending(true);
     try {
       await waitForMinimumLoading(loadingStartedAt);
+      if (!destination) {
+        // Plus aucun projet après cette suppression : `index.tsx` a sa propre
+        // redirection réactive vers `/onboarding/mode` dès que le store passe
+        // à zéro projet — elle peut se déclencher avant notre propre
+        // router.replace() ci-dessous. Le signal doit donc être posé AVANT la
+        // mutation du store (removeGoal), pour être présent quel que soit le
+        // montage qui « gagne la course ». Route statique : expo-router ne
+        // propage pas les query params libres lors d'un router.replace() sur
+        // web (contrairement aux routes dynamiques comme /goal/[id]), d'où ce
+        // signal transitoire plutôt qu'un paramètre d'URL.
+        setPendingFeedback({
+          key: feedbackId,
+          title: 'Projet supprimé',
+          detail: `« ${deletedGoal.name} » et son historique ont été supprimés.`,
+        });
+      }
       await removeGoal(deletedGoal);
-      const feedbackId = String(Date.now());
       setGoalToDelete(null);
       onClose();
       if (destination) {
@@ -76,10 +93,8 @@ export function MenuModal({
           },
         });
       } else {
-        router.replace({
-          pathname: '/home',
-          params: { feedback: 'deleted', feedbackId, feedbackName: deletedGoal.name },
-        });
+        // Signal déjà posé plus haut, avant removeGoal (cf. commentaire).
+        router.replace('/onboarding/mode');
       }
     } catch {
       setDeleteError('La suppression n’a pas abouti. Réessaie dans quelques instants.');

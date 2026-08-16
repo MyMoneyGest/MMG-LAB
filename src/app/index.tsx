@@ -28,5 +28,6 @@ export default function Index() {
   const target = pending[0] ?? goals.find((g) => g.id === lastViewedGoalId) ?? goals[0];
 
   if (target) return <Redirect href={{ pathname: '/goal/[id]', params: { id: target.id } }} />;
-  return <Redirect href="/home" />;
+  // Aucun projet : pas d'écran d'accueil intermédiaire, on va droit à la création.
+  return <Redirect href="/onboarding/mode" />;
 }

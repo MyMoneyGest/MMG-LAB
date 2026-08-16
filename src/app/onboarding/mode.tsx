@@ -1,9 +1,12 @@
 import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
+import { FeedbackBanner } from '@/components/feedback-banner';
 import { Card, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
+import { usePendingFeedbackStore } from '@/lib/pending-feedback';
 import { useStore } from '@/lib/store';
 import type { SavingsMode } from '@/lib/types';
 
@@ -33,6 +36,15 @@ const MODES: {
 export default function SavingsModeScreen() {
   const router = useRouter();
   const budget = useStore((state) => state.budget);
+  // Signal transitoire plutôt que des query params (cf. pending-feedback.ts :
+  // expo-router ne les propage pas de façon fiable sur cette route statique,
+  // et l'écran reste déjà instancié d'une visite à l'autre sur web). Un store
+  // Zustand dédié notifie ce composant dès que le message change, qu'il
+  // vienne de monter ou non.
+  const feedbackMessage = usePendingFeedbackStore((s) => s.message);
+  // Effacé seulement quand la bannière a fini de s'afficher (onFinished),
+  // pas à chaque rendu — sinon elle disparaîtrait instantanément.
+  const clearFeedback = useCallback(() => usePendingFeedbackStore.getState().take(), []);
 
   const choose = (mode: SavingsMode) => {
     if (mode === 'guided' && !budget) {
@@ -45,6 +57,13 @@ export default function SavingsModeScreen() {
   return (
     <Screen>
       <AppHeader showBack title="Nouveau projet" />
+      {feedbackMessage ? (
+        <FeedbackBanner
+          key={feedbackMessage.key}
+          message={feedbackMessage}
+          onFinished={clearFeedback}
+        />
+      ) : null}
       <Card>
         <Text style={styles.title}>Quel mode te convient ?</Text>
         <Text style={styles.body}>
