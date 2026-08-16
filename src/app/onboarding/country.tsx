@@ -4,24 +4,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
+import { CountryPickerModal } from '@/components/country-picker-modal';
 import { Button, Card, Field, Screen } from '@/components/ui';
-import { colors, radius } from '@/constants/theme';
+import { colors, fonts, radius } from '@/constants/theme';
 import { changeLocale } from '@/lib/actions';
 import { COUNTRIES, CURRENCIES, formatMoney } from '@/lib/currency';
-import type { CurrencyCode } from '@/lib/currency';
 import {
   fetchSuggestedExchangeRate,
   formatExchangeRateInput,
   parseExchangeRateInput,
 } from '@/lib/exchange-rate';
 import { useStore } from '@/lib/store';
-
-const COUNTRY_GROUPS: { currency: CurrencyCode; label: string }[] = [
-  { currency: 'XAF', label: 'Afrique centrale · FCFA' },
-  { currency: 'XOF', label: "Afrique de l'Ouest · FCFA" },
-  { currency: 'EUR', label: 'Zone euro' },
-  { currency: 'USD', label: 'Dollar américain' },
-];
 
 function suggestedCountryCode(savedCountry?: string): string {
   if (savedCountry && COUNTRIES.some((country) => country.code === savedCountry)) {
@@ -42,7 +35,7 @@ export default function CountryScreen() {
     (state) => Boolean(state.budget) || state.goals.length > 0
   );
   const [selectedCode, setSelectedCode] = useState(() => suggestedCountryCode(savedCountry));
-  const [listOpen, setListOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [conversionChoice, setConversionChoice] = useState<'convert' | 'keep'>('convert');
   const [rateText, setRateText] = useState('');
@@ -139,63 +132,27 @@ export default function CountryScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Changer le pays, actuellement ${selectedCountry.name}`}
-          accessibilityState={{ expanded: listOpen }}
-          onPress={() => setListOpen((open) => !open)}
-          style={({ pressed }) => [styles.selectionSummary, pressed && styles.countryRowPressed]}>
+          onPress={() => setPickerOpen(true)}
+          style={({ pressed }) => [styles.selectionSummary, pressed && styles.selectionPressed]}>
           <View style={styles.selectionCopy}>
             <Text style={styles.selectionLabel}>Pays et devise proposés</Text>
             <Text style={styles.selectionValue}>
               {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].name}
             </Text>
           </View>
-          <Text style={styles.changeLabel}>{listOpen ? 'Fermer' : 'Changer'}</Text>
+          <Text style={styles.changeLabel}>Changer</Text>
         </Pressable>
 
-        {listOpen
-          ? COUNTRY_GROUPS.map((group) => {
-              const countries = COUNTRIES.filter(
-                (country) => country.currency === group.currency
-              );
-              return (
-                <View key={group.currency} style={styles.group}>
-                  <Text style={styles.groupLabel}>{group.label}</Text>
-                  <View style={styles.countryList}>
-                    {countries.map((country) => {
-                      const selected = country.code === selectedCode;
-                      return (
-                        <Pressable
-                          key={country.code}
-                          accessibilityRole="radio"
-                          accessibilityState={{ checked: selected }}
-                          accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
-                          onPress={() => {
-                            setSelectedCode(country.code);
-                            setListOpen(false);
-                            setSaveError(null);
-                          }}
-                          style={({ pressed }) => [
-                            styles.countryRow,
-                            selected && styles.countryRowSelected,
-                            pressed && styles.countryRowPressed,
-                          ]}>
-                          <Text style={styles.flag}>{country.flag}</Text>
-                          <View style={styles.countryCopy}>
-                            <Text style={styles.countryName}>{country.name}</Text>
-                            <Text style={styles.currencyName}>
-                              {CURRENCIES[country.currency].symbol}
-                            </Text>
-                          </View>
-                          <View style={[styles.radio, selected && styles.radioSelected]}>
-                            {selected ? <View style={styles.radioDot} /> : null}
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-              );
-            })
-          : null}
+        <CountryPickerModal
+          visible={pickerOpen}
+          selectedCode={selectedCode}
+          onClose={() => setPickerOpen(false)}
+          onConfirm={(code) => {
+            setSelectedCode(code);
+            setSaveError(null);
+            setPickerOpen(false);
+          }}
+        />
 
         {changingExistingCurrency ? (
           <View style={styles.conversionCard}>
@@ -330,39 +287,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 6,
   },
-  title: { color: colors.text, fontSize: 25, lineHeight: 31, fontWeight: '800' },
-  body: { color: colors.textSecondary, fontSize: 14, lineHeight: 21, marginTop: 8 },
-  group: { gap: 7, marginTop: 18 },
-  groupLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-  countryList: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.field,
-    overflow: 'hidden',
-  },
-  countryRow: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: colors.card,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  countryRowSelected: { backgroundColor: colors.cardSoft },
-  countryRowPressed: { opacity: 0.72 },
-  flag: { fontSize: 23 },
-  countryCopy: { flex: 1 },
-  countryName: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  currencyName: { color: colors.textSecondary, fontSize: 12, marginTop: 1 },
+  title: { fontFamily: fonts.serifBold, color: colors.text, fontSize: 30, lineHeight: 36 },
+  body: { color: colors.textSecondary, fontSize: 14, lineHeight: 21, marginTop: 10 },
   radio: {
     width: 21,
     height: 21,
@@ -381,12 +307,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSoft,
     borderRadius: radius.field,
     padding: 13,
-    marginTop: 18,
+    marginTop: 28,
   },
+  selectionPressed: { opacity: 0.8 },
   selectionCopy: { flex: 1 },
-  selectionLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
-  selectionValue: { color: colors.text, fontSize: 14, fontWeight: '800', marginTop: 3 },
-  changeLabel: { color: colors.accent, fontSize: 13, fontWeight: '800' },
+  selectionLabel: { fontFamily: fonts.sansBold, color: colors.textSecondary, fontSize: 12 },
+  selectionValue: { fontFamily: fonts.sansSemiBold, color: colors.text, fontSize: 14, marginTop: 3 },
+  changeLabel: { fontFamily: fonts.sansBold, color: colors.accent, fontSize: 13 },
   conversionCard: {
     marginTop: 16,
     borderWidth: 1,

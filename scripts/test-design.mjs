@@ -16,6 +16,7 @@ const home = read('src/app/home.tsx');
 const index = read('src/app/index.tsx');
 const budget = read('src/app/onboarding/budget.tsx');
 const country = read('src/app/onboarding/country.tsx');
+const countryPicker = read('src/components/country-picker-modal.tsx');
 const mode = read('src/app/onboarding/mode.tsx');
 const newGoal = read('src/app/onboarding/new-goal.tsx');
 const adjustGoal = read('src/app/adjust-goal.tsx');
@@ -71,12 +72,20 @@ assert.match(home, /router\.push\('\/onboarding\/mode'\)/);
 assert.match(index, /if \(!country\) return <Redirect href="\/onboarding\/country"/);
 assert.match(country, /getLocales\(\)\[0\]\?\.regionCode/);
 assert.match(country, /useState\(false\)/);
-assert.match(country, /listOpen\s*\? COUNTRY_GROUPS\.map/);
-assert.match(country, /setListOpen\(false\)/);
-assert.match(country, /\{listOpen \? 'Fermer' : 'Changer'\}/);
+// Le choix du pays est un vrai bottom sheet (CountryPickerModal), plus un accordéon
+// inline : le bouton "Continuer" n'est donc plus jamais poussé par une liste ouverte.
+assert.match(country, /<CountryPickerModal/);
+assert.match(country, /visible=\{pickerOpen\}/);
+assert.match(country, /setPickerOpen\(false\)/);
+assert.match(country, /fontFamily: fonts\.serifBold/);
 assert.match(country, /accessibilityRole="radio"/);
-assert.match(country, /accessibilityState=\{\{ checked: selected \}\}/);
 assert.match(country, /Où épargnes-tu/);
+// Bottom sheet : recherche, groupes par devise, radio, récap + Confirmer.
+assert.match(countryPicker, /Rechercher un pays…/);
+assert.match(countryPicker, /accessibilityRole="radio"/);
+assert.match(countryPicker, /accessibilityState=\{\{ checked: selected \}\}/);
+assert.match(countryPicker, /label="Confirmer"/);
+assert.match(countryPicker, /onConfirm\(pendingCode\)/);
 assert.match(country, /Que faire de tes montants actuels/);
 assert.match(country, /Convertir mes montants/);
 assert.match(country, /Garder les mêmes valeurs/);
