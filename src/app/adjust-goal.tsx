@@ -5,10 +5,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppDialog } from '@/components/app-dialog';
 import { AppHeader } from '@/components/app-header';
-import { Button, Card, DateField, Field, Screen } from '@/components/ui';
+import { CalendarModal } from '@/components/calendar-modal';
+import { Button, Card, DatePickerField, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { changeReminderDay } from '@/lib/actions';
-import { formatDate, formatReminderDay, parseAmountInput, parseDateInput } from '@/lib/format';
+import { formatDate, formatReminderDay, parseAmountInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
   goalActivationDate,
@@ -41,7 +42,10 @@ export default function AdjustGoalScreen() {
   const updateGoal = useStore((state) => state.updateGoal);
 
   const [target, setTarget] = useState(goal ? amountInput(String(goal.targetAmount)) : '');
-  const [dateText, setDateText] = useState(goal ? formatDate(goal.targetDate) : '');
+  const [targetDate, setTargetDate] = useState<Date | null>(
+    goal ? new Date(goal.targetDate) : null
+  );
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [reminderDayText, setReminderDayText] = useState(goal ? String(goal.reminderDay) : '');
   const [rhythm, setRhythm] = useState<SavingsRhythm>(goal?.rhythm ?? 'stable');
   const [error, setError] = useState<string | null>(null);
@@ -56,8 +60,14 @@ export default function AdjustGoalScreen() {
   const activationDate = goalActivationDate(goal);
   const now = new Date();
   const saved = savedTotal(goal);
+  // Le calendrier n'offre que des dates que `validate` accepterait : après
+  // aujourd'hui, et après le démarrage quand le projet n'a pas encore commencé.
+  const minTargetDate = (() => {
+    const floor = waitingToStart && activationDate > now ? activationDate : now;
+    return new Date(floor.getFullYear(), floor.getMonth(), floor.getDate() + 1);
+  })();
   const parsedTarget = parseAmountInput(target, currencyCode);
-  const parsedDate = parseDateInput(dateText);
+  const parsedDate = targetDate;
   const reminderDay = Number(reminderDayText);
   const reminderDayValid = Number.isInteger(reminderDay) && reminderDay >= 1 && reminderDay <= 28;
   const previewValid = Boolean(
@@ -94,7 +104,7 @@ export default function AdjustGoalScreen() {
   const nextPeak = previewGoal ? peakScheduledAmount(previewGoal, now) : null;
   const hasChanges =
     target.trim() !== String(goal.targetAmount) ||
-    dateText !== formatDate(goal.targetDate) ||
+    (parsedDate ? parsedDate.toISOString() !== goal.targetDate : true) ||
     reminderDayText !== String(goal.reminderDay) ||
     (!freeMode && rhythm !== (goal.rhythm ?? 'stable'));
   const comparisons = [
@@ -134,7 +144,7 @@ export default function AdjustGoalScreen() {
     if (parsedTarget < saved) {
       return `La cible ne peut pas être inférieure aux ${money(saved)} déjà mis de côté.`;
     }
-    if (!parsedDate) return 'Date cible invalide. Format attendu : JJ/MM/AAAA.';
+    if (!parsedDate) return 'Choisis une date cible dans le calendrier.';
     if (parsedDate <= now) return 'Choisis une date cible à venir.';
     if (waitingToStart && parsedDate <= activationDate) {
       return 'La date cible doit être postérieure au démarrage du projet.';
@@ -208,13 +218,10 @@ export default function AdjustGoalScreen() {
           suffix={currency.symbol}
           error={error?.startsWith('Indique un montant') || error?.startsWith('La cible') ? error : null}
         />
-        <DateField
+        <DatePickerField
           label="Nouvelle date cible"
-          value={dateText}
-          onChangeText={(value) => {
-            setDateText(value);
-            setError(null);
-          }}
+          value={parsedDate}
+          onPress={() => setCalendarOpen(true)}
           error={error?.startsWith('Date cible') || error?.startsWith('Choisis une date') ? error : null}
         />
         <Field
@@ -310,6 +317,18 @@ export default function AdjustGoalScreen() {
             ? 'Mise à jour de la cible et reprogrammation du rappel.'
             : 'Recalcul des montants et reprogrammation des rappels.'
         }
+      />
+      <CalendarModal
+        visible={calendarOpen}
+        value={parsedDate}
+        title="Nouvelle date cible"
+        minDate={minTargetDate}
+        onSelect={(date) => {
+          setTargetDate(date);
+          setError(null);
+          setCalendarOpen(false);
+        }}
+        onClose={() => setCalendarOpen(false)}
       />
       <AppDialog
         visible={goalToDelete !== null}

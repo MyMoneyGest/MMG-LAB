@@ -26,11 +26,16 @@ assert.match(ui, /KEYBOARD_FIELD_GAP = 64/);
 assert.match(ui, /revealFocusedField\(event\.nativeEvent\.target\)/);
 assert.match(ui, /fieldWrapFocused/);
 assert.match(ui, /Boolean\(error\) && styles\.fieldWrapError/);
-assert.match(ui, /export function DateField/);
-assert.equal((ui.match(/styles\.dateSeparator}>\/<\/Text>/g) ?? []).length, 2);
-assert.match(ui, /placeholder="JJ"/);
-assert.match(ui, /placeholder="MM"/);
-assert.match(ui, /placeholder="AAAA"/);
+// Les dates se choisissent au calendrier : plus de saisie JJ/MM/AAAA, donc
+// plus de masque ni de date impossible à valider côté frappe.
+assert.match(ui, /export function DatePickerField/);
+assert.doesNotMatch(ui, /export function DateField/);
+const calendar = read('src/components/calendar-modal.tsx');
+assert.match(calendar, /export function CalendarModal/);
+assert.match(calendar, /const WEEKDAYS = \['L', 'M', 'M', 'J', 'V', 'S', 'D'\]/);
+// Grille lundi→dimanche : getDay() renvoie 0 le dimanche, d'où le décalage.
+assert.match(calendar, /const lead = \(first\.getDay\(\) \+ 6\) % 7;/);
+assert.match(calendar, /disabled=\{disabled\}/);
 
 for (const [name, source] of [
   ['amount-modal', amountModal],
@@ -102,7 +107,8 @@ assert.match(budgetScreen, /deferGlobalRebalance\('budget'\)/);
 assert.match(budgetScreen, /pas aux entrées d'un compte ou portefeuille particulier/);
 assert.match(newGoal, /Effort total avec tes autres projets/);
 assert.match(newGoal, /L'effort cumulé de tes projets dépasse ton reste disponible/);
-assert.match(adjustGoal, /<DateField/);
+assert.match(adjustGoal, /<DatePickerField/);
+assert.match(adjustGoal, /minDate=\{minTargetDate\}/);
 assert.match(adjustGoal, /label="Jour de rappel \(1 à 28\)"/);
 assert.match(adjustGoal, /savedTotal\(goal\)/);
 assert.match(adjustGoal, /parsedTarget < saved/);
@@ -117,10 +123,12 @@ assert.match(recentContributionModal, /contributions\.map/);
 assert.match(recentContributionModal, /money\(contribution\.amount\)/);
 assert.match(recentContributionModal, /formatDate\(contribution\.date\)/);
 
-assert.match(newGoal, /<DateField/);
+assert.match(newGoal, /<DatePickerField/);
+assert.match(newGoal, /minDate=\{calendar === 'start' \? minStartDate : minTargetDate\}/);
 assert.match(newGoal, /label="Date de démarrage"/);
-assert.match(reportModal, /<DateField/);
+assert.match(reportModal, /<DatePickerField/);
+assert.match(reportModal, /maxDate=\{latestDate\}/);
 assert.doesNotMatch(newGoal, /placeholder="JJ\/MM\/AAAA"/);
 assert.doesNotMatch(reportModal, /placeholder="JJ\/MM\/AAAA"/);
 
-console.log('Tests saisie : focus, erreurs, masque date, clavier et défilement protégés.');
+console.log('Tests saisie : focus, erreurs, calendrier, clavier et défilement protégés.');

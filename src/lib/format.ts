@@ -35,18 +35,22 @@ export function formatEuro(amount: number): string {
   return `${sign}${grouped}${centsStr} €`;
 }
 
+/** « 10 Janvier 2027 » : plus lisible qu'un 10/01/2027, et sans ambiguïté
+ *  jour/mois d'une culture à l'autre. Le mois est capitalisé pour se détacher
+ *  des deux nombres qui l'encadrent. */
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}/${d.getFullYear()}`;
+  return `${d.getDate()} ${capitalize(MONTHS[d.getMonth()])} ${d.getFullYear()}`;
 }
 
+/** Forme courte, pour les pastilles : « 10 Jan ». */
 export function formatDayMonth(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}`;
+  return `${d.getDate()} ${capitalize(MONTHS[d.getMonth()].slice(0, 3))}`;
+}
+
+function capitalize(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 const MONTHS = [

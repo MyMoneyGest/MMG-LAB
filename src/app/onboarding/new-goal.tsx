@@ -5,17 +5,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
 import { AppHeader } from '@/components/app-header';
+import { CalendarModal } from '@/components/calendar-modal';
 import { ErrorToast } from '@/components/error-toast';
 import { FeedbackBanner } from '@/components/feedback-banner';
 import { PlanSummaryDark } from '@/components/plan-summary';
-import { Button, Card, DateField, Field, Screen, StepIndicator } from '@/components/ui';
+import { Button, Card, DatePickerField, Field, Screen, StepIndicator } from '@/components/ui';
 import { colors, fonts, radius } from '@/constants/theme';
 import { createGoal } from '@/lib/actions';
 import {
   formatDate,
   formatReminderDay,
   parseAmountInput,
-  parseDateInput,
 } from '@/lib/format';
 import {
   diagnostic,
@@ -85,11 +85,12 @@ export default function NewGoalScreen() {
   const [target, setTarget] = useState('');
   const [available, setAvailable] = useState('');
   const [durationKey, setDurationKey] = useState<DurationKey>('6m');
-  const [dateText, setDateText] = useState('');
+  const [customDate, setCustomDate] = useState<Date | null>(null);
+  const [calendar, setCalendar] = useState<'target' | 'start' | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [rhythmAdvancedOpen, setRhythmAdvancedOpen] = useState(false);
   const [startMode, setStartMode] = useState<StartMode>('now');
-  const [startDateText, setStartDateText] = useState('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
   const [reminderDayText, setReminderDayText] = useState(
     String(Math.min(28, new Date().getDate()))
   );
@@ -104,7 +105,7 @@ export default function NewGoalScreen() {
 
   const parsedTarget = parseAmountInput(target, currencyCode);
   const parsedAvailable = parseAmountInput(available, currencyCode) ?? 0;
-  const parsedStartDate = parseDateInput(startDateText);
+  const parsedStartDate = startDate;
   const reminderDay = Math.min(28, Math.max(1, Number(reminderDayText) || 1));
 
   // Choisir un type dans la liste écrase le nom : le choix explicite de
@@ -125,6 +126,13 @@ export default function NewGoalScreen() {
   // Aperçu du plan dès que les champs clés sont remplis.
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Le calendrier n'offre que des dates que `validate` accepterait : demain au
+  // plus tôt, et pour la cible, après le démarrage quand il est différé.
+  const nextDay = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+  const minStartDate = nextDay(today);
+  const minTargetDate =
+    startMode === 'later' && parsedStartDate ? nextDay(parsedStartDate) : nextDay(today);
   const deferredStartValid =
     startMode === 'now' || Boolean(parsedStartDate && parsedStartDate > today);
   const scheduleReference =
@@ -134,7 +142,7 @@ export default function NewGoalScreen() {
   const selectedDuration = DURATIONS.find((d) => d.key === durationKey);
   const parsedDate =
     durationKey === 'custom'
-      ? parseDateInput(dateText)
+      ? customDate
       : selectedDuration?.months
         ? addMonths(scheduleReference, selectedDuration.months)
         : null;
@@ -187,10 +195,10 @@ export default function NewGoalScreen() {
     if (!name.trim()) return 'Donne un nom à ton projet.';
     if (parsedTarget === null || parsedTarget <= 0) return 'Indique un montant cible valide.';
     if (parsedAvailable > parsedTarget) return 'Le déjà disponible dépasse le montant cible.';
-    if (!parsedDate) return 'Date cible invalide. Format attendu : JJ/MM/AAAA.';
+    if (!parsedDate) return 'Choisis une date cible dans le calendrier.';
     if (parsedDate <= now) return 'Choisis une date cible à venir.';
     if (startMode === 'later') {
-      if (!parsedStartDate) return 'Date de démarrage invalide. Format attendu : JJ/MM/AAAA.';
+      if (!parsedStartDate) return 'Choisis une date de démarrage dans le calendrier.';
       if (parsedStartDate <= today) return 'Choisis une date de démarrage après aujourd’hui.';
       if (parsedDate <= parsedStartDate) {
         return 'La date cible doit être postérieure au démarrage du projet.';
@@ -353,13 +361,10 @@ export default function NewGoalScreen() {
             })}
           </ScrollView>
           {durationKey === 'custom' ? (
-            <DateField
+            <DatePickerField
               label="Date cible"
-              value={dateText}
-              onChangeText={(t) => {
-                setDateText(t);
-                setError(null);
-              }}
+              value={customDate}
+              onPress={() => setCalendar('target')}
             />
           ) : parsedDate ? (
             <Text style={styles.durationHint}>Objectif visé pour le {formatDate(parsedDate)}.</Text>
@@ -402,13 +407,10 @@ export default function NewGoalScreen() {
               </View>
               {startMode === 'later' ? (
                 <>
-                  <DateField
+                  <DatePickerField
                     label="Date de démarrage"
-                    value={startDateText}
-                    onChangeText={(value) => {
-                      setStartDateText(value);
-                      setError(null);
-                    }}
+                    value={startDate}
+                    onPress={() => setCalendar('start')}
                   />
                   <Text style={styles.startHint}>
                     Aucun rappel ne partira avant cette date.
@@ -677,6 +679,19 @@ export default function NewGoalScreen() {
           </View>
         </>
       )}
+      <CalendarModal
+        visible={calendar !== null}
+        value={calendar === 'start' ? startDate : customDate}
+        title={calendar === 'start' ? 'Date de démarrage' : 'Date cible'}
+        minDate={calendar === 'start' ? minStartDate : minTargetDate}
+        onSelect={(date) => {
+          if (calendar === 'start') setStartDate(date);
+          else setCustomDate(date);
+          setError(null);
+          setCalendar(null);
+        }}
+        onClose={() => setCalendar(null)}
+      />
       {error ? <ErrorToast key={error.key} message={error.text} onFinished={clearError} /> : null}
       <ActionLoadingOverlay
         visible={saving}
