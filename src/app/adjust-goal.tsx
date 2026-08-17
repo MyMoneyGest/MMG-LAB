@@ -7,7 +7,7 @@ import { AppDialog } from '@/components/app-dialog';
 import { AppHeader } from '@/components/app-header';
 import { Button, Card, DateField, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
-import { changeReminderDay, removeGoal } from '@/lib/actions';
+import { changeReminderDay } from '@/lib/actions';
 import { formatDate, formatReminderDay, parseAmountInput, parseDateInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
@@ -20,8 +20,8 @@ import {
   suggestedAmount,
 } from '@/lib/plan';
 import { scheduleGoalReminders } from '@/lib/notifications';
-import { setPendingFeedback } from '@/lib/pending-feedback';
 import { useStore } from '@/lib/store';
+import { useGoalDeletion } from '@/lib/use-goal-deletion';
 import { waitForMinimumLoading } from '@/lib/timing';
 import type { Goal, SavingsRhythm } from '@/lib/types';
 import { useMoney } from '@/lib/use-money';
@@ -38,7 +38,6 @@ export default function AdjustGoalScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const goals = useStore((state) => state.goals);
   const goal = goals.find((candidate) => candidate.id === id);
-  const lastViewedGoalId = useStore((state) => state.lastViewedGoalId);
   const updateGoal = useStore((state) => state.updateGoal);
 
   const [target, setTarget] = useState(goal ? amountInput(String(goal.targetAmount)) : '');
@@ -47,9 +46,8 @@ export default function AdjustGoalScreen() {
   const [rhythm, setRhythm] = useState<SavingsRhythm>(goal?.rhythm ?? 'stable');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deletePending, setDeletePending] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { goalToDelete, deletePending, deleteError, askDelete, closeDelete, confirmDelete } =
+    useGoalDeletion({ navigate: 'dismissTo' });
 
   if (!goal) return <Redirect href="/" />;
 
@@ -178,50 +176,6 @@ export default function AdjustGoalScreen() {
     }
   };
 
-  const deleteThisGoal = async () => {
-    if (!goal || deletePending) return;
-    const remainingGoals = goals.filter((candidate) => candidate.id !== goal.id);
-    const destination =
-      remainingGoals.find((candidate) => candidate.id === lastViewedGoalId) ?? remainingGoals[0];
-    const feedbackId = String(Date.now());
-    const loadingStartedAt = Date.now();
-    setDeleteError(null);
-    setDeletePending(true);
-    try {
-      await waitForMinimumLoading(loadingStartedAt);
-      if (!destination) {
-        // Signal transitoire posé avant removeGoal : sur web, la redirection
-        // réactive d'index.tsx vers /onboarding/new-goal (dès que le store
-        // passe à zéro projet) peut gagner la course sur notre propre
-        // navigation ci-dessous (cf. pending-feedback.ts).
-        setPendingFeedback({
-          key: feedbackId,
-          title: 'Projet supprimé',
-          detail: `« ${goal.name} » et son historique ont été supprimés.`,
-        });
-      }
-      await removeGoal(goal);
-      setDeleteOpen(false);
-      if (destination) {
-        router.dismissTo({
-          pathname: '/goal/[id]',
-          params: {
-            id: destination.id,
-            feedback: 'deleted',
-            feedbackId,
-            feedbackName: goal.name,
-          },
-        });
-      } else {
-        router.dismissTo('/onboarding/new-goal');
-      }
-    } catch {
-      setDeleteError('La suppression n’a pas abouti. Réessaie dans quelques instants.');
-    } finally {
-      setDeletePending(false);
-    }
-  };
-
   return (
     <Screen>
       <AppHeader
@@ -343,10 +297,7 @@ export default function AdjustGoalScreen() {
         <Button
           label="Supprimer ce projet"
           variant="secondary"
-          onPress={() => {
-            setDeleteError(null);
-            setDeleteOpen(true);
-          }}
+          onPress={() => askDelete(goal)}
           style={styles.dangerButton}
         />
       </Card>
@@ -361,7 +312,7 @@ export default function AdjustGoalScreen() {
         }
       />
       <AppDialog
-        visible={deleteOpen}
+        visible={goalToDelete !== null}
         eyebrow="Action sensible"
         title={deleteError ? 'Suppression interrompue' : 'Supprimer ce projet ?'}
         message={
@@ -373,12 +324,8 @@ export default function AdjustGoalScreen() {
         confirmLabel={deleteError ? 'Réessayer' : 'Supprimer'}
         loading={deletePending}
         loadingLabel="Suppression…"
-        onClose={() => {
-          if (deletePending) return;
-          setDeleteError(null);
-          setDeleteOpen(false);
-        }}
-        onConfirm={() => void deleteThisGoal()}
+        onClose={closeDelete}
+        onConfirm={() => void confirmDelete()}
       />
     </Screen>
   );

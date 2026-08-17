@@ -85,13 +85,20 @@ assert.match(newGoal, /usePendingFeedbackStore\.getState\(\)\.take\(\)/);
 const pendingFeedback = read('src/lib/pending-feedback.ts');
 assert.match(pendingFeedback, /export const usePendingFeedbackStore = create</);
 assert.match(pendingFeedback, /export function setPendingFeedback/);
-// Écran 5 : la suppression vit exclusivement sur l'écran « Ajuster le
-// projet/plan », plus dans le menu (sécurité contre un tap accidentel).
-assert.match(adjustGoal, /setPendingFeedback\(\{/);
-assert.match(adjustGoal, /Projet supprimé/);
-assert.doesNotMatch(menu, /setPendingFeedback/);
-assert.doesNotMatch(menu, /Supprimer/);
-assert.doesNotMatch(menu, /<AppDialog/);
+// Suppression : deux points d'entrée (la ligne du menu et l'écran
+// « Ajuster »), une seule implémentation partagée — elle porte un ordre
+// sensible aux courses de navigation qu'on ne veut pas voir diverger.
+const goalDeletion = read('src/lib/use-goal-deletion.ts');
+assert.match(goalDeletion, /export function useGoalDeletion/);
+assert.match(goalDeletion, /setPendingFeedback\(\{/);
+assert.match(goalDeletion, /Projet supprimé/);
+assert.match(goalDeletion, /await removeGoal\(deleted\)/);
+assert.match(menu, /useGoalDeletion\(\{ navigate: 'replace' \}\)/);
+assert.match(menu, /styles\.deleteAction/);
+assert.match(menu, /accessibilityLabel=\{`Supprimer \$\{g\.name\}`\}/);
+assert.match(menu, /<AppDialog/);
+assert.match(adjustGoal, /useGoalDeletion\(\{ navigate: 'dismissTo' \}\)/);
+assert.match(adjustGoal, /label="Supprimer ce projet"/);
 
 assert.match(index, /if \(!country\) return <Redirect href="\/onboarding\/country"/);
 assert.match(country, /getLocales\(\)\[0\]\?\.regionCode/);
@@ -387,8 +394,7 @@ assert.doesNotMatch(menu, /Alert\.alert|\bAlert\b/);
 assert.match(adjustGoal, /<AppDialog/);
 assert.match(adjustGoal, /loadingLabel="Suppression…"/);
 assert.match(adjustGoal, /await waitForMinimumLoading\(loadingStartedAt\)/);
-assert.match(adjustGoal, /feedback: 'deleted'/);
-assert.match(adjustGoal, /removeGoal\(goal\)/);
+assert.match(goalDeletion, /feedback: 'deleted'/);
 assert.match(adjustGoal, /Zone sensible/);
 assert.match(adjustGoal, /label="Supprimer ce projet"/);
 

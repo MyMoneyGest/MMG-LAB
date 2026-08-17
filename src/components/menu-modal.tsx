@@ -5,13 +5,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '@/constants/theme';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import { useGoalDeletion } from '@/lib/use-goal-deletion';
 import { useMoney } from '@/lib/use-money';
+import { AppDialog } from './app-dialog';
 import { Button } from './ui';
 
 // Switcher de projets + navigation générale, accessible depuis tous les écrans.
-// La suppression d'un projet vit exclusivement sur son écran « Ajuster » —
-// aucun bouton de suppression ici, pour éviter une action définitive à un
-// tap accidentel depuis cette liste.
+// Chaque ligne porte un « Supprimer » discret : c'est d'ici qu'on gère ses
+// projets, y compris pour en retirer un. La confirmation passe par un dialogue
+// (action définitive), et l'écran « Ajuster » propose la même action.
 
 export function MenuModal({
   visible,
@@ -26,6 +28,8 @@ export function MenuModal({
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const goals = useStore((s) => s.goals);
+  const { goalToDelete, deletePending, deleteError, askDelete, closeDelete, confirmDelete } =
+    useGoalDeletion({ navigate: 'replace' });
   const activeGoal = currentGoalId ? goals.find((goal) => goal.id === currentGoalId) : undefined;
   const orderedGoals = activeGoal
     ? [activeGoal, ...goals.filter((goal) => goal.id !== activeGoal.id)]
@@ -50,6 +54,7 @@ export function MenuModal({
   );
 
   return (
+    <>
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable
@@ -77,6 +82,17 @@ export function MenuModal({
                   </View>
                   <View style={styles.goalActions}>
                     {active ? <Text style={styles.activeBadge}>Actif</Text> : null}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Supprimer ${g.name}`}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        askDelete(g);
+                        onClose();
+                      }}
+                      hitSlop={8}>
+                      <Text style={styles.deleteAction}>Supprimer</Text>
+                    </Pressable>
                   </View>
                 </Pressable>
               );
@@ -113,6 +129,23 @@ export function MenuModal({
         </Pressable>
       </Pressable>
     </Modal>
+      <AppDialog
+        visible={goalToDelete !== null}
+        eyebrow="Action sensible"
+        title={deleteError ? 'Suppression interrompue' : 'Supprimer ce projet ?'}
+        message={
+          deleteError ??
+          `« ${goalToDelete?.name ?? ''} » et tout son historique seront supprimés de ce téléphone. Cette action est définitive.`
+        }
+        tone="danger"
+        cancelLabel="Annuler"
+        confirmLabel={deleteError ? 'Réessayer' : 'Supprimer'}
+        loading={deletePending}
+        loadingLabel="Suppression…"
+        onClose={closeDelete}
+        onConfirm={() => void confirmDelete()}
+      />
+    </>
   );
 }
 
@@ -156,6 +189,7 @@ const styles = StyleSheet.create({
   goalName: { fontSize: 15, fontWeight: '700', color: colors.text },
   goalMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   goalActions: { alignItems: 'flex-end', gap: 5 },
+  deleteAction: { fontSize: 12, fontWeight: '700', color: colors.accent },
   activeBadge: {
     color: colors.accent,
     backgroundColor: colors.card,
