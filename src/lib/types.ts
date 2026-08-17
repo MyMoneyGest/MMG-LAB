@@ -128,6 +128,16 @@ export const CATEGORY_LABELS: Record<GoalCategory, string> = {
   other: 'Autre projet',
 };
 
+/** Pastille illustrative du projet, à côté de son objectif mensuel. */
+export const CATEGORY_EMOJI: Record<GoalCategory, string> = {
+  emergency: '🛟',
+  car: '🚗',
+  moving: '🏠',
+  travel: '✈️',
+  housing: '🏡',
+  other: '🎯',
+};
+
 export const CATEGORY_DESCRIPTIONS: Record<GoalCategory, string> = {
   emergency: 'Construire une réserve de sécurité avant les grands projets.',
   car: 'Financer la voiture sans passer par le crédit.',

@@ -1,5 +1,5 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ActionLoadingOverlay } from '@/components/action-loading-overlay';
@@ -16,8 +16,9 @@ import { RecentContributionModal } from '@/components/recent-contribution-modal'
 import { RebalanceModal } from '@/components/rebalance-modal';
 import { ReminderDayModal } from '@/components/reminder-day-modal';
 import { SavingsLocationModal } from '@/components/savings-location-modal';
+import { CalendarIcon, ClockIcon, HomeIcon } from '@/components/tab-icons';
 import { Button, Card, Eyebrow, ProgressRing, Screen } from '@/components/ui';
-import { colors, radius } from '@/constants/theme';
+import { colors, fonts, radius } from '@/constants/theme';
 import {
   applyGlobalRebalance,
   changeMidCycleNudge,
@@ -28,7 +29,7 @@ import {
   reconcileGlobalBalance,
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
-import { fitFontSize, formatDate, formatReminderDay } from '@/lib/format';
+import { fitFontSize, formatDate, formatDayMonth, formatReminderDay } from '@/lib/format';
 import { TEST_TOOLS_ENABLED } from '@/lib/test-tools';
 import {
   hasNotificationPermission,
@@ -60,16 +61,17 @@ import {
   MIN_INLINE_LOADING_MS,
   waitForMinimumLoading,
 } from '@/lib/timing';
+import { CATEGORY_EMOJI } from '@/lib/types';
 import type { Contribution } from '@/lib/types';
 import type { RebalanceReason } from '@/lib/types';
 import { useMoney } from '@/lib/use-money';
 
 type Tab = 'today' | 'schedule' | 'history';
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'today', label: "Aujourd'hui" },
-  { key: 'schedule', label: 'Échéancier' },
-  { key: 'history', label: 'Historique' },
+const TABS: { key: Tab; label: string; Icon: (props: { color: string }) => ReactElement }[] = [
+  { key: 'today', label: "Aujourd'hui", Icon: HomeIcon },
+  { key: 'schedule', label: 'Échéancier', Icon: CalendarIcon },
+  { key: 'history', label: 'Historique', Icon: ClockIcon },
 ];
 
 const handledNotificationActions = new Set<string>();
@@ -385,16 +387,17 @@ export default function GoalScreen() {
   ) : null;
   const tabBar = (
     <View style={styles.tabs}>
-      {TABS.map((t) => {
-        const active = t.key === tab;
+      {TABS.map(({ key, label, Icon }) => {
+        const active = key === tab;
         return (
           <Pressable
-            key={t.key}
+            key={key}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
-            onPress={() => setTab(t.key)}
-            style={[styles.tab, active && styles.tabActive]}>
-            <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t.label}</Text>
+            onPress={() => setTab(key)}
+            style={styles.tab}>
+            <Icon color={active ? colors.accent : colors.textSecondary} />
+            <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
           </Pressable>
         );
       })}
@@ -403,18 +406,7 @@ export default function GoalScreen() {
 
   return (
     <Screen footer={tabBar}>
-      <AppHeader
-        currentGoalId={goal.id}
-        title={goal.name}
-        titleSerif
-        subtitle={
-          waitingToStart
-            ? `Prévu le ${formatDate(goal.startDate!)}`
-            : freeMode
-              ? 'Épargne libre'
-              : 'Plan actif'
-        }
-      />
+      <AppHeader greeting currentGoalId={goal.id} title={goal.name} />
 
       {feedbackMessage ? (
         <FeedbackBanner
@@ -467,13 +459,42 @@ export default function GoalScreen() {
       ) : null}
 
       <Card>
+        <View style={styles.projectHead}>
+          <Text style={styles.projectEyebrow}>Projet actif</Text>
+          <Text style={styles.statusPill}>
+            {reached ? 'Atteint' : waitingToStart ? 'À venir' : freeMode ? 'Libre' : 'En cours'}
+          </Text>
+        </View>
+        <Text numberOfLines={2} style={styles.projectName}>
+          {goal.name}
+        </Text>
+
         {/* L'anneau affiche le montant mis de côté et le pourcentage en son centre
             (fitFontSize interne gère les gros montants FCFA sans déborder). Les
-            infos secondaires (restant, cible) restent en dessous. */}
+            trois repères chiffrés sont regroupés en dessous. */}
         <ProgressRing pct={pct} amount={money(saved)} />
-        <Text style={styles.savedMeta}>
-          {money(remaining)} restants · sur {money(goal.targetAmount)}
-        </Text>
+
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>Objectif</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={styles.statValue}>
+              {money(goal.targetAmount)}
+            </Text>
+          </View>
+          <View style={[styles.stat, styles.statMiddle]}>
+            <Text style={styles.statLabel}>Restant</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={styles.statValue}>
+              {money(remaining)}
+            </Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>Échéance</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={styles.statValue}>
+              {formatDate(goal.targetDate)}
+            </Text>
+          </View>
+        </View>
+
         <Pressable
           accessibilityRole="button"
           hitSlop={5}
@@ -493,14 +514,18 @@ export default function GoalScreen() {
           </Text>
           <Text style={styles.savingsLocationArrow}>›</Text>
         </Pressable>
-        <View style={styles.progressFooter}>
-          <Text style={styles.targetDate}>Cible {formatDate(goal.targetDate)}</Text>
-        </View>
       </Card>
 
       {tab === 'today' ? (
         <Card>
-          <Eyebrow>Ce mois-ci</Eyebrow>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>Ce mois-ci</Text>
+            {!reached ? (
+              <Text style={styles.reminderPill}>
+                Rappel · {formatDayMonth(waitingToStart ? goal.startDate! : goal.nextReminderAt)}
+              </Text>
+            ) : null}
+          </View>
           {reached ? (
             <>
               <Text style={styles.reachedTitle}>Objectif atteint 🎉</Text>
@@ -523,20 +548,25 @@ export default function GoalScreen() {
           ) : (
             <>
               <View style={styles.adviceCard}>
-                <Text style={styles.adviceLabel}>
-                  {freeMode ? 'Ton rythme libre' : 'Montant conseillé'}
-                </Text>
-                {freeMode ? (
-                  <Text style={styles.adviceFreeAmount}>Aucun montant imposé</Text>
-                ) : (
-                  <Text
-                    style={[styles.adviceAmount, { fontSize: fitFontSize(money(suggested), 38) }]}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.4}>
-                    {money(suggested)}
-                  </Text>
-                )}
+                <View style={styles.adviceHead}>
+                  <View style={styles.adviceCopy}>
+                    <Text style={styles.adviceLabel}>
+                      {freeMode ? 'Ton rythme libre' : 'Objectif mensuel'}
+                    </Text>
+                    {freeMode ? (
+                      <Text style={styles.adviceFreeAmount}>Aucun montant imposé</Text>
+                    ) : (
+                      <Text
+                        style={[styles.adviceAmount, { fontSize: fitFontSize(money(suggested), 38) }]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.4}>
+                        {money(suggested)}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.categoryTile}>{CATEGORY_EMOJI[goal.category]}</Text>
+                </View>
                 <Text style={styles.adviceReminder}>
                   {pending ? 'Rappel en cours : ' : 'Rappel prévu : '}
                   {formatDate(goal.nextReminderAt)}
@@ -572,33 +602,30 @@ export default function GoalScreen() {
                   />
                 </View>
               ) : (
-                <View style={{ gap: 12 }}>
+                <View style={{ gap: 4 }}>
                   <Button
                     label={`J'ai mis de côté ✓ (${money(suggested)})`}
                     onPress={() => confirm(suggested, 'one_tap')}
                     loading={actionLoading}
                     loadingLabel="Enregistrement…"
                   />
-                  <View style={{ flexDirection: 'row', gap: 12 }}>
-                    <Button
-                      label="Montant différent"
-                      variant="secondary"
-                      onPress={() => {
-                        setModalFromTest(false);
-                        setAmountModal('deposit');
-                      }}
-                      style={{ flex: 1 }}
-                    />
-                    <Button
-                      label="Reporter"
-                      variant="secondary"
-                      onPress={() => {
-                        setModalFromTest(false);
-                        setReportOpen(true);
-                      }}
-                      style={{ flex: 1 }}
-                    />
-                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      setModalFromTest(false);
+                      setAmountModal('deposit');
+                    }}
+                    style={styles.secondaryLink}>
+                    <Text style={styles.secondaryLinkText}>+ Ajouter un montant libre</Text>
+                  </Pressable>
+                  <Button
+                    label="Reporter"
+                    variant="secondary"
+                    onPress={() => {
+                      setModalFromTest(false);
+                      setReportOpen(true);
+                    }}
+                  />
                 </View>
               )}
               {checkBalance ? (
@@ -891,14 +918,85 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   bannerText: { color: colors.accent, fontSize: 15, fontWeight: '600', lineHeight: 21 },
-  savedMeta: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 2,
-    marginBottom: 6,
+  secondaryLink: { alignSelf: 'center', paddingVertical: 10 },
+  secondaryLinkText: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 12,
   },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  reminderPill: {
+    color: colors.textSecondary,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    fontSize: 12,
+    fontWeight: '700',
+    overflow: 'hidden',
+  },
+  adviceHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  adviceCopy: { flex: 1, minWidth: 0 },
+  categoryTile: {
+    fontSize: 26,
+    lineHeight: 34,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+    textAlign: 'center',
+    paddingTop: 9,
+    overflow: 'hidden',
+  },
+  projectHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  projectEyebrow: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+  },
+  statusPill: {
+    color: colors.accent,
+    backgroundColor: colors.cardSoft,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    fontSize: 12,
+    fontWeight: '800',
+    overflow: 'hidden',
+  },
+  projectName: {
+    fontFamily: fonts.serifItalic,
+    fontSize: 26,
+    lineHeight: 33,
+    color: colors.text,
+    marginTop: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: 14,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  stat: { flex: 1, alignItems: 'center', gap: 4, paddingHorizontal: 4 },
+  statMiddle: {
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  statLabel: { fontSize: 12, color: colors.textSecondary },
+  statValue: { fontSize: 15, fontWeight: '800', color: colors.text },
   savingsLocation: {
     alignSelf: 'flex-start',
     maxWidth: '100%',
@@ -923,11 +1021,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   savingsLocationArrow: { color: colors.accent, fontSize: 18, lineHeight: 18, fontWeight: '700' },
-  amountAside: { alignItems: 'flex-end', paddingBottom: 3, flexShrink: 1, minWidth: 0, maxWidth: '55%' },
-  remainingAmount: { fontSize: 14, fontWeight: '800', color: colors.text },
-  targetAmount: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 2 },
-  progressFooter: { alignItems: 'center', gap: 3 },
-  targetDate: { fontSize: 13, fontWeight: '800', color: colors.text, textAlign: 'center' },
   capacityWarning: {
     backgroundColor: colors.banner,
     borderRadius: radius.field,
@@ -990,16 +1083,10 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     textAlign: 'center',
   },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: radius.button,
-    padding: 6,
-  },
-  tab: { flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.accent },
-  tabLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
-  tabLabelActive: { color: '#FFFFFF' },
+  tabs: { flexDirection: 'row' },
+  tab: { flex: 1, paddingVertical: 8, alignItems: 'center', gap: 4 },
+  tabLabel: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
+  tabLabelActive: { color: colors.accent },
   adviceCard: {
     backgroundColor: colors.cardSoft,
     borderWidth: 1,

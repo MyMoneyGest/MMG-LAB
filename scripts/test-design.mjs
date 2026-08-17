@@ -292,9 +292,25 @@ assert.match(goal, /<Screen footer=\{tabBar\}>/);
 assert.match(goal, /schedule\.slice\(0, 2\)/);
 assert.match(goal, /label=\{`J'ai mis de côté ✓ \(\$\{money\(suggested\)\}\)`\}/);
 assert.match(goal, /label="J'ai mis de côté ✓"/);
-assert.match(goal, /titleSerif/);
+// Fiche projet : en-tête « Bonjour, {prénom} » + marque à droite (accès au
+// menu), statut du projet en pastille, titre en serif italique, et les trois
+// repères chiffrés (objectif / restant / échéance) groupés sous l'anneau.
+assert.match(goal, /<AppHeader greeting currentGoalId=\{goal\.id\}/);
+assert.match(header, /greeting\?: boolean/);
+assert.match(header, /styles\.greetingRow/);
+assert.match(header, /userName \? `\$\{userName\} ✨`/);
 assert.match(header, /titleSerif/);
 assert.match(header, /fonts\.serifBold/);
+assert.match(goal, /styles\.statusPill/);
+assert.match(goal, /styles\.projectName/);
+assert.match(goal, /styles\.statsRow/);
+assert.match(goal, />Objectif</);
+assert.match(goal, />Restant</);
+assert.match(goal, />Échéance</);
+assert.match(goal, /Objectif mensuel/);
+assert.match(goal, /CATEGORY_EMOJI\[goal\.category\]/);
+assert.match(goalTypes, /export const CATEGORY_EMOJI/);
+assert.match(goal, /\+ Ajouter un montant libre/);
 assert.match(goal, /Aucun montant imposé/);
 assert.match(goal, /goalStartsInFuture\(goal\)/);
 assert.match(goal, /Tout est prêt pour le/);
@@ -309,10 +325,10 @@ assert.match(goal, /Jour de rappel modifié/);
 assert.match(goal, /MIN_INLINE_LOADING_MS/);
 assert.match(goal, /waitForMinimumLoading\(loadingStartedAt\)/);
 assert.match(goal, /accessibilityRole="tab"/);
-assert.match(goal, /tabActive: \{ backgroundColor: colors\.accent/);
+// Onglets illustrés (tracés SVG : pas de librairie d'icônes dans le projet).
+assert.match(goal, /<Icon color=\{active \? colors\.accent : colors\.textSecondary\}/);
+assert.match(read('src/components/tab-icons.tsx'), /export function HomeIcon/);
 assert.match(goal, /<ProgressRing pct=\{pct\} amount=\{money\(saved\)\}/);
-assert.match(goal, /styles\.progressFooter/);
-assert.match(goal, /Cible \{formatDate\(goal\.targetDate\)\}/);
 assert.match(goal, />Où \?</);
 assert.match(goal, /goal\.savingsLocation \?\? 'Ajouter'/);
 assert.match(goal, /<SavingsLocationModal/);

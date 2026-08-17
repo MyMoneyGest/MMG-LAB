@@ -21,6 +21,7 @@ export function AppHeader({
   showTestMark = !showBack,
   fallbackHref = '/',
   onBack,
+  greeting = false,
 }: {
   showBack?: boolean;
   currentGoalId?: string;
@@ -35,6 +36,8 @@ export function AppHeader({
   /** Remplace la navigation arrière : pour un écran à étapes internes, où
    * « retour » veut dire revenir à l'étape précédente, pas quitter l'écran. */
   onBack?: () => void;
+  /** Salutation à gauche, marque à droite : réservé à la fiche projet. */
+  greeting?: boolean;
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -46,6 +49,7 @@ export function AppHeader({
   } | null>(null);
   const goals = useStore((s) => s.goals);
   const lastViewedGoalId = useStore((s) => s.lastViewedGoalId);
+  const userName = useStore((s) => s.userName);
 
   const preferredGoal =
     goals.find((goal) => goal.id === currentGoalId) ??
@@ -104,6 +108,52 @@ export function AppHeader({
       setTestPending(false);
     }
   };
+
+  // Variante « accueil » (fiche projet) : une salutation à gauche, la marque
+  // à droite en guise d'accès au menu. Pas de flèche retour — c'est l'écran
+  // d'arrivée de l'app, il n'y a rien derrière.
+  if (greeting) {
+    return (
+      <>
+        <View style={styles.greetingRow}>
+          <View style={styles.greetingCopy}>
+            {/* Sans prénom, une seule ligne : « Bonjour, » suivi du nom du
+                projet donnerait « Bonjour, Déménagement ». */}
+            {userName ? <Text style={styles.greetingHello}>Bonjour,</Text> : null}
+            <Text numberOfLines={1} style={styles.greetingName}>
+              {userName ? `${userName} ✨` : 'Bonjour ✨'}
+            </Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ouvrir le menu"
+            accessibilityHint={
+              TEST_TOOLS_ENABLED ? 'Maintenir appuyé pour un rappel test' : undefined
+            }
+            delayLongPress={700}
+            disabled={testPending}
+            onPress={() => setMenuOpen(true)}
+            onLongPress={TEST_TOOLS_ENABLED ? testNotification : undefined}
+            style={[styles.greetingBadge, testPending && styles.logoPending]}>
+            <Text style={styles.greetingBadgeLetter}>M</Text>
+          </Pressable>
+          <MenuModal
+            visible={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            currentGoalId={currentGoalId}
+          />
+        </View>
+        <AppDialog
+          visible={dialog !== null}
+          eyebrow="Rappel test"
+          title={dialog?.title ?? ''}
+          message={dialog?.message ?? ''}
+          tone={dialog?.tone}
+          onClose={() => setDialog(null)}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -186,6 +236,34 @@ const styles = StyleSheet.create({
   },
   logoLetter: { color: '#FFFFFF', fontSize: 21, fontWeight: '800' },
   logoPending: { opacity: 0.65 },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  greetingCopy: { flex: 1 },
+  greetingHello: { fontSize: 15, color: colors.textSecondary },
+  greetingName: {
+    fontFamily: fonts.serifItalic,
+    fontSize: 26,
+    lineHeight: 33,
+    color: colors.text,
+  },
+  greetingBadge: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
+  },
+  greetingBadgeLetter: { fontFamily: fonts.serifBold, fontSize: 22, color: colors.accent },
   heading: { flex: 1 },
   title: { fontSize: 18, fontWeight: '800', color: colors.text },
   titleSerif: { fontFamily: fonts.serifBold, fontSize: 20, fontWeight: '400' },
