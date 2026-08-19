@@ -13,6 +13,45 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## ⛔ 2026-08-19 — À FAIRE AVANT LE PROCHAIN BUILD DE PRODUCTION (tracking)
+
+**Sans cette étape, aucun utilisateur du Store n'est mesuré — et la panne est
+silencieuse : `track()` n'émet ni erreur ni trace hors développement.**
+
+Le 2.0.0 publié le 11/08 n'a jamais envoyé un seul événement. Deux causes :
+
+1. `.env` est gitignoré, donc jamais transmis au serveur EAS, et aucun profil
+   de build ne déclarait d'`environment` → `supabase` valait `null` dans l'app
+   installée.
+2. La variable `EXPO_PUBLIC_SUPABASE_ANON_KEY` contenait l'URL au lieu de la
+   clé (les deux valeurs faisaient 40 caractères, le prompt masque la saisie).
+
+Corrigé côté EAS le 19/08, et vérifié sur `preview` : l'APK remonte bien
+`app_open` et `goal_created`.
+
+### Ce qu'il reste à faire
+
+- [ ] **Reporter le commit `c848372` (eas.json) sur la branche qui livre.**
+      Le rattachement des profils aux environnements EAS n'existe que sur
+      `v2-ui-premium`. Un build de production lancé depuis `v2` ou `main`
+      repartirait sans variables — même panne, sans signal.
+- [ ] Vérifier l'environnement de production avant de construire :
+      `eas env:list --environment production --include-sensitive`
+      → clé commençant par `sb_publishable_`, URL par `https://ffoxlogtnstbagxitein`.
+- [ ] Après publication, confirmer qu'un `app_open` d'un utilisateur réel
+      arrive dans `public.events` (un `install_id` absent de la liste
+      d'exclusion de `events_reels`).
+
+### Piste pour ne plus tenir d'inventaire
+
+La vue `events_reels` exclut les appareils de test par `install_id`, et chaque
+réinstallation en crée un nouveau (trois entrées au 19/08). Un oubli fausse la
+rétention sans prévenir. Le profil `preview-test` pose déjà
+`EXPO_PUBLIC_MMG_TEST_TOOLS=1` : si `track()` transmettait ce drapeau en
+métadonnée, une seule condition suffirait à écarter tous les builds de test.
+
+---
+
 ## 2026-08-13 — Patrick : idées design « plus tard » (inspiré de Copilot Money)
 
 Notées pendant la discussion UI. **Pas pour maintenant** — pistes de fond, à prioriser plus tard.
