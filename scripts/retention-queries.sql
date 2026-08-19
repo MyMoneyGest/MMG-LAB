@@ -100,7 +100,8 @@ with (security_invoker = true) as
 select *
 from events
 where install_id not in (
-  'install-1784788834062-uklf43hsnw'   -- Patrick — téléphone Android
+  'install-1784788834062-uklf43hsnw',  -- Patrick — téléphone Android
+  'install-1787134036038-1qnk2xwqzp'   -- Patrick — APK de test 2.0.0 (19/08/2026)
   -- , 'install-xxxx'                  -- ex. proches testant « pour voir »
 );
 
