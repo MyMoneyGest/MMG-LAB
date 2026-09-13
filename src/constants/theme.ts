@@ -4,8 +4,13 @@
 // aux moments marquants (récap de plan, confirmation de versement).
 
 export const colors = {
-  background: '#F9F6F0',
-  card: '#FBF8F1',
+  // Le fond est un sable chaud, franchement plus profond que les cartes : elles
+  // n'ont ni ombre ni relief, donc c'est le seul écart qui les détache. Il était
+  // de 1,93 sur 255 (0,8 %) — invisible, et les sections d'un écran se
+  // confondaient. Il est maintenant d'environ 16, soit huit fois plus, ce qui
+  // reste loin d'un gris franc : on cherche la lisibilité, pas le contraste.
+  background: '#F1EADE',
+  card: '#FDFBF7',
   cardSoft: '#F6E0D5',
   cardSoftBorder: '#C97A5E',
 
@@ -18,7 +23,7 @@ export const colors = {
 
   text: '#231F1A',
   textSecondary: '#6E675C',
-  border: '#E7DFD2',
+  border: '#E3D8C6',
 
   success: '#5BA97C',
   banner: '#F3DCCF',

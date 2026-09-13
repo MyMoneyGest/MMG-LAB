@@ -396,9 +396,13 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
+  // Un filet fin plutôt qu'une ombre portée : c'est le vocabulaire du premium
+  // sobre, et une ombre sur fond chaud vire vite au gris sale.
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     padding: spacing.card,
     marginBottom: 12,
   },
