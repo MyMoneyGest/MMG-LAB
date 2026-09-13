@@ -13,24 +13,47 @@ import { parseAmountInput } from '@/lib/format';
 import { useMoney } from '@/lib/use-money';
 import { Button, Field, KeyboardSafeScrollView } from './ui';
 
-const EXPENSE_CATEGORIES = [
+// L'aide couvre les DEUX lignes du budget, pas seulement le variable : une
+// personne qui ne sait pas estimer ses courses ne sait souvent pas davantage
+// additionner loyer, factures et abonnements de tête.
+//
+// Chaque section remplit son champ, et une section laissée vide ne touche à
+// rien : quelqu'un qui connaît déjà ses charges fixes ne doit pas les voir
+// écrasées par un zéro parce qu'il venait estimer autre chose.
+
+const FIXED_CATEGORIES = [
+  { key: 'housing', label: 'Loyer ou prêt immobilier' },
+  { key: 'utilities', label: 'Électricité, eau, gaz' },
+  { key: 'telecom', label: 'Téléphone et internet' },
+  { key: 'credits', label: 'Crédits et assurances' },
+  { key: 'fixedOther', label: 'Autres charges fixes (abonnements…)' },
+] as const;
+
+const VARIABLE_CATEGORIES = [
   { key: 'food', label: 'Alimentation et courses' },
   { key: 'transport', label: 'Transport' },
   { key: 'health', label: 'Santé et soins' },
   { key: 'leisure', label: 'Loisirs et sorties' },
-  { key: 'other', label: 'Autres dépenses variables' },
+  { key: 'variableOther', label: 'Autres dépenses variables' },
 ] as const;
 
-type ExpenseKey = (typeof EXPENSE_CATEGORIES)[number]['key'];
+type ExpenseCategory = (typeof FIXED_CATEGORIES | typeof VARIABLE_CATEGORIES)[number];
+type ExpenseKey = ExpenseCategory['key'];
 type ExpenseValues = Record<ExpenseKey, string>;
 
-const EMPTY_VALUES: ExpenseValues = {
-  food: '',
-  transport: '',
-  health: '',
-  leisure: '',
-  other: '',
-};
+const EMPTY_VALUES: ExpenseValues = [...FIXED_CATEGORIES, ...VARIABLE_CATEGORIES].reduce(
+  (acc, { key }) => {
+    acc[key] = '';
+    return acc;
+  },
+  {} as ExpenseValues
+);
+
+/** Montant par section : `null` = section vide, donc champ laissé intact. */
+export interface ExpenseEstimate {
+  fixedCharges: number | null;
+  variableExpenses: number | null;
+}
 
 export function ExpenseEstimateModal({
   visible,
@@ -38,7 +61,7 @@ export function ExpenseEstimateModal({
   onClose,
 }: {
   visible: boolean;
-  onApply: (total: number) => void;
+  onApply: (estimate: ExpenseEstimate) => void;
   onClose: () => void;
 }) {
   const { currency, currencyCode, money, amountInput } = useMoney();
@@ -49,19 +72,28 @@ export function ExpenseEstimateModal({
     if (visible) setError(null);
   }, [visible]);
 
-  const parsedValues = useMemo(
-    () =>
-      EXPENSE_CATEGORIES.map(({ key }) => ({
-        key,
-        value: values[key] ? parseAmountInput(values[key], currencyCode) : 0,
-      })),
-    [currencyCode, values]
-  );
-  const invalid = parsedValues.some(({ value }) => value === null);
-  const total = parsedValues.reduce((sum, { value }) => sum + (value ?? 0), 0);
+  const summarize = useMemo(() => {
+    const sectionTotal = (categories: readonly ExpenseCategory[]) => {
+      const parsed = categories.map(({ key }) =>
+        values[key] ? parseAmountInput(values[key], currencyCode) : 0
+      );
+      return {
+        invalid: parsed.some((value) => value === null),
+        filled: categories.some(({ key }) => values[key].trim() !== ''),
+        total: parsed.reduce((sum: number, value) => sum + (value ?? 0), 0),
+      };
+    };
+    return {
+      fixed: sectionTotal(FIXED_CATEGORIES),
+      variable: sectionTotal(VARIABLE_CATEGORIES),
+    };
+  }, [currencyCode, values]);
+
+  const { fixed, variable } = summarize;
+  const total = fixed.total + variable.total;
 
   const submit = () => {
-    if (invalid) {
+    if (fixed.invalid || variable.invalid) {
       setError('Vérifie les montants saisis.');
       return;
     }
@@ -69,7 +101,10 @@ export function ExpenseEstimateModal({
       setError('Ajoute au moins une dépense pour obtenir une estimation.');
       return;
     }
-    onApply(total);
+    onApply({
+      fixedCharges: fixed.filled ? fixed.total : null,
+      variableExpenses: variable.filled ? variable.total : null,
+    });
   };
 
   return (
@@ -87,26 +122,57 @@ export function ExpenseEstimateModal({
               <Text style={styles.eyebrow}>Aide facultative</Text>
               <Text style={styles.title}>Estime tes dépenses du mois</Text>
               <Text style={styles.subtitle}>
-                Indique une moyenne. Ne recompte pas le loyer, les crédits ou les abonnements
-                déjà inclus dans tes charges fixes.
+                Remplis ce que tu connais. Une section laissée vide ne modifiera pas le
+                montant déjà saisi sur l'écran précédent.
               </Text>
 
-              <View style={styles.fields}>
-                {EXPENSE_CATEGORIES.map(({ key, label }) => (
-                  <Field
-                    key={key}
-                    label={label}
-                    value={values[key]}
-                    onChangeText={(value) => {
-                      setValues((current) => ({ ...current, [key]: amountInput(value) }));
-                      setError(null);
-                    }}
-                    keyboardType="decimal-pad"
-                    placeholder="0"
-                    suffix={currency.symbol}
-                  />
-                ))}
-              </View>
+              {(
+                [
+                  {
+                    key: 'fixed',
+                    title: 'Charges fixes',
+                    hint: 'Ce qui tombe chaque mois, quoi qu’il arrive.',
+                    categories: FIXED_CATEGORIES,
+                    section: fixed,
+                  },
+                  {
+                    key: 'variable',
+                    title: 'Dépenses variables',
+                    hint: 'Ce qui change d’un mois à l’autre. Indique une moyenne.',
+                    categories: VARIABLE_CATEGORIES,
+                    section: variable,
+                  },
+                ] as const
+              ).map(({ key, title, hint, categories, section }) => (
+                <View key={key} style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>{title}</Text>
+                    {section.filled && !section.invalid ? (
+                      <Text style={styles.sectionTotal}>{money(section.total)}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.sectionHint}>{hint}</Text>
+                  <View style={styles.fields}>
+                    {categories.map(({ key: categoryKey, label }) => (
+                      <Field
+                        key={categoryKey}
+                        label={label}
+                        value={values[categoryKey]}
+                        onChangeText={(value) => {
+                          setValues((current) => ({
+                            ...current,
+                            [categoryKey]: amountInput(value),
+                          }));
+                          setError(null);
+                        }}
+                        keyboardType="decimal-pad"
+                        placeholder="0"
+                        suffix={currency.symbol}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))}
 
               <View style={styles.totalCard}>
                 <Text style={styles.totalLabel}>Estimation mensuelle</Text>
@@ -116,7 +182,7 @@ export function ExpenseEstimateModal({
 
               <View style={styles.buttons}>
                 <Button label="Annuler" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
-                <Button label="Utiliser ce total" onPress={submit} style={{ flex: 1 }} />
+                <Button label="Utiliser ces montants" onPress={submit} style={{ flex: 1 }} />
               </View>
             </Pressable>
           </Pressable>
@@ -150,7 +216,33 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.text, fontSize: 23, fontWeight: '800', marginTop: 4 },
   subtitle: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 6 },
-  fields: { marginTop: 14 },
+  section: {
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  sectionTotal: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  sectionHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 3 },
+  fields: { marginTop: 12 },
   totalCard: {
     flexDirection: 'row',
     alignItems: 'center',

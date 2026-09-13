@@ -173,20 +173,28 @@ cible.
 
 ## 2026-08-12 — Patrick : 2 ajustements pour la prochaine version (à grouper)
 
+**Statut — les deux sont implémentés le 2026-09-13 sur `v2`.**
+
 Notés pendant le lancement Play Store (les builds V2 actuels sont déjà produits → à intégrer au
 **prochain build**, avec iOS build 6 + maintenance Expo 57).
 
-1. **Pays par ordre alphabétique** : la liste du sélecteur de pays est aujourd'hui **groupée par
+1. ✅ **Pays par ordre alphabétique** : la liste du sélecteur de pays était **groupée par
    région** (Afrique centrale, Afrique de l'Ouest, zone euro, dollar). Patrick veut un **tri
-   alphabétique** (plus simple à parcourir quand la liste s'allongera). Fichiers : `COUNTRIES`
-   dans `src/lib/currency.ts` et/ou l'affichage dans `src/app/onboarding/country.tsx` (trier par
-   `name`). ⚠️ Garder le pré-remplissage depuis la locale.
+   alphabétique** (plus simple à parcourir quand la liste s'allongera).
+   → Fait : `COUNTRIES_ALPHABETICAL` dans `src/lib/currency.ts`, consommé par
+   `src/components/country-list.tsx`. `COUNTRIES` garde son ordre par zone monétaire (il
+   documente les devises couvertes) et le pré-remplissage depuis la locale est intact.
+   Le tri passe par un repli d'accents explicite, sans `Intl` : sinon « Côte d'Ivoire » et
+   « États-Unis » partaient en fin de liste. Le même repli rend la **recherche insensible aux
+   accents** — « senegal » trouve « Sénégal », ce qui ne marchait pas avant.
 
-2. **Aide à l'estimation des dépenses = TOUTES les dépenses** : le modal
-   `src/components/expense-estimate-modal.tsx` n'estime aujourd'hui que les **dépenses variables**.
-   Patrick veut que l'aide couvre **tout** (charges fixes ET variables), pas seulement le variable.
-   → étendre le modal pour aider à estimer l'ensemble du budget (ou au moins charges fixes +
-   variables) et remplir les champs correspondants de l'écran Budget.
+2. ✅ **Aide à l'estimation des dépenses = TOUTES les dépenses** : le modal
+   `src/components/expense-estimate-modal.tsx` n'estimait que les **dépenses variables**.
+   Patrick veut que l'aide couvre **tout** (charges fixes ET variables).
+   → Fait : deux sections (5 postes de charges fixes, 5 de dépenses variables), chacune avec
+   son sous-total, qui remplissent les deux champs de l'écran Budget.
+   Règle retenue : **une section laissée vide ne touche à rien**. Quelqu'un qui connaît déjà
+   ses charges fixes et vient estimer ses courses ne doit pas les voir écrasées par un zéro.
 
 ---
 

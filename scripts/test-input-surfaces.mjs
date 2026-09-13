@@ -88,15 +88,30 @@ assert.match(savingsLocationModal, /Compte ou support/);
 assert.match(budgetScreen, /M’aider à estimer mes dépenses/);
 assert.match(budgetScreen, /<ExpenseEstimateModal/);
 assert.match(expenseEstimateModal, /Estime tes dépenses du mois/);
+// L'aide couvre les deux lignes du budget, pas seulement le variable.
+assert.match(expenseEstimateModal, /Charges fixes/);
+assert.match(expenseEstimateModal, /Loyer ou prêt immobilier/);
+assert.match(expenseEstimateModal, /Électricité, eau, gaz/);
+assert.match(expenseEstimateModal, /Téléphone et internet/);
+assert.match(expenseEstimateModal, /Crédits et assurances/);
+assert.match(expenseEstimateModal, /Autres charges fixes/);
+assert.match(expenseEstimateModal, /Dépenses variables/);
 assert.match(expenseEstimateModal, /Alimentation et courses/);
 assert.match(expenseEstimateModal, /Transport/);
 assert.match(expenseEstimateModal, /Santé et soins/);
 assert.match(expenseEstimateModal, /Loisirs et sorties/);
 assert.match(expenseEstimateModal, /Autres dépenses variables/);
-assert.match(expenseEstimateModal, /Ne recompte pas le loyer/);
 assert.match(expenseEstimateModal, /<KeyboardAvoidingView/);
 assert.match(expenseEstimateModal, /<KeyboardSafeScrollView/);
-assert.match(expenseEstimateModal, /onApply\(total\)/);
+// Une section vide vaut null, et l'écran budget ne touche alors pas au champ :
+// sans ça, venir estimer ses courses écraserait des charges fixes déjà saisies.
+assert.match(expenseEstimateModal, /fixedCharges: fixed\.filled \? fixed\.total : null/);
+assert.match(
+  expenseEstimateModal,
+  /variableExpenses: variable\.filled \? variable\.total : null/
+);
+assert.match(budgetScreen, /if \(fixedCharges !== null\) setFixed\(/);
+assert.match(budgetScreen, /if \(variableExpenses !== null\) setVariable\(/);
 assert.match(rebalanceModal, /Garder mes plans/);
 assert.match(rebalanceModal, /Appliquer/);
 assert.match(rebalanceModal, /conserver ton ancien échéancier/);

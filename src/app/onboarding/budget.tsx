@@ -148,8 +148,11 @@ export default function BudgetScreen() {
       <ExpenseEstimateModal
         visible={expenseEstimateOpen}
         onClose={() => setExpenseEstimateOpen(false)}
-        onApply={(total) => {
-          setVariable(amountInput(String(total)));
+        onApply={({ fixedCharges, variableExpenses }) => {
+          // Une section laissée vide vaut « je n'estime pas celle-ci » : on
+          // garde ce qui est déjà saisi plutôt que d'y écrire un zéro.
+          if (fixedCharges !== null) setFixed(amountInput(String(fixedCharges)));
+          if (variableExpenses !== null) setVariable(amountInput(String(variableExpenses)));
           setError(null);
           setExpenseEstimateOpen(false);
         }}
