@@ -13,6 +13,35 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 🚧 2026-09-13 — Le vrai goulot : 12 testeurs Play, et il y en a 1
+
+Relevé dans la Play Console le 13/09. L'accès à la production pour un compte
+personnel exige trois conditions, affichées noir sur blanc :
+
+- [x] Publier une version de test fermé
+- [ ] **Avoir au moins 12 testeurs inscrits** — *1 testeur actuellement inscrit*
+- [ ] **Exécuter le test fermé avec au moins 12 testeurs pendant au moins 14 jours**
+
+État de l'app : piste « Tests fermés — Alpha », 14 pays/régions, MMG 2.0.0
+depuis le 13/08. **Audience ayant installé : 0.**
+
+**Ce que ça corrige dans notre compréhension du tracking.** Le bloqueur
+ci-dessous attend « un `app_open` d'un utilisateur réel » pour se refermer. Il
+ne pouvait pas se refermer : il n'y a aucun utilisateur. Le bug des variables
+d'environnement était bien réel et bien corrigé — mais même réparé, le 2.0.0
+n'aurait rien remonté, faute d'installations.
+
+Les deux causes se masquaient l'une l'autre. **Le chemin critique n'est pas
+technique, c'est le recrutement** : 12 testeurs par adresse mail, puis 14 jours
+consécutifs. Et ces mêmes testeurs fourniront les premiers `app_open` d'un
+`install_id` inconnu — le recrutement débloque la production ET prouve le
+tracking. Un seul chantier, pas deux.
+
+⏱️ À noter : le compte de 14 jours ne démarre qu'une fois les 12 testeurs
+inscrits. Chaque semaine sans recrutement retarde d'autant l'accès production.
+
+---
+
 ## ⛔ 2026-08-19 — À FAIRE AVANT LE PROCHAIN BUILD DE PRODUCTION (tracking)
 
 **Sans cette étape, aucun utilisateur du Store n'est mesuré — et la panne est
