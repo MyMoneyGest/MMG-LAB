@@ -1,27 +1,28 @@
 // Direction visuelle MMG : premium et sobre, mais chaleureux.
-// Le fond porte la couleur de marque (terracotta clair), les cartes sont
-// quasi blanches, et le fond sombre reste réservé aux moments marquants
-// (récap de plan, confirmation de versement). Pas de dark mode pour l'instant.
+// Le fond est un blanc cassé neutre, les cartes sont plus claires que lui, et
+// le terracotta reste réservé à l'accent. Le fond sombre est gardé pour les
+// moments marquants (récap de plan, confirmation de versement).
+// Pas de dark mode pour l'instant.
 
 export const colors = {
-  // Terracotta clair, de la même famille que l'accent : l'app est dans sa
-  // couleur au lieu de la réserver aux boutons.
+  // Blanc cassé neutre. Les cartes n'ayant ni ombre ni relief, cet écart est le
+  // seul qui les détache : il vaut 15 de luminance sur 255.
   //
-  // Il a d'abord été un blanc cassé (#F9F6F0) presque identique aux cartes —
-  // 1,93 de luminance d'écart sur 255, soit 0,8 %. Comme les cartes n'ont ni
-  // ombre ni relief, c'est le seul écart qui les détache : les sections d'un
-  // écran se confondaient. Il est maintenant de 46.
-  background: '#E7C8B7',
+  // Le fond valait #F9F6F0 dans la version publiée, soit 1,93 d'écart (0,8 %) —
+  // invisible, et les sections d'un écran se confondaient. Une tentative en
+  // terracotta clair a été écartée : le fond est une surface qu'on ne regarde
+  // pas, le mettre à la couleur de marque la rendait pesante.
+  background: '#EDECE8',
   card: '#FDFBF7',
   cardSoft: '#F6E0D5',
   cardSoftBorder: '#C97A5E',
 
   // Surfaces en creux posées SUR une carte : champs de saisie, recherche,
   // boutons de mois du calendrier. Volontairement distinct de `background` :
-  // les deux ont longtemps été confondus parce que le fond était quasi blanc,
-  // et le teinter a transformé chaque champ en pastille terracotta qui rivalisait
-  // avec l'accent. Un creux doit s'effacer, pas attirer l'œil.
-  field: '#F4EFE7',
+  // les deux étaient confondus tant que le fond était quasi blanc, et teinter
+  // le fond transformait alors chaque champ en pastille colorée rivalisant avec
+  // l'accent. Un creux doit s'effacer, pas attirer l'œil.
+  field: '#F3F1EC',
 
   accent: '#C04A31',
   accentPressed: '#A63F29',
@@ -32,7 +33,7 @@ export const colors = {
 
   text: '#231F1A',
   textSecondary: '#6E675C',
-  border: '#E3D8C6',
+  border: '#E2E0DA',
 
   success: '#5BA97C',
   banner: '#F3DCCF',
