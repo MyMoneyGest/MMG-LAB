@@ -18,10 +18,14 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 **Sans cette étape, aucun utilisateur du Store n'est mesuré — et la panne est
 silencieuse : `track()` n'émet ni erreur ni trace hors développement.**
 
-> **13/09/2026 — build 2.1.0 lancé** (Android versionCode 4, iOS buildNumber 6)
-> depuis `v2`, avec `eas.json` et son `environment: production`. C'est le
-> premier build de production censé remonter des événements. Le seul point
-> encore ouvert ci-dessous se vérifie APRÈS publication : si aucun `app_open`
+> **13/09/2026 — builds 2.1.0 terminés** (Android versionCode 4 `.aab`,
+> iOS buildNumber 6 `.ipa`), depuis `v2`, avec `eas.json` et son
+> `environment: production`. EAS a confirmé au build le chargement des deux
+> variables Supabase — c'est précisément ce qui manquait au 2.0.0. Un APK
+> `preview` a été installé et validé sur Android le même jour.
+>
+> C'est le premier build de production censé remonter des événements. Le seul
+> point encore ouvert ci-dessous se vérifie APRÈS publication : si aucun `app_open`
 > d'un `install_id` inconnu n'arrive dans les jours qui suivent, la panne n'est
 > pas corrigée et il faut reprendre le diagnostic ici.
 
@@ -119,6 +123,30 @@ moments visuellement avec la pastille « Objectif atteint ».
 de la rareté, et une app qui vibre à chaque appui se fait désactiver. Un test
 (`test-design.mjs`) vérifie que l'accueil, la création, le budget, le menu et
 les dialogues n'en ont pas — c'est la dérive à laquelle il faut résister.
+
+**Vérifié sur appareil (Android, APK 2.1.0, 13/09/2026)** : la vibration est
+bien présente au versement. C'est la première confirmation réelle — jusque-là
+on n'avait que l'API Vibration du navigateur.
+
+#### 📌 Demandé pour une prochaine version : étendre aux autres actions
+Patrick (13/09/2026) : étendre le retour haptique aux **autres actions
+importantes** — changement de nom de projet, de date, etc.
+
+- *Analyse* : cohérent, mais c'est exactement ce que le périmètre ci-dessus
+  interdit aujourd'hui, et le test le verrouille. Il faudra donc **décider une
+  règle** plutôt qu'ajouter des vibrations au cas par cas, sinon on retombe sur
+  l'app qui vibre partout. Piste : ne vibrer que sur ce qui **modifie une
+  donnée du plan** et que l'utilisateur ne peut pas annuler d'un geste — nom,
+  date cible, jour de rappel, solde réel, suppression. Et **jamais** sur la
+  navigation, l'ouverture d'un écran ou d'un modal.
+- *À faire en même temps* : mettre à jour la liste `screensWithoutHaptics` de
+  `test-design.mjs`, qui interdit actuellement toute vibration hors
+  confirmation de versement. Le test doit suivre la nouvelle règle, pas être
+  supprimé — c'est lui qui empêche la dérive.
+- *Nuance à garder* : trois niveaux existent déjà côté sensation (pulsation
+  simple, deux temps). Une modification de réglage mérite plus discret qu'un
+  versement — probablement `selectionAsync()` plutôt qu'une notification.
+- *Verdict* : **prochaine version**, pas maintenant. Le 2.1.0 part comme il est.
 
 ### ⭐⭐ Idée structurante de Patrick : simplifier + inverser une partie de l'onboarding
 Née en réaction à l'échange, réflexion en cours ("bon à creuser, je réfléchis en écrivant") :
