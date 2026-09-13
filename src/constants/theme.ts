@@ -1,28 +1,30 @@
 // Direction visuelle MMG : premium et sobre, mais chaleureux.
-// Le fond est un blanc cassé neutre, les cartes sont plus claires que lui, et
-// le terracotta reste réservé à l'accent. Le fond sombre est gardé pour les
-// moments marquants (récap de plan, confirmation de versement).
+// La page est blanche et ce sont les CARTES qui portent la chaleur, teintées
+// et plus foncées qu'elle. Le terracotta reste réservé à l'accent, et le fond
+// sombre aux moments marquants (récap de plan, confirmation de versement).
 // Pas de dark mode pour l'instant.
 
 export const colors = {
-  // Blanc cassé neutre. Les cartes n'ayant ni ombre ni relief, cet écart est le
-  // seul qui les détache : il vaut 15 de luminance sur 255.
+  // Page blanche. La séparation des sections vient donc des cartes, qui sont
+  // plus FONCÉES que la page — l'inverse de la disposition habituelle, et le
+  // seul moyen de garder des sections lisibles sur un fond blanc.
   //
-  // Le fond valait #F9F6F0 dans la version publiée, soit 1,93 d'écart (0,8 %) —
-  // invisible, et les sections d'un écran se confondaient. Une tentative en
-  // terracotta clair a été écartée : le fond est une surface qu'on ne regarde
-  // pas, le mettre à la couleur de marque la rendait pesante.
-  background: '#EDECE8',
-  card: '#FDFBF7',
+  // Le fond valait #F9F6F0 dans la version publiée, à 1,93 de luminance des
+  // cartes sur 255 (0,8 %) : invisible, les sections se confondaient. L'écart
+  // est maintenant de 11,7. Les cartes n'ayant ni ombre ni relief, c'est lui
+  // qui fait tout le travail — voir le garde-fou dans test-design.mjs.
+  background: '#FFFFFF',
+  card: '#F7F3EC',
   cardSoft: '#F6E0D5',
   cardSoftBorder: '#C97A5E',
 
   // Surfaces en creux posées SUR une carte : champs de saisie, recherche,
-  // boutons de mois du calendrier. Volontairement distinct de `background` :
-  // les deux étaient confondus tant que le fond était quasi blanc, et teinter
-  // le fond transformait alors chaque champ en pastille colorée rivalisant avec
-  // l'accent. Un creux doit s'effacer, pas attirer l'œil.
-  field: '#F3F1EC',
+  // boutons de mois du calendrier. Distinct de `background`, qui est la page.
+  // Les deux ont longtemps eu la même valeur, tant que la page était quasi
+  // blanche — au point qu'une tentative de teinter la page a transformé chaque
+  // champ en pastille colorée rivalisant avec l'accent. Un creux doit
+  // s'effacer, pas attirer l'œil : il se règle donc par rapport à `card`.
+  field: '#EFE9DE',
 
   accent: '#C04A31',
   accentPressed: '#A63F29',
@@ -33,7 +35,7 @@ export const colors = {
 
   text: '#231F1A',
   textSecondary: '#6E675C',
-  border: '#E2E0DA',
+  border: '#E8E1D5',
 
   success: '#5BA97C',
   banner: '#F3DCCF',
