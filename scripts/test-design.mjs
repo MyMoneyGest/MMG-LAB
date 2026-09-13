@@ -167,6 +167,33 @@ assert.match(country, /Aucun montant personnel n'est envoyé/);
 assert.match(country, /await changeLocale\(selectedCountry\.code, selectedCountry\.currency, conversionRate\)/);
 assert.match(menu, /Pays et devise/);
 assert.match(menu, /pathname: '\/onboarding\/country'/);
+
+// Choisir l'écran où l'on se trouve déjà ferme le menu au lieu d'empiler une
+// copie : sinon il fallait autant de retours qu'on avait tapé pour ressortir.
+assert.match(menu, /current \? onClose\(\) : go\(onPress\)/);
+assert.match(menu, /onGoalScreen\s*\?\s*onClose\(\)/);
+assert.match(menu, /currentKey === '\/onboarding\/new-goal'/);
+// L'écran pays sert d'accueil ET de réglage sur le même chemin : sans le
+// paramètre, le réglage passait pour l'accueil et s'empilait quand même.
+assert.match(menu, /function screenKey/);
+assert.match(menu, /params\.settings === '1' \? 'country-settings' : 'country-welcome'/);
+// `useLocalSearchParams` renvoyait `settings: undefined` sur cette route —
+// vérifié dans le navigateur. Ne pas « simplifier » vers la version locale.
+assert.match(menu, /useGlobalSearchParams<\{ settings\?: string \}>\(\)/);
+// On vise l'appel, pas la mention : le commentaire du fichier cite le hook écarté.
+assert.doesNotMatch(menu, /useLocalSearchParams\s*[<(]/);
+// Chaque entrée doit annoncer sa cible, sinon la comparaison ne peut pas se faire.
+for (const [label, key] of [
+  ['Budget', "'/onboarding/budget'"],
+  ['Voir un exemple', "'/example'"],
+  ['Pays et devise', "'country-settings'"],
+  ['Confidentialité', "'/legal'"],
+]) {
+  assert.ok(
+    menu.includes(key),
+    `l'entrée ${label} doit déclarer sa clé d'écran ${key}`
+  );
+}
 assert.match(actions, /state\.setLocale\(\{ country, currencyCode \}\)/);
 assert.match(actions, /state\.convertLocale\(\{ country, currencyCode, rate: conversionRate \}\)/);
 assert.match(actions, /scheduleGoalReminders\(goal, suggestedAmount\(goal\)\)/);
