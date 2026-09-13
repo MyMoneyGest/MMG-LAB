@@ -1,39 +1,35 @@
 // Direction visuelle MMG : premium et sobre, mais chaleureux.
-// La page est blanche et ce sont les CARTES qui portent la chaleur, teintées
-// et plus foncées qu'elle. Le terracotta reste réservé à l'accent, et le fond
-// sombre aux moments marquants (récap de plan, confirmation de versement).
+// Tout est blanc — page ET cartes — et chaque carte est délimitée par son
+// contour. Le terracotta reste réservé à l'accent, et le fond sombre aux
+// moments marquants (récap de plan, confirmation de versement).
 // Pas de dark mode pour l'instant.
+//
+// Ce parti-pris vient après plusieurs tentatives de séparer les sections par
+// la couleur de fond : blanc cassé (invisible), sable et crème (« fade »),
+// terracotta clair (pesant), gris neutre et taupe (froids, et surtout du gris
+// sur presque-gris, dont la lisibilité dépend du téléphone et de la luminosité
+// ambiante). Un contour ne dépend d'aucun des deux.
 
 export const colors = {
-  // Page blanche. La séparation des sections vient donc des cartes, qui sont
-  // plus FONCÉES que la page — l'inverse de la disposition habituelle, et le
-  // seul moyen de garder des sections lisibles sur un fond blanc.
-  //
-  // Le fond valait #F9F6F0 dans la version publiée, à 1,93 de luminance des
-  // cartes sur 255 (0,8 %) : invisible, les sections se confondaient. L'écart
-  // est maintenant de 20,7. Les cartes n'ayant ni ombre ni relief, c'est lui
-  // qui fait tout le travail — voir le garde-fou dans test-design.mjs.
+  // Page et cartes partagent le même blanc : AUCUN écart de remplissage ne les
+  // sépare, c'est le contour qui délimite chaque carte. Il porte donc toute la
+  // structure de l'écran — voir la largeur de bordure dans `ui.tsx` et le
+  // garde-fou dans `test-design.mjs`, qui exige un contour franc dès lors que
+  // les deux remplissages sont identiques.
   background: '#FFFFFF',
+  card: '#FFFFFF',
 
-  // Parchemin taupe : chaud, mais désaturé et sans jaune doré. La nuance
-  // décide du registre — un crème plus sucré (#F7F3EC, essayé) évoque le
-  // papier de pâtisserie, pas la valeur. On garde la chaleur, on retire le
-  // sucre, et le terracotta reste le seul vrai accent au lieu d'être
-  // concurrencé par la surface qui l'entoure.
-  card: '#EFEAE0',
-  // Mise en avant SUR une carte. Elle ne ressort que de 6,5 en luminance : c'est
-  // le contraste de TEINTE qui fait le travail, ce rose chaud contre le taupe
-  // désaturé de la carte. Ne pas la juger au seul écart de clarté.
+  // Mise en avant SUR une carte : ressort de 27 en luminance, et par sa teinte
+  // chaude contre le blanc.
   cardSoft: '#F6E0D5',
   cardSoftBorder: '#C97A5E',
 
   // Surfaces en creux posées SUR une carte : champs de saisie, recherche,
-  // boutons de mois du calendrier. Distinct de `background`, qui est la page.
-  // Les deux ont longtemps eu la même valeur, tant que la page était quasi
-  // blanche — au point qu'une tentative de teinter la page a transformé chaque
-  // champ en pastille colorée rivalisant avec l'accent. Un creux doit
-  // s'effacer, pas attirer l'œil : il se règle donc par rapport à `card`.
-  field: '#E4DDD0',
+  // boutons de mois du calendrier. Distinct de `background` bien que les deux
+  // soient clairs — les confondre avait transformé chaque champ en pastille
+  // colorée le jour où l'on a teinté la page. Un creux doit s'effacer, pas
+  // attirer l'œil : il se règle par rapport à `card`.
+  field: '#F3F0E9',
 
   accent: '#C04A31',
   accentPressed: '#A63F29',
@@ -44,7 +40,7 @@ export const colors = {
 
   text: '#231F1A',
   textSecondary: '#6E675C',
-  border: '#DED6C8',
+  border: '#E2DBCE',
 
   success: '#5BA97C',
   banner: '#F3DCCF',

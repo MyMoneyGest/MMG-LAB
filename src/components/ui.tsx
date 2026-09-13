@@ -396,12 +396,15 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
-  // Un filet fin plutôt qu'une ombre portée : c'est le vocabulaire du premium
-  // sobre, et une ombre sur fond chaud vire vite au gris sale.
+  // La carte a le même blanc que la page : son contour est donc la SEULE chose
+  // qui la délimite. D'où 1 px plein et non `hairlineWidth` — qui vaut 0,33 px
+  // sur un écran 3x, rend de façon irrégulière et peut disparaître selon la
+  // luminosité. Un filet plutôt qu'une ombre reste le vocabulaire du premium
+  // sobre ; ici c'est aussi le seul repère de structure, il doit tenir.
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.card,
     marginBottom: 12,

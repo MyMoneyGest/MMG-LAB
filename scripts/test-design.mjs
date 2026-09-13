@@ -269,25 +269,38 @@ assert.match(theme, /\{ from: 0, color: colors\.progress\.start \}/);
 // le fond était quasi blanc : dès qu'on le teinte, chaque champ devient une
 // pastille colorée. Seuls le navigateur et le conteneur d'écran peuvent porter
 // `background`.
-assert.match(theme, /field: '#E4DDD0'/);
-// La carte doit se détacher du fond. Faute d'ombre ou de relief, la luminance
-// est le seul écart qui l'en sépare — il valait 1,93 sur 255 et les sections
-// d'un écran se confondaient. On mesure une valeur ABSOLUE : la carte a d'abord
-// été plus claire que le fond, elle est maintenant plus foncée (page blanche,
-// cartes teintées). Ce qui compte est qu'on les distingue, pas laquelle domine.
+assert.match(theme, /field: '#F3F0E9'/);
+// Une carte doit se distinguer de la page. Faute d'ombre ou de relief, il n'y a
+// que deux moyens : un écart de remplissage, ou un contour franc. Le test
+// accepte l'un OU l'autre — la palette est passée par les deux — mais jamais
+// aucun des deux : la version publiée avait 1,93 de luminance d'écart sur 255
+// (0,8 %) et un filet `hairlineWidth`, et les sections se confondaient.
 {
   const hex = (name) => theme.match(new RegExp(`${name}: '(#[0-9A-F]{6})'`))[1];
   const lum = (h) => {
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
-  const ecart = Math.abs(lum(hex('card')) - lum(hex('background')));
-  assert.ok(
-    ecart > 8,
-    `la carte doit se détacher du fond : écart de luminance ${ecart.toFixed(2)} sur 255`
-  );
-  // Les surfaces posées SUR la carte doivent s'en distinguer aussi, sinon la
-  // mise en avant et le creux disparaissent tous les deux.
+  const remplissage = Math.abs(lum(hex('card')) - lum(hex('background')));
+  const contour = Math.abs(lum(hex('border')) - lum(hex('card')));
+
+  if (remplissage <= 8) {
+    // Cartes détourées : le contour porte toute la structure de l'écran.
+    assert.ok(
+      contour > 20,
+      `cartes et page ont le même remplissage (${remplissage.toFixed(2)}) : le contour doit alors être franc, il n'est qu'à ${contour.toFixed(2)}`
+    );
+    // Et il doit être tracé en pixel plein. `hairlineWidth` vaut 0,33 px sur un
+    // écran 3x : irrégulier, parfois invisible selon la luminosité.
+    assert.match(
+      ui,
+      /borderRadius: radius\.card,\n\s*borderWidth: 1,/,
+      'un contour qui porte seul la séparation ne peut pas être en hairlineWidth'
+    );
+  }
+
+  // Les surfaces posées SUR la carte doivent s'en distinguer, sinon la mise en
+  // avant et le creux disparaissent tous les deux.
   for (const name of ['cardSoft', 'field']) {
     const interne = Math.abs(lum(hex(name)) - lum(hex('card')));
     assert.ok(interne > 5, `${name} doit rester visible sur une carte (écart ${interne.toFixed(2)})`);
