@@ -42,6 +42,28 @@ export const colors = {
   },
 } as const;
 
+/** Paliers de la progression, en pourcentage atteint. */
+const PROGRESS_THRESHOLDS = [
+  { from: 100, color: colors.progress.complete },
+  { from: 70, color: colors.progress.advanced },
+  { from: 35, color: colors.progress.steady },
+  { from: 0, color: colors.progress.start },
+] as const;
+
+/**
+ * Couleur de l'avancement. La teinte porte une partie de l'information : voir
+ * un anneau vert suffit à savoir où on en est sans lire le pourcentage.
+ *
+ * Calculé en JS plutôt qu'interpolé par une animation : sur `react-native-svg`,
+ * un `stroke` passé en `animatedProps` n'est appliqué qu'à la valeur initiale
+ * et ne suit pas l'animation — l'anneau restait brun à 100 %. Même raison que
+ * `fitFontSize` : on veut un résultat identique sur web et natif.
+ */
+export function progressColor(pct: number): string {
+  const value = Math.min(100, Math.max(0, pct));
+  return (PROGRESS_THRESHOLDS.find((step) => value >= step.from) ?? PROGRESS_THRESHOLDS[3]).color;
+}
+
 // Titres de questions et noms de projet en serif éditorial ; tout le reste
 // (chiffres, libellés, paragraphes) en Sans, pour un rendu "rigoureux et bancaire".
 export const fonts = {

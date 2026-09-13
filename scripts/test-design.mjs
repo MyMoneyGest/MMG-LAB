@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import ts from 'typescript';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const readBinary = (path) => readFileSync(new URL(`../${path}`, import.meta.url));
@@ -184,16 +185,18 @@ assert.match(ui, /ActivityIndicator/);
 assert.match(ui, /loadingLabel\?: string/);
 assert.match(ui, /styles\.buttonLoadingContent/);
 assert.match(ui, /withTiming/);
-assert.match(ui, /interpolateColor/);
-assert.match(ui, /PROGRESS_COLOR_STOPS = \[0, 35, 70, 100\]/);
-assert.match(ui, /colors\.progress\.start/);
-assert.match(ui, /colors\.progress\.steady/);
-assert.match(ui, /colors\.progress\.advanced/);
-assert.match(ui, /colors\.progress\.complete/);
-assert.match(ui, /backgroundColor: interpolateColor\(progress\.value/);
-assert.match(ui, /color: interpolateColor\(progress\.value/);
-assert.match(ui, /borderBottomColor: interpolateColor\(/);
-assert.match(ui, /<Animated\.Text/);
+// L'anneau change de teinte selon l'avancement, et la teinte vient d'une seule
+// source (`progressColor`). C'est la duplication entre deux composants qui
+// avait fait perdre la couleur en passant de la barre à l'anneau.
+assert.match(ui, /const ringColor = progressColor\(target\)/);
+assert.match(ui, /stroke=\{ringColor\}/);
+assert.match(ui, /\{ color: ringColor \}/);
+assert.doesNotMatch(
+  ui,
+  /interpolateColor/,
+  "le stroke SVG n'est pas interpolable : react-native-svg ne l'applique qu'à sa valeur initiale"
+);
+assert.doesNotMatch(ui, /export function ProgressBar/, 'la barre remplacée ne doit pas subsister');
 assert.match(ui, /fontVariant: \['tabular-nums'\]/);
 assert.match(ui, /duration: target >= 100 \? 1_400 : 650/);
 assert.match(ui, /ReduceMotion\.System/);
@@ -203,9 +206,37 @@ assert.match(ui, /minimumFontScale=\{0\.82\}/);
 assert.match(ui, /minHeight: 44/);
 assert.match(ui, /paddingVertical: 12/);
 assert.match(ui, /label\?: string/);
-assert.match(ui, /target <= 14/);
-assert.match(ui, /target >= 86/);
-assert.match(ui, /styles\.progressMarkerArrow/);
+// Les quatre paliers, et leur ordre : `find` renvoie le premier seuil atteint,
+// donc ils doivent rester du plus haut au plus bas.
+assert.match(theme, /export function progressColor/);
+assert.match(theme, /\{ from: 100, color: colors\.progress\.complete \}/);
+assert.match(theme, /\{ from: 70, color: colors\.progress\.advanced \}/);
+assert.match(theme, /\{ from: 35, color: colors\.progress\.steady \}/);
+assert.match(theme, /\{ from: 0, color: colors\.progress\.start \}/);
+
+// Et le comportement réel, pas seulement la présence du code : c'est la valeur
+// rendue aux bornes de chaque palier qui compte.
+{
+  const compiled = ts.transpileModule(theme, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+  }).outputText;
+  const loaded = { exports: {} };
+  new Function('exports', 'module', compiled)(loaded.exports, loaded);
+  const { progressColor, colors: palette } = loaded.exports;
+
+  assert.equal(progressColor(0), palette.progress.start);
+  assert.equal(progressColor(34.9), palette.progress.start);
+  assert.equal(progressColor(35), palette.progress.steady);
+  assert.equal(progressColor(69.9), palette.progress.steady);
+  assert.equal(progressColor(70), palette.progress.advanced);
+  assert.equal(progressColor(99.9), palette.progress.advanced);
+  assert.equal(progressColor(100), palette.progress.complete);
+  // Un objectif dépassé reste « atteint », et un pourcentage aberrant ne casse rien.
+  assert.equal(progressColor(140), palette.progress.complete);
+  assert.equal(progressColor(-10), palette.progress.start);
+  assert.equal(progressColor(Number.NaN), palette.progress.start);
+}
+
 assert.match(theme, /card: 22/);
 assert.match(theme, /button: 18/);
 assert.match(theme, /screen: 16/);

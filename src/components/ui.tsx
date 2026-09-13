@@ -24,29 +24,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
-  interpolateColor,
   ReduceMotion,
   useAnimatedProps,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
 import Svg, { Circle } from 'react-native-svg';
 
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { colors, fonts, progressColor, radius, spacing } from '@/constants/theme';
 import { fitFontSize, formatDate } from '@/lib/format';
 
 const KeyboardScrollContext = createContext<(target: number) => void>(() => {});
 const KEYBOARD_FIELD_GAP = 64;
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const PROGRESS_COLOR_STOPS = [0, 35, 70, 100];
-const PROGRESS_COLORS = [
-  colors.progress.start,
-  colors.progress.steady,
-  colors.progress.advanced,
-  colors.progress.complete,
-];
 
 /**
  * ScrollView qui révèle le champ dès le focus, puis une seconde fois à la fin
@@ -308,69 +299,6 @@ export function DatePickerField({
   );
 }
 
-export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
-  const target = Math.min(100, Math.max(0, pct));
-  const progress = useSharedValue(0);
-  const animatedFillStyle = useAnimatedStyle(() => ({
-    width: `${progress.value}%`,
-    backgroundColor: interpolateColor(progress.value, PROGRESS_COLOR_STOPS, PROGRESS_COLORS),
-  }));
-  const animatedLabelStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(progress.value, PROGRESS_COLOR_STOPS, PROGRESS_COLORS),
-  }));
-  const animatedArrowStyle = useAnimatedStyle(() => ({
-    borderBottomColor: interpolateColor(
-      progress.value,
-      PROGRESS_COLOR_STOPS,
-      PROGRESS_COLORS
-    ),
-  }));
-  const markerPosition: ViewStyle =
-    target <= 14
-      ? { left: `${target}%` }
-      : target >= 86
-        ? { right: `${100 - target}%` }
-        : { left: `${target}%`, transform: [{ translateX: -46 }] };
-
-  useEffect(() => {
-    if (target >= 100) progress.value = 0;
-    progress.value = withTiming(target, {
-      duration: target >= 100 ? 1_400 : 650,
-      reduceMotion: ReduceMotion.System,
-    });
-  }, [target]);
-
-  return (
-    <View style={styles.progressContainer}>
-      <View
-        style={styles.progressTrack}
-        accessibilityRole="progressbar"
-        accessibilityValue={{ min: 0, max: 100, now: target }}>
-        <Animated.View style={[styles.progressFill, animatedFillStyle]} />
-      </View>
-      {label ? (
-        <View style={styles.progressMarkerArea}>
-          <View style={[styles.progressMarker, markerPosition]}>
-            <Animated.View
-              style={[
-                styles.progressMarkerArrow,
-                animatedArrowStyle,
-                target <= 14 && styles.progressMarkerArrowStart,
-                target >= 86 && styles.progressMarkerArrowEnd,
-              ]}
-            />
-            <Animated.Text
-              numberOfLines={1}
-              style={[styles.progressMarkerLabel, animatedLabelStyle]}>
-              {label}
-            </Animated.Text>
-          </View>
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
 /**
  * Anneau de progression : le montant s'affiche en son centre, avec la taille
  * dynamique de `fitFontSize` pour qu'un très gros montant (FCFA) reste sur une
@@ -402,6 +330,15 @@ export function ProgressRing({
     });
   }, [target]);
 
+  // L'anneau change de teinte en avançant, comme le faisait la barre qu'il
+  // remplace : brun discret au départ, terracotta en rythme de croisière, ocre
+  // en approche, vert une fois l'objectif financé.
+  //
+  // La teinte suit la valeur cible et ne s'interpole pas pendant le remplissage.
+  // Un `stroke` passé en `animatedProps` n'est appliqué qu'à sa valeur initiale
+  // par react-native-svg : l'anneau restait brun à 100 %.
+  const ringColor = progressColor(target);
+
   const animatedCircleProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference - (progress.value / 100) * circumference,
   }));
@@ -421,7 +358,7 @@ export function ProgressRing({
           cx={size / 2}
           cy={size / 2}
           r={radiusPx}
-          stroke={colors.accent}
+          stroke={ringColor}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={circumference}
@@ -437,7 +374,9 @@ export function ProgressRing({
           {amount}
         </Text>
         <Text style={styles.ringAmountLabel}>{amountLabel}</Text>
-        <Text style={styles.ringPercentage}>{Math.round(target)}%</Text>
+        <Text style={[styles.ringPercentage, { color: ringColor }]}>
+          {Math.round(target)}%
+        </Text>
         <Text style={styles.ringAttain}>ATTEINT</Text>
       </View>
     </View>
@@ -514,37 +453,6 @@ const styles = StyleSheet.create({
   dateTriggerValue: { fontSize: 16, fontWeight: '600', color: colors.text },
   dateTriggerPlaceholder: { color: colors.textSecondary, fontWeight: '500' },
   dateTriggerIcon: { fontSize: 15 },
-  progressContainer: { marginTop: 12, marginBottom: 10 },
-  progressTrack: {
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: '#EBE2D2',
-    overflow: 'hidden',
-  },
-  progressFill: { height: 9, borderRadius: 5, backgroundColor: colors.progress.start },
-  progressMarkerArea: { position: 'relative', height: 30 },
-  progressMarker: { position: 'absolute', top: 2, width: 92 },
-  progressMarkerArrow: {
-    alignSelf: 'center',
-    width: 0,
-    height: 0,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderBottomWidth: 5,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: colors.progress.start,
-  },
-  progressMarkerArrowStart: { alignSelf: 'flex-start' },
-  progressMarkerArrowEnd: { alignSelf: 'flex-end' },
-  progressMarkerLabel: {
-    color: colors.progress.start,
-    fontSize: 12,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-    textAlign: 'center',
-    paddingTop: 2,
-  },
   steps: { gap: 7, marginBottom: 15 },
   stepLabels: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   stepLabel: { flex: 1, fontSize: 12, fontWeight: '700', color: colors.textSecondary },
@@ -559,7 +467,13 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   ringTextContainer: { position: 'absolute', alignItems: 'center' },
-  ringAmount: { fontFamily: fonts.sansBold, color: colors.text },
+  // Chiffres tabulaires : le montant et le pourcentage changent sous les yeux,
+  // et des largeurs de chiffres variables les feraient sautiller.
+  ringAmount: {
+    fontFamily: fonts.sansBold,
+    color: colors.text,
+    fontVariant: ['tabular-nums'],
+  },
   ringAmountLabel: {
     fontFamily: fonts.sansRegular,
     fontSize: 12,
@@ -569,8 +483,8 @@ const styles = StyleSheet.create({
   ringPercentage: {
     fontFamily: fonts.sansBold,
     fontSize: 22,
-    color: colors.accent,
     marginTop: 10,
+    fontVariant: ['tabular-nums'],
   },
   ringAttain: {
     fontFamily: fonts.sansSemiBold,
