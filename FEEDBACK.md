@@ -31,13 +31,14 @@ Corrigé côté EAS le 19/08, et vérifié sur `preview` : l'APK remonte bien
 
 ### Ce qu'il reste à faire
 
-- [ ] **Reporter le commit `c848372` (eas.json) sur la branche qui livre.**
-      Le rattachement des profils aux environnements EAS n'existe que sur
-      `v2-ui-premium`. Un build de production lancé depuis `v2` ou `main`
-      repartirait sans variables — même panne, sans signal.
-- [ ] Vérifier l'environnement de production avant de construire :
-      `eas env:list --environment production --include-sensitive`
-      → clé commençant par `sb_publishable_`, URL par `https://ffoxlogtnstbagxitein`.
+- [x] **Reporter le commit `c848372` (eas.json) sur la branche qui livre.**
+      Fait le 13/09 : `v2-ui-premium` a été fusionnée dans `v2`, `eas.json`
+      arrive avec. Les quatre profils y déclarent leur `environment`.
+      ⚠️ `main` ne l'a toujours pas — ne pas construire depuis `main`.
+- [x] Vérifier l'environnement de production avant de construire.
+      Fait le 13/09 : les deux variables sont présentes sur `production`, et
+      la clé anon y est identique à celle du `.env` local (46 caractères).
+      L'API REST répond — insertion réelle testée, `201`.
 - [ ] Après publication, confirmer qu'un `app_open` d'un utilisateur réel
       arrive dans `public.events` (un `install_id` absent de la liste
       d'exclusion de `events_reels`).
