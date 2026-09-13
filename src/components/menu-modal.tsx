@@ -1,4 +1,5 @@
 import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +9,7 @@ import { useStore } from '@/lib/store';
 import { useGoalDeletion } from '@/lib/use-goal-deletion';
 import { useMoney } from '@/lib/use-money';
 import { AppDialog } from './app-dialog';
+import { NameModal } from './name-modal';
 import { Button } from './ui';
 
 // Switcher de projets + navigation générale, accessible depuis tous les écrans.
@@ -50,6 +52,9 @@ export function MenuModal({
   const currentKey = screenKey(pathname, searchParams);
   const insets = useSafeAreaInsets();
   const goals = useStore((s) => s.goals);
+  const userName = useStore((s) => s.userName);
+  const setUserName = useStore((s) => s.setUserName);
+  const [nameModalOpen, setNameModalOpen] = useState(false);
   const { goalToDelete, deletePending, deleteError, askDelete, closeDelete, confirmDelete } =
     useGoalDeletion({ navigate: 'replace' });
   const activeGoal = currentGoalId ? goals.find((goal) => goal.id === currentGoalId) : undefined;
@@ -63,12 +68,22 @@ export function MenuModal({
     setTimeout(fn, 50);
   };
 
-  const action = (label: string, targetKey: string, onPress: () => void) => {
-    const current = targetKey === currentKey;
+  /**
+   * `targetKey` absent = l'entrée n'ouvre pas un écran (ex. un modal) : elle ne
+   * peut donc jamais être « celle où l'on est ».
+   */
+  const action = (
+    label: string,
+    targetKey: string | null,
+    onPress: () => void,
+    value?: string
+  ) => {
+    const current = targetKey !== null && targetKey === currentKey;
     return (
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ selected: current }}
+        accessibilityLabel={value ? `${label} : ${value}. Modifier` : label}
         onPress={() => (current ? onClose() : go(onPress))}
         style={({ pressed }) => [styles.actionItem, pressed && styles.actionItemPressed]}>
         <Text
@@ -78,6 +93,11 @@ export function MenuModal({
           style={[styles.actionLabel, current && styles.actionLabelCurrent]}>
           {label}
         </Text>
+        {value ? (
+          <Text numberOfLines={1} style={styles.actionValue}>
+            {value}
+          </Text>
+        ) : null}
         {current ? (
           <Text style={styles.currentBadge}>Ici</Text>
         ) : (
@@ -167,6 +187,12 @@ export function MenuModal({
                   })
                 )}
                 {action('Voir un exemple', '/example', () => router.push('/example'))}
+                {action(
+                  'Mon prénom',
+                  null,
+                  () => setNameModalOpen(true),
+                  userName ?? 'Non renseigné'
+                )}
                 {action('Pays et devise', 'country-settings', () =>
                   router.push({
                     pathname: '/onboarding/country',
@@ -180,6 +206,15 @@ export function MenuModal({
         </Pressable>
       </Pressable>
     </Modal>
+      <NameModal
+        visible={nameModalOpen}
+        currentName={userName}
+        onConfirm={(name) => {
+          setUserName(name);
+          setNameModalOpen(false);
+        }}
+        onClose={() => setNameModalOpen(false)}
+      />
       <AppDialog
         visible={goalToDelete !== null}
         eyebrow="Action sensible"
@@ -269,6 +304,14 @@ const styles = StyleSheet.create({
   actionItemPressed: { backgroundColor: colors.cardSoft },
   actionLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
   actionLabelCurrent: { color: colors.textSecondary },
+  // Valeur courante à droite du libellé : on lit son prénom sans ouvrir le modal.
+  actionValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginRight: 8,
+    maxWidth: 150,
+  },
   actionChevron: { fontSize: 20, lineHeight: 22, fontWeight: '500', color: colors.textSecondary },
   // Même traitement que la pastille « Actif » des projets : on dit où l'on est,
   // pour qu'un appui sans navigation ne passe pas pour un bouton mort.

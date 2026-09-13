@@ -18,6 +18,8 @@ const rebalanceModal = read('src/components/rebalance-modal.tsx');
 const budgetScreen = read('src/app/onboarding/budget.tsx');
 const expenseEstimateModal = read('src/components/expense-estimate-modal.tsx');
 const savingsLocationModal = read('src/components/savings-location-modal.tsx');
+const nameModal = read('src/components/name-modal.tsx');
+const menuModal = read('src/components/menu-modal.tsx');
 
 assert.match(ui, /<KeyboardAvoidingView/);
 assert.match(ui, /keyboardDismissMode=/);
@@ -85,6 +87,23 @@ for (const [name, source] of [
 assert.match(savingsLocationModal, /<KeyboardAvoidingView/);
 assert.match(savingsLocationModal, /<KeyboardSafeScrollView/);
 assert.match(savingsLocationModal, /Compte ou support/);
+
+// Le prénom se saisit au premier lancement et n'était plus modifiable ensuite :
+// l'écran d'accueil ne se revoit pas, et « Pays et devise » ne propose pas le
+// champ. Il se règle donc depuis le menu.
+assert.match(menuModal, /'Mon prénom'/);
+assert.match(menuModal, /setNameModalOpen\(true\)/);
+assert.match(menuModal, /<NameModal/);
+// La ligne du menu affiche la valeur courante : on lit son prénom sans ouvrir.
+assert.match(menuModal, /userName \?\? 'Non renseigné'/);
+assert.match(nameModal, /Prénom ou pseudo/);
+assert.match(nameModal, /<KeyboardAvoidingView/);
+assert.match(nameModal, /<KeyboardSafeScrollView/);
+// Un champ vidé retire le prénom plutôt que d'enregistrer une chaîne vide —
+// l'accueil repasse alors à « Bonjour ✨ ».
+assert.match(nameModal, /value\.trim\(\)\.replace\(\/\\s\+\/g, ' '\) \|\| undefined/);
+// Et la consigne n'apparaît que s'il y a quelque chose à retirer.
+assert.match(nameModal, /currentName \? \(\s*<Text style=\{styles\.note\}>/);
 assert.match(budgetScreen, /M’aider à estimer mes dépenses/);
 assert.match(budgetScreen, /<ExpenseEstimateModal/);
 assert.match(expenseEstimateModal, /Estime tes dépenses du mois/);
