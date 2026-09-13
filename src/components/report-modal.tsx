@@ -10,7 +10,7 @@ import {
 
 import { colors, radius } from '@/constants/theme';
 import { postponeReminder } from '@/lib/actions';
-import { formatDate, formatDayMonth, parseDateInput } from '@/lib/format';
+import { formatDate, formatDayMonth } from '@/lib/format';
 import {
   canPostponeReminderTo,
   nextRegularReminderAfterCurrent,
@@ -19,7 +19,8 @@ import {
 } from '@/lib/plan';
 import { Goal } from '@/lib/types';
 import { MIN_INLINE_LOADING_MS, waitForMinimumLoading } from '@/lib/timing';
-import { Button, DateField, KeyboardSafeScrollView } from './ui';
+import { Button, DatePickerField, KeyboardSafeScrollView } from './ui';
+import { CalendarModal } from './calendar-modal';
 
 // Report du rappel : « Quand te le rappeler ? » — Demain / 3 jours / 7 jours
 // ou date précise. Échoue proprement si la permission de notification manque.
@@ -39,8 +40,8 @@ export function ReportModal({
   onDone: () => void;
   isTestAction?: boolean;
 }) {
-  const [dateText, setDateText] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const latestDate = postponeDateLimit(goal);
@@ -52,8 +53,8 @@ export function ReportModal({
 
   useEffect(() => {
     if (visible) {
-      setDateText('');
       setSelectedDate(null);
+      setCalendarOpen(false);
       setError(null);
       setSaving(false);
     }
@@ -88,24 +89,15 @@ export function ReportModal({
       return;
     }
     setSelectedDate(date);
-    setDateText(formatDate(date));
     setError(null);
   };
 
   const applyPrecise = () => {
-    const parsed = parseDateInput(dateText);
-    if (!parsed) {
-      setError('Date invalide. Format attendu : JJ/MM/AAAA.');
+    if (!selectedDate) {
+      setError('Choisis une date dans le calendrier.');
       return;
     }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (parsed <= today) {
-      setError('Choisis une date à venir.');
-      return;
-    }
-    setSelectedDate(parsed);
-    void apply(parsed);
+    void apply(selectedDate);
   };
 
   const inDays = (n: number) => {
@@ -147,13 +139,9 @@ export function ReportModal({
               ))}
 
               <Text style={styles.fieldTitle}>Date précise</Text>
-              <DateField
-                value={dateText}
-                onChangeText={(t) => {
-                  setDateText(t);
-                  setSelectedDate(parseDateInput(t));
-                  setError(null);
-                }}
+              <DatePickerField
+                value={selectedDate}
+                onPress={() => setCalendarOpen(true)}
               />
               {selectedDate && postponeIsNearNextAnchor(goal, selectedDate) ? (
                 <Text style={styles.info}>
@@ -175,6 +163,18 @@ export function ReportModal({
           </Pressable>
         </KeyboardSafeScrollView>
       </KeyboardAvoidingView>
+      <CalendarModal
+        visible={calendarOpen}
+        value={selectedDate}
+        title="Reporter au"
+        minDate={inDays(1)}
+        maxDate={latestDate}
+        onSelect={(date) => {
+          chooseDate(date);
+          setCalendarOpen(false);
+        }}
+        onClose={() => setCalendarOpen(false)}
+      />
     </Modal>
   );
 }

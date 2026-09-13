@@ -1,4 +1,13 @@
-import { ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  MutableRefObject,
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -26,7 +35,7 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 
 import { colors, fonts, radius, spacing } from '@/constants/theme';
-import { fitFontSize } from '@/lib/format';
+import { fitFontSize, formatDate } from '@/lib/format';
 
 const KeyboardScrollContext = createContext<(target: number) => void>(() => {});
 const KEYBOARD_FIELD_GAP = 64;
@@ -44,7 +53,10 @@ const PROGRESS_COLORS = [
  * de l'animation du clavier. Le second passage évite d'attendre la première
  * frappe sur Android pour obtenir la bonne hauteur visible.
  */
-export function KeyboardSafeScrollView(props: ScrollViewProps) {
+export function KeyboardSafeScrollView({
+  scrollRef: externalRef,
+  ...props
+}: ScrollViewProps & { scrollRef?: MutableRefObject<ScrollView | null> }) {
   const scrollRef = useRef<ScrollView>(null);
   const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const revealFocusedField = useCallback((target: number) => {
@@ -68,7 +80,13 @@ export function KeyboardSafeScrollView(props: ScrollViewProps) {
 
   return (
     <KeyboardScrollContext.Provider value={revealFocusedField}>
-      <ScrollView {...props} ref={scrollRef} />
+      <ScrollView
+        {...props}
+        ref={(node) => {
+          scrollRef.current = node;
+          if (externalRef) externalRef.current = node;
+        }}
+      />
     </KeyboardScrollContext.Provider>
   );
 }
@@ -77,10 +95,13 @@ export function Screen({
   children,
   footer,
   contentContainerStyle,
+  scrollRef,
 }: {
   children: ReactNode;
   footer?: ReactNode;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  /** Pour amener l'utilisateur sur une section qui vient d'apparaître. */
+  scrollRef?: MutableRefObject<ScrollView | null>;
 }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
@@ -88,6 +109,7 @@ export function Screen({
         style={styles.keyboardAvoider}
         behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
         <KeyboardSafeScrollView
+          scrollRef={scrollRef}
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           contentInsetAdjustmentBehavior="automatic"
@@ -245,103 +267,42 @@ export function Field({
   );
 }
 
-/** Une seule ligne de date dont les séparateurs restent toujours visibles. */
-export function DateField({
+/**
+ * Déclencheur de calendrier : affiche la date retenue en clair et laisse
+ * l'écran hôte ouvrir un CalendarModal. Remplace la saisie JJ/MM/AAAA — plus
+ * rien à formater ni à valider côté frappe, et aucune date impossible.
+ */
+export function DatePickerField({
   label,
   value,
-  onChangeText,
+  placeholder = 'Choisir une date',
   error,
+  onPress,
 }: {
   label?: string;
-  value: string;
-  onChangeText: (value: string) => void;
+  value: Date | null;
+  placeholder?: string;
   error?: string | null;
+  onPress: () => void;
 }) {
-  const [focused, setFocused] = useState(false);
-  const revealFocusedField = useContext(KeyboardScrollContext);
-  const dayRef = useRef<TextInput>(null);
-  const monthRef = useRef<TextInput>(null);
-  const yearRef = useRef<TextInput>(null);
-  const parts = value.split('/');
-  const day = (parts[0] ?? '').replace(/\D/g, '').slice(0, 2);
-  const month = (parts[1] ?? '').replace(/\D/g, '').slice(0, 2);
-  const year = (parts[2] ?? '').replace(/\D/g, '').slice(0, 4);
-  const emit = (nextDay: string, nextMonth: string, nextYear: string) =>
-    onChangeText(`${nextDay}/${nextMonth}/${nextYear}`);
-  const focus = (target: number) => {
-    setFocused(true);
-    revealFocusedField(target);
-  };
-
   return (
     <View style={styles.field}>
       {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
-      <View
-        style={[
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={value ? `${label ?? 'Date'} : ${formatDate(value)}. Modifier` : label}
+        onPress={onPress}
+        style={({ pressed }) => [
           styles.fieldWrap,
-          styles.dateFieldWrap,
-          focused && styles.fieldWrapFocused,
+          styles.dateTrigger,
+          pressed && styles.fieldWrapFocused,
           Boolean(error) && styles.fieldWrapError,
         ]}>
-        <TextInput
-          ref={dayRef}
-          accessibilityLabel="Jour"
-          value={day}
-          onChangeText={(text) => {
-            const next = text.replace(/\D/g, '').slice(0, 2);
-            emit(next, month, year);
-            if (next.length === 2) monthRef.current?.focus();
-          }}
-          onFocus={(event) => focus(event.nativeEvent.target)}
-          onBlur={() => setFocused(false)}
-          keyboardType="number-pad"
-          maxLength={2}
-          placeholder="JJ"
-          placeholderTextColor={colors.textSecondary}
-          selectionColor={colors.accent}
-          style={[styles.fieldInput, styles.datePart, styles.datePartShort]}
-        />
-        <Text style={styles.dateSeparator}>/</Text>
-        <TextInput
-          ref={monthRef}
-          accessibilityLabel="Mois"
-          value={month}
-          onChangeText={(text) => {
-            const next = text.replace(/\D/g, '').slice(0, 2);
-            emit(day, next, year);
-            if (next.length === 2) yearRef.current?.focus();
-          }}
-          onKeyPress={({ nativeEvent }) => {
-            if (nativeEvent.key === 'Backspace' && !month) dayRef.current?.focus();
-          }}
-          onFocus={(event) => focus(event.nativeEvent.target)}
-          onBlur={() => setFocused(false)}
-          keyboardType="number-pad"
-          maxLength={2}
-          placeholder="MM"
-          placeholderTextColor={colors.textSecondary}
-          selectionColor={colors.accent}
-          style={[styles.fieldInput, styles.datePart, styles.datePartShort]}
-        />
-        <Text style={styles.dateSeparator}>/</Text>
-        <TextInput
-          ref={yearRef}
-          accessibilityLabel="Année"
-          value={year}
-          onChangeText={(text) => emit(day, month, text.replace(/\D/g, '').slice(0, 4))}
-          onKeyPress={({ nativeEvent }) => {
-            if (nativeEvent.key === 'Backspace' && !year) monthRef.current?.focus();
-          }}
-          onFocus={(event) => focus(event.nativeEvent.target)}
-          onBlur={() => setFocused(false)}
-          keyboardType="number-pad"
-          maxLength={4}
-          placeholder="AAAA"
-          placeholderTextColor={colors.textSecondary}
-          selectionColor={colors.accent}
-          style={[styles.fieldInput, styles.datePart, styles.datePartYear]}
-        />
-      </View>
+        <Text style={[styles.dateTriggerValue, !value && styles.dateTriggerPlaceholder]}>
+          {value ? formatDate(value) : placeholder}
+        </Text>
+        <Text style={styles.dateTriggerIcon}>📅</Text>
+      </Pressable>
       {error ? <Text style={styles.fieldError}>{error}</Text> : null}
     </View>
   );
@@ -527,7 +488,14 @@ const styles = StyleSheet.create({
   buttonLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   buttonLoadingContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   field: { marginBottom: 10 },
-  fieldLabel: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 5 },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
   fieldWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -542,11 +510,10 @@ const styles = StyleSheet.create({
   fieldInput: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text, paddingVertical: 10 },
   fieldSuffix: { fontSize: 13, fontWeight: '800', color: colors.textSecondary, marginLeft: 8 },
   fieldError: { color: colors.accent, fontSize: 13, marginTop: 5, fontWeight: '600' },
-  dateFieldWrap: { justifyContent: 'flex-start', gap: 6 },
-  datePart: { flex: 0, paddingHorizontal: 0, textAlign: 'center' },
-  datePartShort: { width: 34 },
-  datePartYear: { width: 64 },
-  dateSeparator: { color: colors.text, fontSize: 19, fontWeight: '800' },
+  dateTrigger: { justifyContent: 'space-between', paddingVertical: 12 },
+  dateTriggerValue: { fontSize: 16, fontWeight: '600', color: colors.text },
+  dateTriggerPlaceholder: { color: colors.textSecondary, fontWeight: '500' },
+  dateTriggerIcon: { fontSize: 15 },
   progressContainer: { marginTop: 12, marginBottom: 10 },
   progressTrack: {
     height: 9,

@@ -1,19 +1,19 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
-import { removeGoal } from '@/lib/actions';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
-import { waitForMinimumLoading } from '@/lib/timing';
-import type { Goal } from '@/lib/types';
+import { useGoalDeletion } from '@/lib/use-goal-deletion';
 import { useMoney } from '@/lib/use-money';
 import { AppDialog } from './app-dialog';
 import { Button } from './ui';
 
 // Switcher de projets + navigation générale, accessible depuis tous les écrans.
+// Chaque ligne porte un « Supprimer » discret : c'est d'ici qu'on gère ses
+// projets, y compris pour en retirer un. La confirmation passe par un dialogue
+// (action définitive), et l'écran « Ajuster » propose la même action.
 
 export function MenuModal({
   visible,
@@ -27,10 +27,9 @@ export function MenuModal({
   const { money } = useMoney();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
-  const [deletePending, setDeletePending] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const goals = useStore((s) => s.goals);
+  const { goalToDelete, deletePending, deleteError, askDelete, closeDelete, confirmDelete } =
+    useGoalDeletion({ navigate: 'replace' });
   const activeGoal = currentGoalId ? goals.find((goal) => goal.id === currentGoalId) : undefined;
   const orderedGoals = activeGoal
     ? [activeGoal, ...goals.filter((goal) => goal.id !== activeGoal.id)]
@@ -40,52 +39,6 @@ export function MenuModal({
     onClose();
     // Laisse le modal se fermer avant de naviguer.
     setTimeout(fn, 50);
-  };
-
-  const confirmDelete = (goalId: string) => {
-    const goal = goals.find((g) => g.id === goalId);
-    if (!goal) return;
-    setDeleteError(null);
-    setGoalToDelete(goal);
-    onClose();
-  };
-
-  const deleteSelectedGoal = async () => {
-    if (!goalToDelete || deletePending) return;
-    const deletedGoal = goalToDelete;
-    const remainingGoals = goals.filter((goal) => goal.id !== deletedGoal.id);
-    const destination =
-      remainingGoals.find((goal) => goal.id === currentGoalId) ?? remainingGoals[0];
-    const loadingStartedAt = Date.now();
-    setDeleteError(null);
-    setDeletePending(true);
-    try {
-      await waitForMinimumLoading(loadingStartedAt);
-      await removeGoal(deletedGoal);
-      const feedbackId = String(Date.now());
-      setGoalToDelete(null);
-      onClose();
-      if (destination) {
-        router.replace({
-          pathname: '/goal/[id]',
-          params: {
-            id: destination.id,
-            feedback: 'deleted',
-            feedbackId,
-            feedbackName: deletedGoal.name,
-          },
-        });
-      } else {
-        router.replace({
-          pathname: '/home',
-          params: { feedback: 'deleted', feedbackId, feedbackName: deletedGoal.name },
-        });
-      }
-    } catch {
-      setDeleteError('La suppression n’a pas abouti. Réessaie dans quelques instants.');
-    } finally {
-      setDeletePending(false);
-    }
   };
 
   const action = (label: string, onPress: () => void) => (
@@ -102,7 +55,7 @@ export function MenuModal({
 
   return (
     <>
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable
           style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + 8, 20) }]}
@@ -134,7 +87,8 @@ export function MenuModal({
                       accessibilityLabel={`Supprimer ${g.name}`}
                       onPress={(event) => {
                         event.stopPropagation();
-                        confirmDelete(g.id);
+                        askDelete(g);
+                        onClose();
                       }}
                       hitSlop={8}>
                       <Text style={styles.deleteAction}>Supprimer</Text>
@@ -145,7 +99,7 @@ export function MenuModal({
             })}
 
             <View style={[styles.actions, { marginTop: goals.length ? 10 : 2 }]}>
-              <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/mode'))} />
+              <Button label="Nouveau projet" onPress={() => go(() => router.push('/onboarding/new-goal'))} />
               <View style={styles.actionList}>
                 {currentGoalId
                   ? action(activeGoal?.savingsMode === 'free' ? 'Ajuster le projet' : 'Ajuster le plan', () =>
@@ -174,7 +128,7 @@ export function MenuModal({
           </ScrollView>
         </Pressable>
       </Pressable>
-      </Modal>
+    </Modal>
       <AppDialog
         visible={goalToDelete !== null}
         eyebrow="Action sensible"
@@ -188,12 +142,8 @@ export function MenuModal({
         confirmLabel={deleteError ? 'Réessayer' : 'Supprimer'}
         loading={deletePending}
         loadingLabel="Suppression…"
-        onClose={() => {
-          if (deletePending) return;
-          setDeleteError(null);
-          setGoalToDelete(null);
-        }}
-        onConfirm={() => void deleteSelectedGoal()}
+        onClose={closeDelete}
+        onConfirm={() => void confirmDelete()}
       />
     </>
   );
@@ -239,6 +189,7 @@ const styles = StyleSheet.create({
   goalName: { fontSize: 15, fontWeight: '700', color: colors.text },
   goalMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   goalActions: { alignItems: 'flex-end', gap: 5 },
+  deleteAction: { fontSize: 12, fontWeight: '700', color: colors.accent },
   activeBadge: {
     color: colors.accent,
     backgroundColor: colors.card,
@@ -249,7 +200,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     overflow: 'hidden',
   },
-  deleteAction: { fontSize: 12, fontWeight: '700', color: colors.accent },
   actions: { gap: 8 },
   actionList: {
     borderWidth: 1,

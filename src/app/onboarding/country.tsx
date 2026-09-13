@@ -1,27 +1,21 @@
 import { getLocales } from 'expo-localization';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
+import { CountryList } from '@/components/country-list';
+import { CountryPickerModal } from '@/components/country-picker-modal';
 import { Button, Card, Field, Screen } from '@/components/ui';
-import { colors, radius } from '@/constants/theme';
+import { colors, fonts, radius } from '@/constants/theme';
 import { changeLocale } from '@/lib/actions';
 import { COUNTRIES, CURRENCIES, formatMoney } from '@/lib/currency';
-import type { CurrencyCode } from '@/lib/currency';
 import {
   fetchSuggestedExchangeRate,
   formatExchangeRateInput,
   parseExchangeRateInput,
 } from '@/lib/exchange-rate';
 import { useStore } from '@/lib/store';
-
-const COUNTRY_GROUPS: { currency: CurrencyCode; label: string }[] = [
-  { currency: 'XAF', label: 'Afrique centrale · FCFA' },
-  { currency: 'XOF', label: "Afrique de l'Ouest · FCFA" },
-  { currency: 'EUR', label: 'Zone euro' },
-  { currency: 'USD', label: 'Dollar américain' },
-];
 
 function suggestedCountryCode(savedCountry?: string): string {
   if (savedCountry && COUNTRIES.some((country) => country.code === savedCountry)) {
@@ -42,7 +36,7 @@ export default function CountryScreen() {
     (state) => Boolean(state.budget) || state.goals.length > 0
   );
   const [selectedCode, setSelectedCode] = useState(() => suggestedCountryCode(savedCountry));
-  const [listOpen, setListOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [conversionChoice, setConversionChoice] = useState<'convert' | 'keep'>('convert');
   const [rateText, setRateText] = useState('');
@@ -50,6 +44,22 @@ export default function CountryScreen() {
   const [rateLoading, setRateLoading] = useState(false);
   const [rateError, setRateError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Prénom facultatif, saisi ici (à côté de « Bienvenue ») plutôt qu'à la
+  // création d'un projet : c'est une info sur la personne, pas sur le projet.
+  const userName = useStore((state) => state.userName);
+  const setUserName = useStore((state) => state.setUserName);
+  // Défilement vers le bloc de conversion dès qu'il apparaît (mode réglages).
+  // Le déclencheur est son onLayout : au moment du tap, le bloc n'est pas
+  // encore monté, donc sa position n'est pas connue.
+  const settingsScrollRef = useRef<ScrollView | null>(null);
+  const scrollToConversion = useRef(false);
+  const conversionTop = useRef(0);
+  const [nameEditing, setNameEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const commitName = () => {
+    setUserName(nameDraft);
+    setNameEditing(false);
+  };
   const selectedCountry = useMemo(
     () => COUNTRIES.find((country) => country.code === selectedCode) ?? COUNTRIES[0],
     [selectedCode]
@@ -109,191 +119,259 @@ export default function CountryScreen() {
     try {
       await changeLocale(selectedCountry.code, selectedCountry.currency, conversionRate);
       if (settings === '1' && router.canGoBack()) router.back();
-      else router.replace('/');
+      // Premier lancement : on va droit à la création du projet, sans écran
+      // d'accueil ni de choix de mode intermédiaire — le mode se choisit
+      // désormais via le bascule « Épargne libre » sur l'écran de création.
+      else router.replace('/onboarding/new-goal');
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <Screen>
-      {settings === '1' ? (
-        <AppHeader showBack title="Pays et devise" showTestMark={false} />
-      ) : (
-        <View style={styles.brand}>
-          <View style={styles.logo}>
-            <Text style={styles.logoLetter}>M</Text>
-          </View>
-          <Text style={styles.brandName}>MMG</Text>
-        </View>
-      )}
+  const nameField = nameEditing ? (
+    <TextInput
+      autoFocus
+      selectTextOnFocus
+      value={nameDraft}
+      onChangeText={setNameDraft}
+      onBlur={commitName}
+      onSubmitEditing={commitName}
+      returnKeyType="done"
+      placeholder="Ton prénom"
+      placeholderTextColor={colors.textSecondary}
+      selectionColor={colors.accent}
+      maxLength={24}
+      style={styles.nameInput}
+    />
+  ) : (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={userName ? `Prénom : ${userName}. Modifier` : 'Ajouter ton prénom'}
+      hitSlop={8}
+      onPress={() => {
+        setNameDraft(userName ?? '');
+        setNameEditing(true);
+      }}
+      style={userName ? styles.nameSet : styles.namePill}>
+      <Text style={userName ? styles.nameSetValue : styles.nameValue}>
+        {userName ?? 'Ton prénom'}
+      </Text>
+      {userName ? null : <Text style={styles.namePencil}>✎</Text>}
+    </Pressable>
+  );
 
-      <Card>
-        <Text style={styles.eyebrow}>{settings === '1' ? 'Réglages' : 'Bienvenue'}</Text>
+  const conversionBlock = (
+    <View style={styles.conversionCard}>
+              <Text style={styles.conversionTitle}>Que faire de tes montants actuels ?</Text>
+              <Text style={styles.conversionBody}>
+                Le changement de devise ne sera appliqué qu'après ton choix et ta validation.
+              </Text>
+    
+              <Pressable
+                accessibilityRole="radio"
+                accessibilityState={{ checked: conversionChoice === 'convert' }}
+                onPress={() => {
+                  setConversionChoice('convert');
+                  setSaveError(null);
+                }}
+                style={[
+                  styles.conversionOption,
+                  conversionChoice === 'convert' && styles.conversionOptionSelected,
+                ]}>
+                <View
+                  style={[styles.radio, conversionChoice === 'convert' && styles.radioSelected]}>
+                  {conversionChoice === 'convert' ? <View style={styles.radioDot} /> : null}
+                </View>
+                <View style={styles.conversionOptionCopy}>
+                  <Text style={styles.conversionOptionTitle}>Convertir mes montants</Text>
+                  <Text style={styles.conversionOptionBody}>
+                    Budget, projets, versements et soldes seront recalculés ensemble.
+                  </Text>
+                </View>
+              </Pressable>
+    
+              {conversionChoice === 'convert' ? (
+                <View style={styles.rateBlock}>
+                  {rateLoading ? (
+                    <Text style={styles.rateLoading}>Recherche du taux indicatif…</Text>
+                  ) : null}
+                  <Field
+                    label={`Taux proposé ou vérifié · 1 ${currentCurrency} =`}
+                    value={rateText}
+                    onChangeText={(value) => {
+                      setRateText(value.replace(/[^\d.,\s]/g, ''));
+                      setRateSource('Taux saisi ou ajusté manuellement');
+                      setRateError(null);
+                      setSaveError(null);
+                    }}
+                    keyboardType="decimal-pad"
+                    placeholder="À renseigner"
+                    suffix={selectedCountry.currency}
+                    editable={!rateLoading}
+                  />
+                  {rateSource ? <Text style={styles.rateSource}>{rateSource}</Text> : null}
+                  {rateError ? <Text style={styles.rateError}>{rateError}</Text> : null}
+                  {parsedRate ? (
+                    <View style={styles.previewCard}>
+                      <Text style={styles.previewLabel}>Aperçu avant validation</Text>
+                      <Text style={styles.previewValue}>
+                        {formatMoney(exampleAmount, currentCurrency)} →{' '}
+                        {formatMoney(
+                          exampleAmount * parsedRate,
+                          selectedCountry.currency
+                        )}
+                      </Text>
+                    </View>
+                  ) : null}
+                  <Text style={styles.rateDisclaimer}>
+                    Le taux reste indicatif. Aucun montant personnel n'est envoyé pour le récupérer.
+                  </Text>
+                </View>
+              ) : null}
+    
+              <Pressable
+                accessibilityRole="radio"
+                accessibilityState={{ checked: conversionChoice === 'keep' }}
+                onPress={() => {
+                  setConversionChoice('keep');
+                  setSaveError(null);
+                }}
+                style={[
+                  styles.conversionOption,
+                  conversionChoice === 'keep' && styles.conversionOptionSelected,
+                ]}>
+                <View style={[styles.radio, conversionChoice === 'keep' && styles.radioSelected]}>
+                  {conversionChoice === 'keep' ? <View style={styles.radioDot} /> : null}
+                </View>
+                <View style={styles.conversionOptionCopy}>
+                  <Text style={styles.conversionOptionTitle}>Garder les mêmes valeurs</Text>
+                  <Text style={styles.conversionOptionBody}>
+                    Seule l'unité change. Tu vérifieras ensuite les montants un par un.
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+  );
+
+  // En réglages, choisir un pays l'applique directement — sauf si la devise
+  // change alors que des montants existent : il faut alors décider quoi en
+  // faire (convertir / garder), ce qui demande une validation explicite.
+  const selectInSettings = async (code: string) => {
+    const country = COUNTRIES.find((c) => c.code === code) ?? COUNTRIES[0];
+    setSelectedCode(code);
+    setSaveError(null);
+    if (hasFinancialData && country.currency !== currentCurrency) {
+      // Ce bloc apparaît sous la liste, hors écran : sans ce défilement, le
+      // tap semble sans effet et on repart en arrière sans avoir validé.
+      // S'il est déjà à l'écran (changement de pays suivant), son onLayout ne
+      // se redéclenche pas : on défile tout de suite, avec la position déjà
+      // mesurée. Sinon on attend qu'il soit monté pour connaître la sienne.
+      if (changingExistingCurrency) {
+        requestAnimationFrame(() =>
+          settingsScrollRef.current?.scrollTo({ y: conversionTop.current, animated: true })
+        );
+      } else {
+        scrollToConversion.current = true;
+      }
+      return;
+    }
+    setSaving(true);
+    try {
+      await changeLocale(country.code, country.currency);
+      if (router.canGoBack()) router.back();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (settings === '1') {
+    return (
+      <Screen contentContainerStyle={styles.settingsScrollContent} scrollRef={settingsScrollRef}>
+        <AppHeader showBack title="Pays et devise" showTestMark={false} />
+        <Card style={styles.settingsCard}>
+          <CountryList
+            embedded
+            selectedCode={selectedCode}
+            onSelect={(code) => void selectInSettings(code)}
+          />
+          {changingExistingCurrency ? (
+            <View
+              onLayout={(event) => {
+                conversionTop.current = event.nativeEvent.layout.y;
+                if (!scrollToConversion.current) return;
+                scrollToConversion.current = false;
+                settingsScrollRef.current?.scrollTo({
+                  y: conversionTop.current,
+                  animated: true,
+                });
+              }}>
+              {conversionBlock}
+            </View>
+          ) : null}
+          {saveError ? <Text style={styles.warning}>{saveError}</Text> : null}
+          {changingExistingCurrency ? (
+            <Button
+              label="Continuer"
+              onPress={() => void save()}
+              loading={saving}
+              loadingLabel="Mise à jour…"
+              style={styles.button}
+            />
+          ) : null}
+        </Card>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen contentContainerStyle={styles.heroScrollContent}>
+      <View style={styles.brand}>
+        <View style={styles.logo}>
+          <Text style={styles.logoLetter}>M</Text>
+        </View>
+        <Text style={styles.brandName}>MMG</Text>
+      </View>
+
+      <Card style={styles.heroCard}>
+        <View style={styles.eyebrowRow}>
+          <Text style={styles.eyebrow}>Bienvenue</Text>
+          {nameField}
+        </View>
         <Text style={styles.title}>Où épargnes-tu ?</Text>
         <Text style={styles.body}>
-          MMG adapte les montants à ta devise. Le pays proposé vient du réglage régional de ton
-          téléphone et tu peux le modifier.
+          MMG adapte automatiquement l'application à ta devise locale.
         </Text>
+
+        <View style={styles.heroSpacer} />
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Changer le pays, actuellement ${selectedCountry.name}`}
-          accessibilityState={{ expanded: listOpen }}
-          onPress={() => setListOpen((open) => !open)}
-          style={({ pressed }) => [styles.selectionSummary, pressed && styles.countryRowPressed]}>
-          <View style={styles.selectionCopy}>
-            <Text style={styles.selectionLabel}>Pays et devise proposés</Text>
-            <Text style={styles.selectionValue}>
-              {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].name}
-            </Text>
-          </View>
-          <Text style={styles.changeLabel}>{listOpen ? 'Fermer' : 'Changer'}</Text>
+          onPress={() => setPickerOpen(true)}
+          style={({ pressed }) => [styles.selectionSummary, pressed && styles.selectionPressed]}>
+          <Text style={styles.selectionValue}>
+            {selectedCountry.flag} {selectedCountry.name} · {CURRENCIES[selectedCountry.currency].symbol}
+          </Text>
+          <Text style={styles.changeChevron}>⌄</Text>
         </Pressable>
 
-        {listOpen
-          ? COUNTRY_GROUPS.map((group) => {
-              const countries = COUNTRIES.filter(
-                (country) => country.currency === group.currency
-              );
-              return (
-                <View key={group.currency} style={styles.group}>
-                  <Text style={styles.groupLabel}>{group.label}</Text>
-                  <View style={styles.countryList}>
-                    {countries.map((country) => {
-                      const selected = country.code === selectedCode;
-                      return (
-                        <Pressable
-                          key={country.code}
-                          accessibilityRole="radio"
-                          accessibilityState={{ checked: selected }}
-                          accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
-                          onPress={() => {
-                            setSelectedCode(country.code);
-                            setListOpen(false);
-                            setSaveError(null);
-                          }}
-                          style={({ pressed }) => [
-                            styles.countryRow,
-                            selected && styles.countryRowSelected,
-                            pressed && styles.countryRowPressed,
-                          ]}>
-                          <Text style={styles.flag}>{country.flag}</Text>
-                          <View style={styles.countryCopy}>
-                            <Text style={styles.countryName}>{country.name}</Text>
-                            <Text style={styles.currencyName}>
-                              {CURRENCIES[country.currency].symbol}
-                            </Text>
-                          </View>
-                          <View style={[styles.radio, selected && styles.radioSelected]}>
-                            {selected ? <View style={styles.radioDot} /> : null}
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-              );
-            })
-          : null}
+        <CountryPickerModal
+          visible={pickerOpen}
+          selectedCode={selectedCode}
+          onClose={() => setPickerOpen(false)}
+          onConfirm={(code) => {
+            setSelectedCode(code);
+            setSaveError(null);
+            setPickerOpen(false);
+          }}
+        />
 
-        {changingExistingCurrency ? (
-          <View style={styles.conversionCard}>
-            <Text style={styles.conversionTitle}>Que faire de tes montants actuels ?</Text>
-            <Text style={styles.conversionBody}>
-              Le changement de devise ne sera appliqué qu'après ton choix et ta validation.
-            </Text>
-
-            <Pressable
-              accessibilityRole="radio"
-              accessibilityState={{ checked: conversionChoice === 'convert' }}
-              onPress={() => {
-                setConversionChoice('convert');
-                setSaveError(null);
-              }}
-              style={[
-                styles.conversionOption,
-                conversionChoice === 'convert' && styles.conversionOptionSelected,
-              ]}>
-              <View
-                style={[styles.radio, conversionChoice === 'convert' && styles.radioSelected]}>
-                {conversionChoice === 'convert' ? <View style={styles.radioDot} /> : null}
-              </View>
-              <View style={styles.conversionOptionCopy}>
-                <Text style={styles.conversionOptionTitle}>Convertir mes montants</Text>
-                <Text style={styles.conversionOptionBody}>
-                  Budget, projets, versements et soldes seront recalculés ensemble.
-                </Text>
-              </View>
-            </Pressable>
-
-            {conversionChoice === 'convert' ? (
-              <View style={styles.rateBlock}>
-                {rateLoading ? (
-                  <Text style={styles.rateLoading}>Recherche du taux indicatif…</Text>
-                ) : null}
-                <Field
-                  label={`Taux proposé ou vérifié · 1 ${currentCurrency} =`}
-                  value={rateText}
-                  onChangeText={(value) => {
-                    setRateText(value.replace(/[^\d.,\s]/g, ''));
-                    setRateSource('Taux saisi ou ajusté manuellement');
-                    setRateError(null);
-                    setSaveError(null);
-                  }}
-                  keyboardType="decimal-pad"
-                  placeholder="À renseigner"
-                  suffix={selectedCountry.currency}
-                  editable={!rateLoading}
-                />
-                {rateSource ? <Text style={styles.rateSource}>{rateSource}</Text> : null}
-                {rateError ? <Text style={styles.rateError}>{rateError}</Text> : null}
-                {parsedRate ? (
-                  <View style={styles.previewCard}>
-                    <Text style={styles.previewLabel}>Aperçu avant validation</Text>
-                    <Text style={styles.previewValue}>
-                      {formatMoney(exampleAmount, currentCurrency)} →{' '}
-                      {formatMoney(
-                        exampleAmount * parsedRate,
-                        selectedCountry.currency
-                      )}
-                    </Text>
-                  </View>
-                ) : null}
-                <Text style={styles.rateDisclaimer}>
-                  Le taux reste indicatif. Aucun montant personnel n'est envoyé pour le récupérer.
-                </Text>
-              </View>
-            ) : null}
-
-            <Pressable
-              accessibilityRole="radio"
-              accessibilityState={{ checked: conversionChoice === 'keep' }}
-              onPress={() => {
-                setConversionChoice('keep');
-                setSaveError(null);
-              }}
-              style={[
-                styles.conversionOption,
-                conversionChoice === 'keep' && styles.conversionOptionSelected,
-              ]}>
-              <View style={[styles.radio, conversionChoice === 'keep' && styles.radioSelected]}>
-                {conversionChoice === 'keep' ? <View style={styles.radioDot} /> : null}
-              </View>
-              <View style={styles.conversionOptionCopy}>
-                <Text style={styles.conversionOptionTitle}>Garder les mêmes valeurs</Text>
-                <Text style={styles.conversionOptionBody}>
-                  Seule l'unité change. Tu vérifieras ensuite les montants un par un.
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-        ) : null}
+        {changingExistingCurrency ? conversionBlock : null}
 
         {saveError ? <Text style={styles.warning}>{saveError}</Text> : null}
 
         <Button
-          label={settings === '1' ? 'Enregistrer' : 'Continuer'}
+          label="Continuer"
           onPress={() => void save()}
           loading={saving}
           loadingLabel="Mise à jour…"
@@ -322,47 +400,63 @@ const styles = StyleSheet.create({
   },
   logoLetter: { color: '#FFFFFF', fontSize: 21, fontWeight: '800' },
   brandName: { color: colors.text, fontSize: 19, fontWeight: '800' },
+  // Alignement sur la ligne de base : l'eyebrow (12 px capitales) et le
+  // prénom (serif italique, plus grand) doivent poser sur la même ligne, pas
+  // être centrés l'un par rapport à l'autre. Les variantes encadrées (pill
+  // vide, champ en édition) repassent en centrage via alignSelf.
+  eyebrowRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 6 },
   eyebrow: {
     color: colors.accent,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1.1,
     textTransform: 'uppercase',
-    marginBottom: 6,
   },
-  title: { color: colors.text, fontSize: 25, lineHeight: 31, fontWeight: '800' },
-  body: { color: colors.textSecondary, fontSize: 14, lineHeight: 21, marginTop: 8 },
-  group: { gap: 7, marginTop: 18 },
-  groupLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-  countryList: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.field,
-    overflow: 'hidden',
-  },
-  countryRow: {
-    minHeight: 52,
+  namePill: {
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: colors.card,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 9,
+    backgroundColor: colors.background,
   },
-  countryRowSelected: { backgroundColor: colors.cardSoft },
-  countryRowPressed: { opacity: 0.72 },
-  flag: { fontSize: 23 },
-  countryCopy: { flex: 1 },
-  countryName: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  currencyName: { color: colors.textSecondary, fontSize: 12, marginTop: 1 },
+  nameValue: { fontFamily: fonts.serifItalic, fontSize: 14, color: colors.text },
+  namePencil: { fontSize: 11, color: colors.textSecondary },
+  // Une fois renseigné, le prénom se lit comme un mot de la phrase d'accueil
+  // et non comme un champ : plus de cadre ni de crayon, il reste modifiable
+  // au tap (l'affordance revient dès qu'on l'efface).
+  // Pas de padding vertical : il décalerait la ligne de base du prénom par
+  // rapport à l'eyebrow. La zone tactile est élargie par hitSlop.
+  nameSet: {},
+  nameSetValue: { fontFamily: fonts.serifItalic, fontSize: 15, color: colors.text },
+  nameInput: {
+    alignSelf: 'center',
+    flex: 1,
+    fontFamily: fonts.serifItalic,
+    fontSize: 14,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    backgroundColor: colors.card,
+  },
+  title: { fontFamily: fonts.serifBold, color: colors.text, fontSize: 30, lineHeight: 36 },
+  body: { fontFamily: fonts.sansRegular, color: colors.textSecondary, fontSize: 15, lineHeight: 22, marginTop: 10 },
+  // Écran d'accueil (hors réglages) : le pill et le bouton restent ancrés en
+  // bas d'un grand espace respirant, comme dans la maquette. En réglages, la
+  // carte garde sa hauteur naturelle, plus compacte.
+  heroScrollContent: { flexGrow: 1 },
+  heroCard: { flex: 1 },
+  heroSpacer: { flex: 1, minHeight: 40 },
+  // Réglages : la liste occupe l'écran, pas de zone vide à combler.
+  settingsScrollContent: { flexGrow: 1 },
+  settingsCard: { flex: 1 },
   radio: {
     width: 21,
     height: 21,
@@ -378,15 +472,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.cardSoft,
+    backgroundColor: colors.card,
     borderRadius: radius.field,
-    padding: 13,
-    marginTop: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
-  selectionCopy: { flex: 1 },
-  selectionLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
-  selectionValue: { color: colors.text, fontSize: 14, fontWeight: '800', marginTop: 3 },
-  changeLabel: { color: colors.accent, fontSize: 13, fontWeight: '800' },
+  selectionPressed: { opacity: 0.8 },
+  selectionValue: { flex: 1, fontFamily: fonts.sansSemiBold, color: colors.text, fontSize: 15 },
+  changeChevron: { fontFamily: fonts.sansBold, color: colors.textSecondary, fontSize: 18 },
   conversionCard: {
     marginTop: 16,
     borderWidth: 1,

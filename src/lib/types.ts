@@ -1,4 +1,4 @@
-export type GoalCategory = 'emergency' | 'car' | 'moving' | 'travel' | 'other';
+export type GoalCategory = 'emergency' | 'car' | 'moving' | 'travel' | 'housing' | 'other';
 
 export type SavingsRhythm = 'stable' | 'progressive' | 'regressive';
 
@@ -124,7 +124,18 @@ export const CATEGORY_LABELS: Record<GoalCategory, string> = {
   car: 'Voiture',
   moving: 'Déménagement',
   travel: 'Vacances',
+  housing: 'Immobilier',
   other: 'Autre projet',
+};
+
+/** Pastille illustrative du projet, à côté de son objectif mensuel. */
+export const CATEGORY_EMOJI: Record<GoalCategory, string> = {
+  emergency: '🛟',
+  car: '🚗',
+  moving: '🏠',
+  travel: '✈️',
+  housing: '🏡',
+  other: '🎯',
 };
 
 export const CATEGORY_DESCRIPTIONS: Record<GoalCategory, string> = {
@@ -132,5 +143,6 @@ export const CATEGORY_DESCRIPTIONS: Record<GoalCategory, string> = {
   car: 'Financer la voiture sans passer par le crédit.',
   moving: 'Préparer le déménagement sereinement.',
   travel: 'Préparer le départ sans toucher au reste.',
+  housing: 'Avancer vers ton projet immobilier, à ton rythme.',
   other: 'Avancer vers ton objectif, à ton rythme.',
 };

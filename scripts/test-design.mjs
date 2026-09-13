@@ -12,11 +12,10 @@ const pngSize = (path) => {
 const appConfig = JSON.parse(read('app.json'));
 const ui = read('src/components/ui.tsx');
 const header = read('src/components/app-header.tsx');
-const home = read('src/app/home.tsx');
 const index = read('src/app/index.tsx');
 const budget = read('src/app/onboarding/budget.tsx');
 const country = read('src/app/onboarding/country.tsx');
-const mode = read('src/app/onboarding/mode.tsx');
+const countryPicker = read('src/components/country-picker-modal.tsx');
 const newGoal = read('src/app/onboarding/new-goal.tsx');
 const adjustGoal = read('src/app/adjust-goal.tsx');
 const goal = read('src/app/goal/[id].tsx');
@@ -60,23 +59,92 @@ assert.deepEqual(pngSize('assets/images/favicon.png'), [512, 512]);
 assert.match(iconGenerator, /let brand = NSColor\(hex: "#B5432A"\)/);
 assert.match(iconGenerator, /let monogram = "M"/);
 
-assert.match(home, /Un projet,/);
-assert.match(home, /un geste par mois\./);
-assert.doesNotMatch(home, /CHECKLIST/);
-assert.doesNotMatch(home, /<AppHeader/);
-assert.match(home, /<FeedbackBanner/);
-assert.match(home, /feedback !== 'deleted'/);
-assert.match(home, /router\.push\('\/onboarding\/mode'\)/);
+// Écran d'accueil retiré (home.tsx supprimé) et écran de choix du mode retiré
+// (mode.tsx supprimé) : premier lancement et retour sans projet vont
+// désormais droit à la création (/onboarding/new-goal), sans étape
+// intermédiaire ; le mode guidé/libre se choisit via un bascule sur cet
+// écran. La bannière « Projet supprimé » vit maintenant sur cet écran.
+assert.match(index, /return <Redirect href="\/onboarding\/new-goal" \/>/);
+// Le retour d'un écran sans historique (replace) accepte une destination de
+// repli configurable : par défaut '/', mais new-goal.tsx pointe vers l'écran
+// pays quand aucun projet n'existe encore (sinon le retour rebouclerait sur
+// lui-même, index.tsx redirigeant tout projet manquant vers new-goal).
+assert.match(header, /fallbackHref = '\/'/);
+assert.match(header, /router\.replace\(fallbackHref\)/);
+// Sans projet, le repli vise l'écran pays en mode accueil (logo + Bienvenue,
+// sans flèche retour) et non sa variante réglages : c'est lui qui fait office
+// d'écran d'entrée depuis le retrait de home.tsx.
+assert.match(newGoal, /fallbackHref=\{goals\.length === 0 \? '\/onboarding\/country' : '\/'\}/);
+assert.match(newGoal, /<FeedbackBanner/);
+// Store Zustand dédié (pas de query params ni de simple useEffect au montage) :
+// sur web, expo-router garde l'écran cible déjà instancié d'une visite à
+// l'autre — seule une notification réactive traverse cette navigation de
+// façon fiable, indépendamment du cycle de montage/focus.
+assert.match(newGoal, /usePendingFeedbackStore\(\(s\) => s\.message\)/);
+assert.match(newGoal, /usePendingFeedbackStore\.getState\(\)\.take\(\)/);
+const pendingFeedback = read('src/lib/pending-feedback.ts');
+assert.match(pendingFeedback, /export const usePendingFeedbackStore = create</);
+assert.match(pendingFeedback, /export function setPendingFeedback/);
+// Suppression : deux points d'entrée (la ligne du menu et l'écran
+// « Ajuster »), une seule implémentation partagée — elle porte un ordre
+// sensible aux courses de navigation qu'on ne veut pas voir diverger.
+const goalDeletion = read('src/lib/use-goal-deletion.ts');
+assert.match(goalDeletion, /export function useGoalDeletion/);
+assert.match(goalDeletion, /setPendingFeedback\(\{/);
+assert.match(goalDeletion, /Projet supprimé/);
+assert.match(goalDeletion, /await removeGoal\(deleted\)/);
+assert.match(menu, /useGoalDeletion\(\{ navigate: 'replace' \}\)/);
+assert.match(menu, /styles\.deleteAction/);
+assert.match(menu, /accessibilityLabel=\{`Supprimer \$\{g\.name\}`\}/);
+assert.match(menu, /<AppDialog/);
+assert.match(adjustGoal, /useGoalDeletion\(\{ navigate: 'dismissTo' \}\)/);
+assert.match(adjustGoal, /label="Supprimer ce projet"/);
 
 assert.match(index, /if \(!country\) return <Redirect href="\/onboarding\/country"/);
 assert.match(country, /getLocales\(\)\[0\]\?\.regionCode/);
 assert.match(country, /useState\(false\)/);
-assert.match(country, /listOpen\s*\? COUNTRY_GROUPS\.map/);
-assert.match(country, /setListOpen\(false\)/);
-assert.match(country, /\{listOpen \? 'Fermer' : 'Changer'\}/);
+// Le choix du pays est un vrai bottom sheet (CountryPickerModal), plus un accordéon
+// inline : le bouton "Continuer" n'est donc plus jamais poussé par une liste ouverte.
+assert.match(country, /<CountryPickerModal/);
+assert.match(country, /visible=\{pickerOpen\}/);
+assert.match(country, /setPickerOpen\(false\)/);
+assert.match(country, /fontFamily: fonts\.serifBold/);
 assert.match(country, /accessibilityRole="radio"/);
-assert.match(country, /accessibilityState=\{\{ checked: selected \}\}/);
 assert.match(country, /Où épargnes-tu/);
+// Le prénom facultatif se saisit ici, à côté de « Bienvenue » : c'est une
+// info sur la personne, pas sur un projet (retirée de l'écran de création).
+assert.match(country, /styles\.eyebrowRow/);
+assert.match(country, /setUserName\(nameDraft\)/);
+assert.match(country, /userName \?\? 'Ton prénom'/);
+assert.doesNotMatch(newGoal, /Comment doit-on t'appeler|setUserName/);
+// Liste partagée (recherche + groupes par devise + radio) entre le bottom
+// sheet du premier lancement et l'écran de réglages, qui l'affiche à plat :
+// on y vient pour changer de pays, pas pour relire la page d'accueil.
+const countryList = read('src/components/country-list.tsx');
+assert.match(countryList, /Rechercher un pays…/);
+assert.match(countryList, /accessibilityRole="radio"/);
+assert.match(countryList, /accessibilityState=\{\{ checked: selected \}\}/);
+// Choisir une ligne vaut confirmation : plus d'état intermédiaire ni de
+// bouton « Confirmer » (un tap de moins pour changer de pays).
+assert.match(countryList, /onPress=\{\(\) => onSelect\(country\.code\)\}/);
+assert.doesNotMatch(countryPicker, /label="Confirmer"|pendingCode/);
+assert.match(countryPicker, /<CountryList selectedCode=\{selectedCode\} onSelect=\{onConfirm\}/);
+assert.match(country, /<CountryList\s+embedded\s+selectedCode=\{selectedCode\}/);
+assert.match(country, /const selectInSettings = async/);
+// La liste s'intègre au défilement de l'écran (pas de ScrollView imbriqué),
+// pour pouvoir amener l'utilisateur sur le bloc à confirmer qui la suit.
+assert.match(countryList, /embedded \? \(\s*<View style=\{styles\.scrollContent\}>/);
+// Deux chemins, pour que le défilement ait lieu à chaque choix de pays :
+// bloc pas encore monté → on attend son onLayout (position inconnue au tap) ;
+// bloc déjà à l'écran → son onLayout ne se redéclenche pas, on défile tout de
+// suite avec la position mémorisée.
+assert.match(country, /scrollToConversion\.current = true;/);
+assert.match(country, /conversionTop\.current = event\.nativeEvent\.layout\.y;/);
+assert.match(country, /if \(changingExistingCurrency\) \{/);
+assert.match(country, /scrollTo\(\{\s*y: conversionTop\.current,\s*animated: true,?\s*\}\)/);
+assert.match(ui, /scrollRef\?: MutableRefObject<ScrollView \| null>/);
+// Application immédiate, sauf si une décision de conversion est requise.
+assert.match(country, /if \(hasFinancialData && country\.currency !== currentCurrency\) \{/);
 assert.match(country, /Que faire de tes montants actuels/);
 assert.match(country, /Convertir mes montants/);
 assert.match(country, /Garder les mêmes valeurs/);
@@ -89,12 +157,12 @@ assert.match(actions, /state\.setLocale\(\{ country, currencyCode \}\)/);
 assert.match(actions, /state\.convertLocale\(\{ country, currencyCode, rate: conversionRate \}\)/);
 assert.match(actions, /scheduleGoalReminders\(goal, suggestedAmount\(goal\)\)/);
 
-assert.match(mode, /Quel mode te convient/);
-assert.match(mode, /Plan guidé/);
-assert.match(mode, /Épargne libre/);
-assert.match(mode, /Aucun budget imposé ni montant calculé/);
-assert.match(mode, /pathname: '\/onboarding\/budget'/);
-assert.match(mode, /pathname: '\/onboarding\/new-goal'/);
+// Le choix guidé/libre n'est plus un écran séparé : un bascule inline sur
+// l'écran 2 (jour de rappel) remplace l'ancien /onboarding/mode.
+assert.match(newGoal, /Épargne libre/);
+assert.match(newGoal, /<Switch/);
+assert.match(newGoal, /setSavingsMode\(value \? 'free' : 'guided'\)/);
+assert.match(newGoal, /Aucun budget ni montant mensuel ne sera imposé/);
 
 assert.match(ui, /footer\?: ReactNode/);
 assert.match(ui, /styles\.screenFooter/);
@@ -154,11 +222,27 @@ assert.match(
   /labels=\{savingsMode === 'free' \? \['Projet', 'Rappel'\] : \['Projet', 'Rythme'\]\}/
 );
 assert.doesNotMatch(newGoal, /sur 3/);
-assert.match(newGoal, /\['emergency', 'car', 'moving', 'travel', 'other'\]/);
+assert.match(newGoal, /\['emergency', 'car', 'moving', 'travel', 'housing', 'other'\]/);
 assert.match(newGoal, /CATEGORY_LABELS\[c\]/);
 assert.match(newGoal, /category === 'other' \? 'Choisis un nom pour ton projet'/);
 assert.doesNotMatch(newGoal, /editId|Ajuster le plan/);
 assert.match(newGoal, /Continuer vers le rythme/);
+// Erreurs de saisie en pop-up flottante auto-effaçable (via Modal : le
+// contenu des écrans vit dans un ScrollView, où `absolute` suivrait le
+// défilement), plus en texte inline sous les champs.
+const errorToast = read('src/components/error-toast.tsx');
+assert.match(errorToast, /<Modal visible transparent/);
+assert.match(errorToast, /setTimeout\(onFinished, duration\)/);
+assert.match(errorToast, /accessibilityRole="alert"/);
+assert.match(newGoal, /<ErrorToast key=\{error\.key\}/);
+assert.doesNotMatch(newGoal, /styles\.error\b/);
+// Retour depuis l'étape 2 : revient à l'étape 1 au lieu de quitter l'écran.
+assert.match(newGoal, /onBack=\{step === 2 \? \(\) => setStep\(1\) : undefined\}/);
+assert.match(header, /onBack\?: \(\) => void/);
+// Choisir un type dans la liste écrase le nom déjà saisi.
+assert.doesNotMatch(newGoal, /!name\.trim\(\) \|\| nameIsSuggested/);
+// Jour de rappel ordinal (« le 1er », pas « le 1 »).
+assert.match(newGoal, /Rappel le <Text style=\{styles\.dayHintAccent\}>\{formatReminderDay\(reminderDay\)\}/);
 assert.match(newGoal, /Continuer vers le rappel/);
 assert.match(newGoal, /savingsMode === 'free'/);
 assert.match(newGoal, /savingsMode,/);
@@ -192,8 +276,7 @@ assert.match(newGoal, /accessibilityLabel="Ajuster le budget"/);
 assert.match(newGoal, /params: \{ returnToGoal: '1' \}/);
 assert.match(budget, /returnToGoal === '1'/);
 assert.match(budget, /standalone === '1'/);
-assert.match(budget, /next === 'guided'/);
-assert.match(budget, /goalSavingsMode\(goal\) === 'guided'/);
+assert.doesNotMatch(budget, /goalSavingsMode/);
 
 assert.match(adjustGoal, /Les paramètres utiles, en un seul écran/);
 assert.match(adjustGoal, /Le nom et le type de projet restent inchangés/);
@@ -214,8 +297,27 @@ assert.doesNotMatch(adjustGoal, /<StepIndicator|Quel projet veux-tu préparer/);
 
 assert.match(goal, /<Screen footer=\{tabBar\}>/);
 assert.match(goal, /schedule\.slice\(0, 2\)/);
-assert.match(goal, /label=\{`Versement fait \(\$\{money\(suggested\)\}\)`\}/);
-assert.match(goal, /label="J'ai mis de côté"/);
+assert.match(goal, /label=\{`J'ai mis de côté ✓ \(\$\{money\(suggested\)\}\)`\}/);
+assert.match(goal, /label="J'ai mis de côté ✓"/);
+// Fiche projet : en-tête « Bonjour, {prénom} » + marque à droite (accès au
+// menu), statut du projet en pastille, titre en serif italique, et les trois
+// repères chiffrés (objectif / restant / échéance) groupés sous l'anneau.
+assert.match(goal, /<AppHeader greeting currentGoalId=\{goal\.id\}/);
+assert.match(header, /greeting\?: boolean/);
+assert.match(header, /styles\.greetingRow/);
+assert.match(header, /userName \? `\$\{userName\} ✨`/);
+assert.match(header, /titleSerif/);
+assert.match(header, /fonts\.serifBold/);
+assert.match(goal, /styles\.statusPill/);
+assert.match(goal, /styles\.projectName/);
+assert.match(goal, /styles\.statsRow/);
+assert.match(goal, />Objectif</);
+assert.match(goal, />Restant</);
+assert.match(goal, />Échéance</);
+assert.match(goal, /Objectif mensuel/);
+assert.match(goal, /CATEGORY_EMOJI\[goal\.category\]/);
+assert.match(goalTypes, /export const CATEGORY_EMOJI/);
+assert.match(goal, /\+ Ajouter un montant libre/);
 assert.match(goal, /Aucun montant imposé/);
 assert.match(goal, /goalStartsInFuture\(goal\)/);
 assert.match(goal, /Tout est prêt pour le/);
@@ -230,10 +332,10 @@ assert.match(goal, /Jour de rappel modifié/);
 assert.match(goal, /MIN_INLINE_LOADING_MS/);
 assert.match(goal, /waitForMinimumLoading\(loadingStartedAt\)/);
 assert.match(goal, /accessibilityRole="tab"/);
-assert.match(goal, /tabActive: \{ backgroundColor: colors\.accent/);
+// Onglets illustrés (tracés SVG : pas de librairie d'icônes dans le projet).
+assert.match(goal, /<Icon color=\{active \? colors\.accent : colors\.textSecondary\}/);
+assert.match(read('src/components/tab-icons.tsx'), /export function HomeIcon/);
 assert.match(goal, /<ProgressRing pct=\{pct\} amount=\{money\(saved\)\}/);
-assert.match(goal, /styles\.progressFooter/);
-assert.match(goal, /Cible \{formatDate\(goal\.targetDate\)\}/);
 assert.match(goal, />Où \?</);
 assert.match(goal, /goal\.savingsLocation \?\? 'Ajouter'/);
 assert.match(goal, /<SavingsLocationModal/);
@@ -279,7 +381,7 @@ assert.match(menu, /\[activeGoal, \.\.\.goals\.filter/);
 assert.match(menu, /useSafeAreaInsets/);
 assert.match(menu, /Math\.max\(insets\.bottom \+ 8, 20\)/);
 assert.match(menu, /params: \{ standalone: '1' \}/);
-assert.match(menu, /router\.push\('\/onboarding\/mode'\)/);
+assert.match(menu, /router\.push\('\/onboarding\/new-goal'\)/);
 assert.match(menu, /pathname: '\/adjust-goal'/);
 assert.match(menu, /params: \{ id: currentGoalId \}/);
 assert.match(menu, /contentInsetAdjustmentBehavior="automatic"/);
@@ -287,13 +389,14 @@ assert.match(menu, /styles\.actionList/);
 assert.match(menu, /minimumFontScale=\{0\.85\}/);
 assert.match(menu, /style=\{styles\.actionChevron\}>›/);
 assert.doesNotMatch(menu, /styles\.actionRow/);
-assert.match(menu, /event\.stopPropagation\(\)/);
-assert.match(menu, /<AppDialog/);
-assert.match(menu, /loadingLabel="Suppression…"/);
-assert.match(menu, /await waitForMinimumLoading\(loadingStartedAt\)/);
-assert.match(menu, /feedback: 'deleted'/);
-assert.match(menu, /setGoalToDelete\(goal\);\s*onClose\(\);/s);
 assert.doesNotMatch(menu, /Alert\.alert|\bAlert\b/);
+
+assert.match(adjustGoal, /<AppDialog/);
+assert.match(adjustGoal, /loadingLabel="Suppression…"/);
+assert.match(adjustGoal, /await waitForMinimumLoading\(loadingStartedAt\)/);
+assert.match(goalDeletion, /feedback: 'deleted'/);
+assert.match(adjustGoal, /Zone sensible/);
+assert.match(adjustGoal, /label="Supprimer ce projet"/);
 
 assert.match(appDialog, /export type AppDialogTone = 'info' \| 'success' \| 'danger'/);
 assert.match(appDialog, /accessibilityViewIsModal/);
