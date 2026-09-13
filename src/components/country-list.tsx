@@ -2,19 +2,16 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, fonts, radius } from '@/constants/theme';
-import { COUNTRIES, CURRENCIES } from '@/lib/currency';
-import type { CurrencyCode } from '@/lib/currency';
+import { COUNTRIES_ALPHABETICAL, CURRENCIES, foldAccents } from '@/lib/currency';
 
-// Liste de pays cherchable et groupée par devise, partagée par le bottom
-// sheet (premier lancement) et l'écran de réglages, qui l'affiche à plat.
-// Choisir une ligne vaut confirmation : pas d'état intermédiaire.
-
-const COUNTRY_GROUPS: { currency: CurrencyCode; label: string }[] = [
-  { currency: 'XAF', label: 'Afrique centrale · FCFA' },
-  { currency: 'XOF', label: "Afrique de l'Ouest · FCFA" },
-  { currency: 'EUR', label: 'Zone euro' },
-  { currency: 'USD', label: 'Dollar américain' },
-];
+// Liste de pays cherchable, partagée par le bottom sheet (premier lancement)
+// et l'écran de réglages. Choisir une ligne vaut confirmation : pas d'état
+// intermédiaire.
+//
+// Ordre alphabétique plutôt que regroupé par zone monétaire : sur seize pays
+// les en-têtes de groupe coûtaient quatre lignes de chrome et obligeaient à
+// savoir dans quelle zone on se trouve pour retrouver le sien. La devise reste
+// lisible sur chaque ligne.
 
 export function CountryList({
   selectedCode,
@@ -37,52 +34,41 @@ export function CountryList({
     setLastReset(resetKey);
     setQuery('');
   }
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = foldAccents(query.trim());
+  const countries = normalizedQuery
+    ? COUNTRIES_ALPHABETICAL.filter((country) =>
+        foldAccents(country.name).includes(normalizedQuery)
+      )
+    : COUNTRIES_ALPHABETICAL;
 
-  const rows = (
-    <>
-      {COUNTRY_GROUPS.map((group) => {
-        const countries = COUNTRIES.filter(
-          (country) =>
-            country.currency === group.currency &&
-            (!normalizedQuery || country.name.toLowerCase().includes(normalizedQuery))
-        );
-        if (!countries.length) return null;
+  const rows = countries.length ? (
+    <View style={styles.countryList}>
+      {countries.map((country) => {
+        const selected = country.code === selectedCode;
         return (
-          <View key={group.currency} style={styles.group}>
-            <Text style={styles.groupLabel}>{group.label}</Text>
-            <View style={styles.countryList}>
-              {countries.map((country) => {
-                const selected = country.code === selectedCode;
-                return (
-                  <Pressable
-                    key={country.code}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: selected }}
-                    accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
-                    onPress={() => onSelect(country.code)}
-                    style={({ pressed }) => [
-                      styles.row,
-                      selected && styles.rowSelected,
-                      pressed && styles.rowPressed,
-                    ]}>
-                    <Text style={styles.flag}>{country.flag}</Text>
-                    <Text style={styles.countryName}>{country.name}</Text>
-                    <Text style={styles.currencyName}>{CURRENCIES[country.currency].symbol}</Text>
-                    <View style={[styles.radio, selected && styles.radioSelected]}>
-                      {selected ? <View style={styles.radioDot} /> : null}
-                    </View>
-                  </Pressable>
-                );
-              })}
+          <Pressable
+            key={country.code}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selected }}
+            accessibilityLabel={`${country.name}, ${CURRENCIES[country.currency].name}`}
+            onPress={() => onSelect(country.code)}
+            style={({ pressed }) => [
+              styles.row,
+              selected && styles.rowSelected,
+              pressed && styles.rowPressed,
+            ]}>
+            <Text style={styles.flag}>{country.flag}</Text>
+            <Text style={styles.countryName}>{country.name}</Text>
+            <Text style={styles.currencyName}>{CURRENCIES[country.currency].symbol}</Text>
+            <View style={[styles.radio, selected && styles.radioSelected]}>
+              {selected ? <View style={styles.radioDot} /> : null}
             </View>
-          </View>
+          </Pressable>
         );
       })}
-      {normalizedQuery && !COUNTRIES.some((c) => c.name.toLowerCase().includes(normalizedQuery)) ? (
-        <Text style={styles.empty}>Aucun pays ne correspond à « {query} ».</Text>
-      ) : null}
-    </>
+    </View>
+  ) : (
+    <Text style={styles.empty}>Aucun pays ne correspond à « {query} ».</Text>
   );
 
   return (
@@ -124,14 +110,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   scrollContent: { paddingBottom: 8 },
-  group: { gap: 7, marginBottom: 16 },
-  groupLabel: {
-    fontFamily: fonts.sansBold,
-    fontSize: 12,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-    color: colors.textSecondary,
-  },
   countryList: {
     borderWidth: 1,
     borderColor: colors.border,

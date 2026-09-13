@@ -16,6 +16,9 @@ const {
   convertMoney,
   defaultCurrencyForCountry,
   CURRENCIES,
+  COUNTRIES,
+  COUNTRIES_ALPHABETICAL,
+  foldAccents,
 } = loaded.exports;
 
 // EUR : rendu IDENTIQUE à la V1 (formatEuro) — pas de « ,00 » sur un entier.
@@ -53,4 +56,26 @@ assert.equal(defaultCurrencyForCountry('XX'), 'EUR'); // pays inconnu → fallba
 assert.equal(CURRENCIES.XAF.decimals, 0);
 assert.equal(CURRENCIES.EUR.decimals, 2);
 
-console.log('Tests devises : EUR (rendu V1), FCFA sans centimes, repli et pays→devise validés.');
+// Repli des accents : sans lui, 'ô' (U+00F4) dépasse 'z' en comparaison brute.
+assert.equal(foldAccents("Côte d'Ivoire"), "cote d'ivoire");
+assert.equal(foldAccents('États-Unis'), 'etats-unis');
+assert.equal(foldAccents('Sénégal'), 'senegal');
+
+// La liste affichée est triée, la liste source garde son ordre par zone.
+assert.equal(COUNTRIES_ALPHABETICAL.length, COUNTRIES.length);
+assert.equal(COUNTRIES[0].name, 'Gabon'); // ordre source : Afrique centrale d'abord
+const displayed = COUNTRIES_ALPHABETICAL.map((c) => c.name);
+assert.deepEqual(displayed.slice(0, 6), [
+  'Belgique',
+  'Bénin', // « Belgique » avant « Bénin » : on compare bien lettre à lettre
+  'Burkina Faso',
+  'Cameroun',
+  'Congo',
+  "Côte d'Ivoire", // le piège : après « Congo », pas relégué en fin de liste
+]);
+assert.equal(displayed[6], 'États-Unis'); // É replié sur E, donc entre C et F
+assert.equal(displayed[displayed.length - 1], 'Togo');
+
+console.log(
+  'Tests devises : EUR (rendu V1), FCFA sans centimes, repli, pays→devise et tri alphabétique validés.'
+);

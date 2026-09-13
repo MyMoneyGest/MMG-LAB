@@ -148,6 +148,33 @@ export const COUNTRIES: CountryDef[] = [
   { code: 'US', name: 'États-Unis', flag: '🇺🇸', currency: 'USD' },
 ];
 
+/**
+ * Replie les accents sur leur lettre de base pour trier et chercher.
+ * Sans ça « Côte d'Ivoire » se retrouverait après « Togo » (le code de 'ô'
+ * dépasse celui de 'z') et taper « senegal » ne trouverait pas « Sénégal ».
+ * Table explicite plutôt que `localeCompare('fr')` ou `normalize('NFD')` :
+ * le reste du module écarte déjà Intl pour ne pas dépendre de Hermes.
+ */
+const FOLDED: Record<string, string> = {
+  à: 'a', â: 'a', ä: 'a', ç: 'c', é: 'e', è: 'e', ê: 'e', ë: 'e',
+  î: 'i', ï: 'i', ô: 'o', ö: 'o', ù: 'u', û: 'u', ü: 'u', ÿ: 'y',
+};
+
+export function foldAccents(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, (char) => FOLDED[char] ?? char);
+}
+
+/**
+ * Les pays par ordre alphabétique français, pour l'affichage. `COUNTRIES`
+ * garde son ordre par zone monétaire : il documente quelles devises sont
+ * couvertes, ce qu'une liste triée ne montrerait plus.
+ */
+export const COUNTRIES_ALPHABETICAL: CountryDef[] = [...COUNTRIES].sort((a, b) => {
+  const left = foldAccents(a.name);
+  const right = foldAccents(b.name);
+  return left < right ? -1 : left > right ? 1 : 0;
+});
+
 const COUNTRY_CURRENCY: Record<string, CurrencyCode> = COUNTRIES.reduce(
   (acc, c) => {
     acc[c.code] = c.currency;
