@@ -18,6 +18,13 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 **Sans cette étape, aucun utilisateur du Store n'est mesuré — et la panne est
 silencieuse : `track()` n'émet ni erreur ni trace hors développement.**
 
+> **13/09/2026 — build 2.1.0 lancé** (Android versionCode 4, iOS buildNumber 6)
+> depuis `v2`, avec `eas.json` et son `environment: production`. C'est le
+> premier build de production censé remonter des événements. Le seul point
+> encore ouvert ci-dessous se vérifie APRÈS publication : si aucun `app_open`
+> d'un `install_id` inconnu n'arrive dans les jours qui suivent, la panne n'est
+> pas corrigée et il faut reprendre le diagnostic ici.
+
 Le 2.0.0 publié le 11/08 n'a jamais envoyé un seul événement. Deux causes :
 
 1. `.env` est gitignoré, donc jamais transmis au serveur EAS, et aucun profil
