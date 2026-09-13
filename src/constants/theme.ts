@@ -11,10 +11,19 @@ export const colors = {
   //
   // Le fond valait #F9F6F0 dans la version publiée, à 1,93 de luminance des
   // cartes sur 255 (0,8 %) : invisible, les sections se confondaient. L'écart
-  // est maintenant de 11,7. Les cartes n'ayant ni ombre ni relief, c'est lui
+  // est maintenant de 20,7. Les cartes n'ayant ni ombre ni relief, c'est lui
   // qui fait tout le travail — voir le garde-fou dans test-design.mjs.
   background: '#FFFFFF',
-  card: '#F7F3EC',
+
+  // Parchemin taupe : chaud, mais désaturé et sans jaune doré. La nuance
+  // décide du registre — un crème plus sucré (#F7F3EC, essayé) évoque le
+  // papier de pâtisserie, pas la valeur. On garde la chaleur, on retire le
+  // sucre, et le terracotta reste le seul vrai accent au lieu d'être
+  // concurrencé par la surface qui l'entoure.
+  card: '#EFEAE0',
+  // Mise en avant SUR une carte. Elle ne ressort que de 6,5 en luminance : c'est
+  // le contraste de TEINTE qui fait le travail, ce rose chaud contre le taupe
+  // désaturé de la carte. Ne pas la juger au seul écart de clarté.
   cardSoft: '#F6E0D5',
   cardSoftBorder: '#C97A5E',
 
@@ -24,7 +33,7 @@ export const colors = {
   // blanche — au point qu'une tentative de teinter la page a transformé chaque
   // champ en pastille colorée rivalisant avec l'accent. Un creux doit
   // s'effacer, pas attirer l'œil : il se règle donc par rapport à `card`.
-  field: '#EFE9DE',
+  field: '#E4DDD0',
 
   accent: '#C04A31',
   accentPressed: '#A63F29',
@@ -35,7 +44,7 @@ export const colors = {
 
   text: '#231F1A',
   textSecondary: '#6E675C',
-  border: '#E8E1D5',
+  border: '#DED6C8',
 
   success: '#5BA97C',
   banner: '#F3DCCF',

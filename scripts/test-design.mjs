@@ -269,7 +269,7 @@ assert.match(theme, /\{ from: 0, color: colors\.progress\.start \}/);
 // le fond était quasi blanc : dès qu'on le teinte, chaque champ devient une
 // pastille colorée. Seuls le navigateur et le conteneur d'écran peuvent porter
 // `background`.
-assert.match(theme, /field: '#EFE9DE'/);
+assert.match(theme, /field: '#E4DDD0'/);
 // La carte doit se détacher du fond. Faute d'ombre ou de relief, la luminance
 // est le seul écart qui l'en sépare — il valait 1,93 sur 255 et les sections
 // d'un écran se confondaient. On mesure une valeur ABSOLUE : la carte a d'abord
