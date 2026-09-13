@@ -99,10 +99,19 @@ prioriser.
   actions, et en mode guidé l'action "Fait" déclenche `confirm()` qui affiche bien l'écran
   "moment marquant" (`ConfirmationOverlay`). L'app s'ouvre et célèbre déjà, même via notif.
 
-### Idée retenue et priorisée : retours haptiques (`expo-haptics`)
+### ✅ Idée retenue et priorisée : retours haptiques (`expo-haptics`)
 Vibration subtile au moment de "Versement fait" — sensation physique de "devoir accompli",
-cohérent avec le premium sobre (pas d'effet visuel ajouté). `expo-haptics` n'est pas encore une
-dépendance. **À ajouter au lot premium** avec le cercle de progression déjà noté.
+cohérent avec le premium sobre (pas d'effet visuel ajouté).
+
+**Implémenté le 2026-09-13** (`src/lib/haptics.ts`, déclenché par
+`confirmation-overlay.tsx`). Deux nuances : une pulsation pour un versement,
+deux temps quand l'objectif est atteint — l'écran distingue déjà ces deux
+moments visuellement avec la pastille « Objectif atteint ».
+
+⚠️ **Périmètre volontairement étroit** : rien ne vibre ailleurs. L'effet vient
+de la rareté, et une app qui vibre à chaque appui se fait désactiver. Un test
+(`test-design.mjs`) vérifie que l'accueil, la création, le budget, le menu et
+les dialogues n'en ont pas — c'est la dérive à laquelle il faut résister.
 
 ### ⭐⭐ Idée structurante de Patrick : simplifier + inverser une partie de l'onboarding
 Née en réaction à l'échange, réflexion en cours ("bon à creuser, je réfléchis en écrivant") :

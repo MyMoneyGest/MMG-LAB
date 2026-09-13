@@ -35,6 +35,19 @@ const iconGenerator = read('scripts/generate-app-icons.swift');
 const actions = read('src/lib/actions.ts');
 const goalTypes = read('src/lib/types.ts');
 const savingsLocationModal = read('src/components/savings-location-modal.tsx');
+const haptics = read('src/lib/haptics.ts');
+
+// Le retour haptique est réservé à la confirmation d'un versement. Ces surfaces
+// sont les plus tentantes pour en ajouter « aussi » : on vérifie qu'elles n'en
+// ont pas.
+const screensWithoutHaptics = [
+  ['index', index],
+  ['new-goal', newGoal],
+  ['budget', budget],
+  ['menu-modal', menu],
+  ['app-dialog', appDialog],
+  ['feedback-banner', feedbackBanner],
+];
 
 assert.match(newGoal, /La date cible doit permettre le premier rappel prévu/);
 
@@ -415,6 +428,17 @@ assert.match(confirmation, /FadeInUp\.delay/);
 assert.match(confirmation, /Objectif atteint/);
 assert.match(confirmation, /ReduceMotion\.System/);
 assert.match(confirmation, /delay\(760\)\.duration\(300\)/);
+// Retour haptique : à l'apparition de l'écran, et distinct quand l'objectif
+// est atteint. Il ne doit rester qu'à cet endroit — vibrer sur la navigation
+// ordinaire userait l'effet.
+assert.match(confirmation, /if \(done\) hapticGoalReached\(\);/);
+assert.match(confirmation, /else hapticContributionLogged\(\);/);
+assert.match(haptics, /NotificationFeedbackType\.Success/);
+assert.match(haptics, /ImpactFeedbackStyle\.Medium/);
+assert.match(haptics, /\.catch\(\(\) => \{\}\)/, 'une vibration ratée ne doit jamais faire échouer un versement');
+for (const [name, source] of screensWithoutHaptics) {
+  assert.doesNotMatch(source, /haptic/i, `${name} ne doit pas vibrer : l'effet vient de la rareté`);
+}
 assert.match(reminderDay, /loadingLabel="Mise à jour…"/);
 assert.match(balance, /loadingLabel="Recalcul…"/);
 assert.match(rebalance, /loadingLabel="Application…"/);

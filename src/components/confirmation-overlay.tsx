@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, ReduceMotion, ZoomIn } from 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
 import { fitFontSize, formatDate, formatMonth } from '@/lib/format';
+import { hapticContributionLogged, hapticGoalReached } from '@/lib/haptics';
 import { useMoney } from '@/lib/use-money';
 import { Button } from './ui';
 
@@ -32,6 +34,17 @@ export function ConfirmationOverlay({
   onClose: () => void;
 }) {
   const { money } = useMoney();
+
+  // La vibration accompagne l'apparition de l'écran, pas l'appui sur le bouton :
+  // c'est le moment où le versement est acquis. `done` est figé tant que
+  // l'écran reste ouvert (il vient d'un seul objet d'état), donc pas de
+  // double déclenchement.
+  useEffect(() => {
+    if (!visible) return;
+    if (done) hapticGoalReached();
+    else hapticContributionLogged();
+  }, [visible, done]);
+
   return (
     <Modal visible={visible} animationType="fade" onRequestClose={onClose}>
       <View style={styles.container}>
