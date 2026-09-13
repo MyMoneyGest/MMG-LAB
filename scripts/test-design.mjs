@@ -264,6 +264,27 @@ assert.match(theme, /\{ from: 0, color: colors\.progress\.start \}/);
   assert.equal(progressColor(Number.NaN), palette.progress.start);
 }
 
+// `background` est le fond d'écran, `field` les surfaces en creux posées sur une
+// carte (saisies, recherche, pastilles). Les deux ne se confondaient que tant que
+// le fond était quasi blanc : le teinter en terracotta a transformé chaque champ
+// en pastille colorée. Seuls le navigateur et le conteneur d'écran peuvent
+// porter `background`.
+assert.match(theme, /field: '#F4EFE7'/);
+assert.match(ui, /backgroundColor: colors\.field/);
+for (const [name, source] of [
+  ['country-list', read('src/components/country-list.tsx')],
+  ['calendar-modal', read('src/components/calendar-modal.tsx')],
+  ['new-goal', newGoal],
+  ['goal', goal],
+  ['country', country],
+]) {
+  assert.doesNotMatch(
+    source,
+    /backgroundColor: colors\.background/,
+    `${name} : une surface en creux doit utiliser colors.field, pas le fond d'écran`
+  );
+}
+
 assert.match(theme, /card: 22/);
 assert.match(theme, /button: 18/);
 assert.match(theme, /screen: 16/);

@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.field,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.field,

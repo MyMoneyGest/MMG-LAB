@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansRegular,
     fontSize: 15,
     color: colors.text,
-    backgroundColor: colors.background,
+    backgroundColor: colors.field,
     borderRadius: radius.field,
     borderWidth: 1,
     borderColor: colors.border,

@@ -1,18 +1,27 @@
 // Direction visuelle MMG : premium et sobre, mais chaleureux.
-// Fond blanc cassé chaud (pas blanc pur, pas de dark mode par défaut),
-// une seule couleur d'accent (terracotta), le fond sombre est réservé
-// aux moments marquants (récap de plan, confirmation de versement).
+// Le fond porte la couleur de marque (terracotta clair), les cartes sont
+// quasi blanches, et le fond sombre reste réservé aux moments marquants
+// (récap de plan, confirmation de versement). Pas de dark mode pour l'instant.
 
 export const colors = {
-  // Le fond est un sable chaud, franchement plus profond que les cartes : elles
-  // n'ont ni ombre ni relief, donc c'est le seul écart qui les détache. Il était
-  // de 1,93 sur 255 (0,8 %) — invisible, et les sections d'un écran se
-  // confondaient. Il est maintenant d'environ 16, soit huit fois plus, ce qui
-  // reste loin d'un gris franc : on cherche la lisibilité, pas le contraste.
-  background: '#F1EADE',
+  // Terracotta clair, de la même famille que l'accent : l'app est dans sa
+  // couleur au lieu de la réserver aux boutons.
+  //
+  // Il a d'abord été un blanc cassé (#F9F6F0) presque identique aux cartes —
+  // 1,93 de luminance d'écart sur 255, soit 0,8 %. Comme les cartes n'ont ni
+  // ombre ni relief, c'est le seul écart qui les détache : les sections d'un
+  // écran se confondaient. Il est maintenant de 46.
+  background: '#E7C8B7',
   card: '#FDFBF7',
   cardSoft: '#F6E0D5',
   cardSoftBorder: '#C97A5E',
+
+  // Surfaces en creux posées SUR une carte : champs de saisie, recherche,
+  // boutons de mois du calendrier. Volontairement distinct de `background` :
+  // les deux ont longtemps été confondus parce que le fond était quasi blanc,
+  // et le teinter a transformé chaque champ en pastille terracotta qui rivalisait
+  // avec l'accent. Un creux doit s'effacer, pas attirer l'œil.
+  field: '#F4EFE7',
 
   accent: '#C04A31',
   accentPressed: '#A63F29',

@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 3,
     paddingHorizontal: 9,
-    backgroundColor: colors.background,
+    backgroundColor: colors.field,
   },
   nameValue: { fontFamily: fonts.serifItalic, fontSize: 14, color: colors.text },
   namePencil: { fontSize: 11, color: colors.textSecondary },

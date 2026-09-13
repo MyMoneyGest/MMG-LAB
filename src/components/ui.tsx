@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   fieldWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.field,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.field,

@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
   reminderPill: {
     color: colors.textSecondary,
-    backgroundColor: colors.background,
+    backgroundColor: colors.field,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
