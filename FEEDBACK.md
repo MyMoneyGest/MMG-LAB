@@ -13,6 +13,25 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 🚀 2026-09-13 — 2.1.0 envoyé sur les deux plateformes
+
+- **Android** : app bundle 4 (2.1.0) déposé sur la piste « Tests fermés — Alpha »,
+  release « MMG 2.1.0 — test fermé », notes fr-FR, déploiement complet.
+  Envoyé pour examen → *en cours d'examen*. Google annonce **jusqu'à 7 jours**,
+  y compris pour un test fermé : ce n'est pas instantané, contrairement à ce
+  qu'on supposait. Le bundle 3 (2.0.0) passe en « non inclus ».
+  Avertissement sans gravité : pas de fichier de désobscurcissement (R8/ProGuard
+  n'est pas actif sur un build Expo standard). **0 appareil perdu** — 12 477
+  téléphones, 6 684 tablettes.
+- **iOS** : build 2.1.0 (6) chargé sur App Store Connect, visible dans TestFlight.
+  Groupes existants : « publics testers » (3 externes), « Team (Expo) » (8 internes).
+
+⚠️ **Déséquilibre à exploiter** : ~11 testeurs côté iOS, **1 seul côté Android**.
+Si une partie d'entre eux possède aussi un Android, c'est le chemin le plus court
+vers les 12 inscrits — et donc vers le démarrage des 14 jours.
+
+---
+
 ## 🚧 2026-09-13 — Le vrai goulot : 12 testeurs Play, et il y en a 1
 
 Relevé dans la Play Console le 13/09. L'accès à la production pour un compte
