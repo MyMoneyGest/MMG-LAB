@@ -13,6 +13,30 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## ✅ 2026-09-15 — 2.1.0 EN LIGNE sur la piste Alpha
+
+Examen Google terminé, puis publication le **15/09 à 10:27**. La piste
+« Tests fermés — Alpha » est active sur MMG 2.1.0, 14 pays/régions,
+« disponible pour certains testeurs ». Côté Apple, la vérification est
+également passée.
+
+⚠️ **Piège à connaître pour les prochaines fois** : le compte a la
+**publication gérée activée**. Une version approuvée par Google n'est donc
+PAS diffusée automatiquement — elle reste en attente dans « Vue d'ensemble
+de la publication » jusqu'à ce qu'on clique « Publier ». Et la console ne
+le signale pas : elle change juste le titre de la section, de « en cours
+d'examen » à « prêtes à être publiées ». On a cru attendre Google pendant
+deux jours alors que la balle était dans notre camp. Le réglage se désactive
+dans le menu déroulant du même écran.
+
+📌 À vérifier avant le **30/09/2026** : une notification du 08/09 rappelle
+d'enregistrer les applications pour la **validation des développeurs
+Android**. Le tableau de bord affiche « toutes vos applis ont bien été
+enregistrées », donc c'est probablement fait — mais l'échéance est proche et
+mérite une confirmation de deux minutes.
+
+---
+
 ## 🚀 2026-09-13 — 2.1.0 envoyé sur les deux plateformes
 
 - **Android** : app bundle 4 (2.1.0) déposé sur la piste « Tests fermés — Alpha »,
