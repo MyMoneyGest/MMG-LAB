@@ -131,6 +131,16 @@ assert.match(country, /styles\.eyebrowRow/);
 assert.match(country, /setUserName\(nameDraft\)/);
 assert.match(country, /userName \?\? 'Ton prénom'/);
 assert.doesNotMatch(newGoal, /Comment doit-on t'appeler|setUserName/);
+// Le bouton « Continuer » doit committer un prénom encore en cours de saisie.
+// L'écran défile en `keyboardShouldPersistTaps="handled"` : le tap est consommé
+// par le bouton SANS retirer le focus au champ, donc `onBlur` ne se déclenche
+// pas. Sans cette ligne, un prénom saisi au premier lancement était perdu, et
+// il fallait le ressaisir depuis le menu pour le voir sur le tableau de bord.
+assert.match(
+  country,
+  /const save = async \(\) => \{\s*\n\s*if \(saving\) return;(?:\s*\n\s*\/\/[^\n]*)*\s*\n\s*if \(nameEditing\) commitName\(\);/,
+  'save() doit committer le brouillon du prénom avant de naviguer'
+);
 // Liste partagée (recherche + groupes par devise + radio) entre le bottom
 // sheet du premier lancement et l'écran de réglages, qui l'affiche à plat :
 // on y vient pour changer de pays, pas pour relire la page d'accueil.

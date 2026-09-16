@@ -107,6 +107,13 @@ export default function CountryScreen() {
 
   const save = async () => {
     if (saving) return;
+    // Le prénom peut être encore en cours de saisie. L'écran défile dans un
+    // ScrollView en `keyboardShouldPersistTaps="handled"` : le tap sur le
+    // bouton est consommé sans retirer le focus au champ, donc `onBlur` ne se
+    // déclenche pas et le brouillon serait perdu en quittant l'écran. C'est
+    // exactement ce qui se passait au premier lancement — le prénom saisi
+    // n'apparaissait pas, et il fallait le ressaisir depuis le menu.
+    if (nameEditing) commitName();
     const conversionRate =
       changingExistingCurrency && conversionChoice === 'convert'
         ? (parsedRate ?? undefined)
