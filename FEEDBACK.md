@@ -13,6 +13,28 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 🐞 2026-09-16 — Prénom du premier lancement : corrigé, mais PAS dans le 2.1.0 en ligne
+
+**Si un testeur signale que son prénom ne s'affiche pas, c'est ça. Ne pas
+rouvrir l'enquête : le correctif est déjà sur `v2` (commit `b2dd748`).**
+
+Le prénom saisi à la première connexion n'était pas enregistré. `commitName()`
+n'était appelé que par le `onBlur` du champ, jamais par le bouton « Continuer »
+— et `onBlur` ne se déclenchait pas, l'écran défilant en
+`keyboardShouldPersistTaps="handled"` (le tap est consommé par le bouton sans
+retirer le focus). Quiconque tapait son prénom puis touchait directement
+« Continuer » perdait sa saisie. Ceux qui touchaient ailleurs avant ne voyaient
+rien.
+
+**Décision de Patrick (16/09) : pas de 2.1.1, on groupe avec la prochaine
+livraison.** Le bug est bénin — rien n'est perdu, le prénom se renseigne depuis
+le menu, le parcours n'est pas bloqué. Mais il touche le tout premier geste d'un
+nouvel utilisateur, donc **tous les testeurs recrutés d'ici la prochaine version
+le rencontreront**. Une phrase dans le message de recrutement suffit à le
+désamorcer.
+
+---
+
 ## ✅ 2026-09-15 — 2.1.0 EN LIGNE sur la piste Alpha
 
 Examen Google terminé, puis publication le **15/09 à 10:27**. La piste
