@@ -102,8 +102,13 @@ from events
 where install_id not in (
   'install-1784788834062-uklf43hsnw',  -- Patrick — ancien install, téléphone habituel
   'install-1787134036038-1qnk2xwqzp',  -- Patrick — second téléphone de test (19/08/2026)
-  'install-1787134747711-1dwxyrgrut'   -- Patrick — téléphone habituel, APK 2.0.0 (19/08/2026)
+  'install-1787134747711-1dwxyrgrut',  -- Patrick — téléphone habituel, APK 2.0.0 (19/08/2026)
+  'install-1789548913830-mg7iwwsefz'   -- Patrick — Android, APK 2.1.0 (16/09/2026)
   -- , 'install-xxxx'                  -- ex. proches testant « pour voir »
+  --
+  -- ⚠️ NE PAS exclure 'install-1784896946511-qob00bzw2d' : premier utilisateur
+  -- RÉEL (iOS, TestFlight, 16/09/2026 à 10h13). C'est lui qui a clos le
+  -- bloqueur tracking du 19/08 — app_open puis contribution_logged en 37 s.
 );
 
 revoke all on events_reels from anon, authenticated;

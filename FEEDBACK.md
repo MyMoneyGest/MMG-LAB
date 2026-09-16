@@ -13,6 +13,44 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 🎉 2026-09-16 — LE TRACKING FONCTIONNE. Bloqueur du 19/08 CLOS.
+
+Premier utilisateur réel mesuré : **`install-1784896946511-qob00bzw2d`**, iOS,
+2.1.0, TestFlight. `app_open` à 10h13:36, puis `contribution_logged` à
+10h14:13 — **37 secondes**. Quelqu'un a ouvert l'app et essayé la boucle
+principale dans la foulée.
+
+La même journée, un Android (le téléphone de Patrick, APK 2.1.0) a produit la
+séquence complète : `app_open`, `goal_created`, `goal_deleted`,
+`contribution_logged`. **Les deux plateformes remontent sur la version
+publiée**, et toute la boucle est instrumentée.
+
+### Pourquoi on a cru pendant deux jours que rien ne marchait
+
+Rien n'était cassé. Vérifié dans l'ordre, avant de trouver :
+
+1. Les chaînes exactes du `.env` (URL **et** clé anon) sont bien présentes dans
+   le `.aab` publié — inspecté avec `strings` sur le bytecode Hermes. Un
+   `grep` direct ne les trouve pas : c'est du binaire, pas du texte.
+2. Cette clé accepte toujours les écritures (`201` à la demande).
+3. `anon` ne peut pas lire `events_reels` (`permission denied`) — la sécurité
+   tient, mais ça empêche tout diagnostic depuis l'extérieur.
+4. La table `events` contenait les données depuis le début. On regardait au
+   mauvais moment, ou au mauvais endroit.
+
+**La leçon** : avec une RLS insert-only, on ne peut rien vérifier sans la
+console. Le premier réflexe doit être `select ... from public.events` sur la
+table BRUTE — pas la vue, qui est faite pour masquer des choses.
+
+### Écart corrigé au passage
+
+`scripts/retention-queries.sql` annonçait 3 exclusions ; la base n'en
+appliquait qu'**une**. Le script avait été mis à jour le 19/08 mais jamais
+exécuté dans Supabase. À ne pas refaire : modifier le fichier ne change rien
+tant qu'on ne lance pas le `create or replace`.
+
+---
+
 ## 📡 2026-09-16 — Quelques installations par APK au Gabon, NON exclues
 
 Deux ou trois personnes au Gabon passent par un VPN, ce qui rend l'app
@@ -125,7 +163,7 @@ inscrits. Chaque semaine sans recrutement retarde d'autant l'accès production.
 
 ---
 
-## ⛔ 2026-08-19 — À FAIRE AVANT LE PROCHAIN BUILD DE PRODUCTION (tracking)
+## ✅ 2026-08-19 — (CLOS le 16/09) Tracking à rétablir avant le build de production
 
 **Sans cette étape, aucun utilisateur du Store n'est mesuré — et la panne est
 silencieuse : `track()` n'émet ni erreur ni trace hors développement.**
@@ -162,7 +200,7 @@ Corrigé côté EAS le 19/08, et vérifié sur `preview` : l'APK remonte bien
       Fait le 13/09 : les deux variables sont présentes sur `production`, et
       la clé anon y est identique à celle du `.env` local (46 caractères).
       L'API REST répond — insertion réelle testée, `201`.
-- [ ] Après publication, confirmer qu'un `app_open` d'un utilisateur réel
+- [x] Après publication, confirmer qu'un `app_open` d'un utilisateur réel
       arrive dans `public.events` (un `install_id` absent de la liste
       d'exclusion de `events_reels`).
 
