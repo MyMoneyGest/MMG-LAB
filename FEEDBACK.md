@@ -35,12 +35,22 @@ Rien n'était cassé. Vérifié dans l'ordre, avant de trouver :
 2. Cette clé accepte toujours les écritures (`201` à la demande).
 3. `anon` ne peut pas lire `events_reels` (`permission denied`) — la sécurité
    tient, mais ça empêche tout diagnostic depuis l'extérieur.
-4. La table `events` contenait les données depuis le début. On regardait au
-   mauvais moment, ou au mauvais endroit.
+4. La table `events` contenait les données depuis le début. **Le Table Editor
+   de Supabase trie par clé primaire CROISSANTE** : la première page montre
+   les lignes les plus anciennes. En restant sur cette page, la dernière date
+   visible était le 10/08 — d'où la conviction que plus rien n'arrivait. Les
+   événements récents étaient à la dernière page.
 
-**La leçon** : avec une RLS insert-only, on ne peut rien vérifier sans la
-console. Le premier réflexe doit être `select ... from public.events` sur la
-table BRUTE — pas la vue, qui est faite pour masquer des choses.
+**La leçon** : deux outils ont menti par omission, chacun à un bout. La vue
+`events_reels` masque des lignes par conception ; le Table Editor en affiche
+l'autre extrémité. Réflexe à prendre pour tout diagnostic :
+
+```sql
+select count(*) as total, max(created_at) as plus_recent from public.events;
+```
+
+Sur la table BRUTE, avec un tri explicite. Jamais sur la vue, jamais en se
+fiant à l'ordre par défaut d'une interface.
 
 ### Écart corrigé au passage
 
