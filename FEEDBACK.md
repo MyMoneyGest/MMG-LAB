@@ -13,6 +13,24 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 📡 2026-09-16 — Quelques installations par APK au Gabon, NON exclues
+
+Deux ou trois personnes au Gabon passent par un VPN, ce qui rend l'app
+indisponible depuis le Play Store. Le Gabon est pourtant bien ciblé par la
+piste Alpha (vérifié en console) : c'est la région détectée qui est faussée,
+rien à corriger côté distribution. Elles reçoivent donc l'APK directement
+(build `preview` 2.1.0, versionCode 4).
+
+**Décision de Patrick : on ne les exclut pas de `events_reels`** — elles sont
+minoritaires. À garder en tête en lisant la rétention : ces `install_id`
+correspondent à des proches sollicités pour donner un avis, pas à des
+utilisateurs qui ont découvert l'app d'eux-mêmes.
+
+⚠️ Rappel : **les installations par APK ne comptent pas** dans les 12 testeurs
+exigés par Google. Seule la piste Alpha fait avancer ce compteur.
+
+---
+
 ## 🐞 2026-09-16 — Prénom du premier lancement : corrigé, mais PAS dans le 2.1.0 en ligne
 
 **Si un testeur signale que son prénom ne s'affiche pas, c'est ça. Ne pas
