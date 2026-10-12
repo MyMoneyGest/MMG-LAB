@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import type { EventRow } from './analytics';
 import { CurrencyCode, DEFAULT_CURRENCY } from './currency';
 import { convertFinancialData } from './currency-conversion';
 import {
@@ -41,6 +42,18 @@ interface MMGState {
   lastNudgeAt?: string;
   /** Coups de pouce actuellement programmés (annulation + plafond + tracing). */
   nudgePlan?: ScheduledNudge[];
+  /**
+   * Événements de mesure dont l'envoi a échoué, rejoués au prochain passage au
+   * premier plan. Persistés : une panne de serveur dure parfois des semaines, et
+   * sans cette file les événements de cette période n'existent nulle part.
+   */
+  pendingEvents: EventRow[];
+  /**
+   * Dernier échec d'envoi. Sert à RENDRE LA PANNE VISIBLE : deux pannes de
+   * mesure sont passées inaperçues faute de signal. Affiché dans le menu sur un
+   * build de test.
+   */
+  lastTrackFailure?: { at: string; message: string };
 
   setLocale: (locale: { country?: string; currencyCode: CurrencyCode }) => void;
   convertLocale: (locale: {
@@ -66,7 +79,17 @@ interface MMGState {
   setUserName: (userName?: string) => void;
   recordAppOpen: () => void;
   setNudgePlan: (plan: ScheduledNudge[], lastNudgeAt?: string) => void;
+  queueEvents: (rows: EventRow[], failure: string) => void;
+  clearQueuedEvents: (sentCount: number) => void;
+  recordTrackFailure: (message: string) => void;
 }
+
+/**
+ * Plafond de la file d'attente. Au-delà on jette les PLUS ANCIENS : sur une
+ * panne longue, les événements récents disent mieux l'usage actuel, et une file
+ * sans borne finirait par peser sur le stockage local d'un téléphone.
+ */
+const MAX_PENDING_EVENTS = 300;
 
 export const useStore = create<MMGState>()(
   persist(
@@ -76,6 +99,7 @@ export const useStore = create<MMGState>()(
       goals: [],
       balanceSnapshots: [],
       notifPermissionAsked: false,
+      pendingEvents: [],
 
       // Les anciens utilisateurs (store persisté sans ces champs) retombent sur
       // EUR par défaut via le merge de zustand/persist — aucune migration requise.
@@ -145,6 +169,23 @@ export const useStore = create<MMGState>()(
           nudgePlan,
           lastNudgeAt: lastNudgeAt ?? state.lastNudgeAt,
         })),
+
+      queueEvents: (rows, failure) =>
+        set((state) => ({
+          pendingEvents: [...state.pendingEvents, ...rows].slice(-MAX_PENDING_EVENTS),
+          lastTrackFailure: { at: new Date().toISOString(), message: failure },
+        })),
+
+      // On retire par le DÉBUT et seulement le nombre envoyé : un événement
+      // tracé pendant le rejeu doit rester en file, pas disparaître avec le lot.
+      clearQueuedEvents: (sentCount) =>
+        set((state) => ({
+          pendingEvents: state.pendingEvents.slice(sentCount),
+          lastTrackFailure: undefined,
+        })),
+
+      recordTrackFailure: (message) =>
+        set({ lastTrackFailure: { at: new Date().toISOString(), message } }),
     }),
     {
       name: 'mmg-store-v1',

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '@/constants/theme';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
+import { TEST_TOOLS_ENABLED } from '@/lib/test-tools';
 import { useGoalDeletion } from '@/lib/use-goal-deletion';
 import { useMoney } from '@/lib/use-money';
 import { AppDialog } from './app-dialog';
@@ -53,6 +54,8 @@ export function MenuModal({
   const insets = useSafeAreaInsets();
   const goals = useStore((s) => s.goals);
   const userName = useStore((s) => s.userName);
+  const pendingEvents = useStore((s) => s.pendingEvents);
+  const lastTrackFailure = useStore((s) => s.lastTrackFailure);
   const setUserName = useStore((s) => s.setUserName);
   const [nameModalOpen, setNameModalOpen] = useState(false);
   const { goalToDelete, deletePending, deleteError, askDelete, closeDelete, confirmDelete } =
@@ -201,6 +204,17 @@ export function MenuModal({
                 )}
                 {action('Confidentialité · CGU', '/legal', () => router.push('/legal'))}
               </View>
+              {/* État de la mesure, sur un build de test seulement. Deux pannes
+                  de tracking (août et septembre 2026) sont passées inaperçues
+                  plusieurs semaines faute du moindre signal : ces deux lignes
+                  sont le signal. */}
+              {TEST_TOOLS_ENABLED && (pendingEvents.length > 0 || lastTrackFailure) ? (
+                <Text style={styles.trackingStatus}>
+                  Mesure : {pendingEvents.length} évènement
+                  {pendingEvents.length === 1 ? '' : 's'} en attente
+                  {lastTrackFailure ? ` · dernier échec : ${lastTrackFailure.message}` : ''}
+                </Text>
+              ) : null}
             </View>
           </ScrollView>
         </Pressable>
@@ -304,6 +318,12 @@ const styles = StyleSheet.create({
   actionItemPressed: { backgroundColor: colors.cardSoft },
   actionLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
   actionLabelCurrent: { color: colors.textSecondary },
+  trackingStatus: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: colors.accent,
+    marginTop: 8,
+  },
   // Valeur courante à droite du libellé : on lit son prénom sans ouvrir le modal.
   actionValue: {
     fontSize: 13,

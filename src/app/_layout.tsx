@@ -13,7 +13,7 @@ import { AppState } from 'react-native';
 import { PendingReminderModal } from '@/components/pending-reminder-modal';
 import type { PendingReminderChoice } from '@/components/pending-reminder-modal';
 import { colors } from '@/constants/theme';
-import { track } from '@/lib/analytics';
+import { flushPendingEvents, track } from '@/lib/analytics';
 import { mergePendingReminders } from '@/lib/notification-model';
 import type { PendingReminder } from '@/lib/notification-model';
 import {
@@ -82,6 +82,10 @@ export default function RootLayout() {
     const refresh = async () => {
       await waitForStoreHydration();
       useStore.getState().recordAppOpen();
+      // Rejoue les événements qu'une panne de mesure avait mis en file. C'est
+      // ici que le réseau est le plus souvent revenu, et l'appel ne bloque
+      // rien : un échec laisse simplement la file en place.
+      void flushPendingEvents();
       await scheduleNudges();
     };
     void refresh();
