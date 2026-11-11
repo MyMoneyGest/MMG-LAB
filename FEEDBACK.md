@@ -59,13 +59,45 @@ c'est aussi la signature d'un vrai utilisateur qui a essayé et n'est pas revenu
 le signal de rétention négatif le plus important qu'on puisse recevoir. Écarter « ceux qui ne
 sont pas revenus » reviendrait à ne mesurer que les gens contents.
 
-Et la Belgique le montre : sur ses 4 installations, une seule a 73 événements sur 4 jours, la
-boucle complète (projet, versement, confirmation de solde) — **c'est l'appareil le plus engagé
-de toute la table.** Un filtre par pays l'aurait supprimé.
-
 **Donc : segmenter, pas filtrer.** Lire la rétention avec et sans la cohorte US, et regarder
 si une nouvelle grappe apparaît au prochain envoi — si oui, le lien avec la revue est établi
 et on pourra exclure par identifiant, envoi par envoi. Chantier `mesure-cohorte-us`.
+
+### ⚠️ Ce que « pays » veut dire exactement — et deux erreurs que j'ai faites
+
+`metadata->>'country'` n'est **ni une géolocalisation, ni forcément un choix**. C'est le pays
+enregistré dans l'app, et il est **présélectionné depuis la région système du téléphone**
+(`country.tsx:24`, `getLocales()[0].regionCode`). La devise en découle : elle n'apporte aucune
+information supplémentaire.
+
+Deux conséquences qu'il faut avoir en tête avant de lire le tableau ci-dessus.
+
+**1. « FR » est un fourre-tout.** La liste ne contient que 16 pays. Tout téléphone réglé sur un
+pays absent de la liste retombe sur `'FR'`. Les 26 « France » contiennent donc aussi bien un
+téléphone marocain, canadien ou britannique. **On ne peut pas conclure de ces données qu'il n'y
+a pas d'utilisateurs hors France et Gabon** — la mesure est incapable de les distinguer.
+
+**2. Un même appareil peut émettre plusieurs pays**, et compter « les installations dont un
+app_open porte BE » n'est donc pas compter des Belges. Je m'y suis laissé prendre :
+`install-1783790886497-ivp6b00uod`, que j'avais présenté comme « l'appareil le plus engagé de
+la table » et « un utilisateur belge qui vaut un message », a en réalité changé de pays quatre
+fois :
+
+| Jour | Version | Pays | Ce qu'il a fait |
+|---|---|---|---|
+| 10/08 | 1.0.0 | FR puis **GA** | 9 ouvertures, 2 projets créés, 1 versement, 1 suppression |
+| 16/08 | 2.0.0 | FR | **18 ouvertures**, 1 réajustement |
+| 17/08 | 2.0.0 | **BE** | 5 ouvertures, 1 projet (déménagement) |
+| 13/09 | 2.0.0 | **BE** | 9 ouvertures, solde confirmé, 2 versements, 1 réajustement |
+
+Dix-huit ouvertures en une journée, des pays qui changent, des projets créés puis supprimés :
+ce n'est pas le profil d'un épargnant, c'est celui de quelqu'un qui **explore l'app**. Son
+identifiant date du 22/07, deux jours avant le test APK « d'un ami de Patrick » du 24/07.
+
+**La conclusion « tu as un excellent utilisateur en Belgique » était fausse.** Ce qui reste
+vrai, et qui est plus utile : le filtre par pays n'a aucun sens pour écarter qui que ce soit,
+puisque le pays n'est pas stable pour un appareil donné. La cohorte US, elle, n'a pas cette
+ambiguïté — ses onze installations n'ont qu'un seul événement chacune, donc un seul pays.
 
 ---
 
