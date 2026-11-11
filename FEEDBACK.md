@@ -13,6 +13,62 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 🤖 2026-11-11 — Onze installations américaines qui n'ont jamais eu de lendemain
+
+Trouvé en cherchant à qui appartenaient six appareils apparus sur la 2.2.0. Patrick en a
+reconnu un seul ; les cinq autres n'étaient pas lui. Avant de conclure à cinq nouveaux
+utilisateurs, un détail : ils ont tourné entre 13h36 et 15h11, **alors que la 2.2.0 n'était
+pas encore publiée sur le Play Store** — elle l'a été à 21h30.
+
+En regardant le pays enregistré dans l'app, toutes installations confondues depuis juillet :
+
+| Pays | Installations | Lignes | Première | Dernière |
+|---|---:|---:|---|---|
+| FR | 26 | 84 | 10/08 | 11/11 |
+| *(aucun)* | 21 | 51 | 23/07 | 14/10 |
+| **US** | **11** | **11** | 13/08 | 11/11 |
+| GA | 6 | 27 | 10/08 | 11/11 |
+| BE | 4 | 17 | 17/08 | 11/11 |
+| BJ | 2 | 2 | 13/08 | 01/11 |
+
+**Onze installations américaines, onze événements.** Une ouverture chacune, jamais deux. Le
+détail le confirme : les onze ont `jours = 1`, aucune n'est revenue un second jour, sur trois
+mois. Deux d'entre elles ont tout de même créé un projet, et une a reporté une échéance.
+
+Elles apparaissent par grappes autour des dates d'envoi aux stores — 13/08, septembre, et
+aujourd'hui dans l'heure qui a suivi les deux builds.
+
+**L'hypothèse : ce n'est pas de l'usage, c'est de la revue.** Google et Apple font tourner les
+applications qu'on leur soumet, et ces exécutions partent de leurs infrastructures — US et
+Belgique sont deux implantations majeures de Google. Une personne qui crée un projet et
+reporte une échéance revient ; aucune de ces onze n'est jamais revenue.
+
+**Ce qui contredit l'hypothèse, et qu'il faut garder en tête :** le rapport de pré-lancement
+de la Play Console est **vide**, aucun n'a jamais été généré. Ce n'est donc pas le Robo test.
+La revue d'application elle-même n'est exposée nulle part dans la console, donc elle n'est ni
+confirmable ni infirmable depuis là.
+
+### Pourquoi ça compte, et pourquoi on n'exclut rien pour l'instant
+
+Le dénominateur de la mesure, c'est « les personnes ayant créé un projet ». Deux de ces onze y
+sont entrées. À l'échelle actuelle — 59 installations réelles dans la vue — deux faux
+dénominateurs se voient.
+
+Mais **l'exclusion automatique serait pire que le mal**. Une ouverture unique sans lendemain,
+c'est aussi la signature d'un vrai utilisateur qui a essayé et n'est pas revenu — c'est-à-dire
+le signal de rétention négatif le plus important qu'on puisse recevoir. Écarter « ceux qui ne
+sont pas revenus » reviendrait à ne mesurer que les gens contents.
+
+Et la Belgique le montre : sur ses 4 installations, une seule a 73 événements sur 4 jours, la
+boucle complète (projet, versement, confirmation de solde) — **c'est l'appareil le plus engagé
+de toute la table.** Un filtre par pays l'aurait supprimé.
+
+**Donc : segmenter, pas filtrer.** Lire la rétention avec et sans la cohorte US, et regarder
+si une nouvelle grappe apparaît au prochain envoi — si oui, le lien avec la revue est établi
+et on pourra exclure par identifiant, envoi par envoi. Chantier `mesure-cohorte-us`.
+
+---
+
 ## 🧹 2026-11-11 — Supabase assaini : la sonde DELETE blanchie, et la moitié de la mesure était du navigateur
 
 Les trois actions Supabase en attente depuis l'audit du 01/11, passées dans l'éditeur SQL.
