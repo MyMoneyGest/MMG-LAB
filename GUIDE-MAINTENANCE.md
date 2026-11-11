@@ -360,6 +360,27 @@ réinstallation de l'app ou un vidage de ses données. Il **n'y a pas** de copie
 (c'est un choix de conception : MMG ne stocke rien de personnel). Rien à « réparer » côté
 serveur.
 
+### Le menu affiche une version qui n'est pas la bonne (en local)
+
+Depuis la 2.3.0, le bas du menu affiche `Version 2.2.0 · production`. Si, **en local
+seulement**, il affiche une version plus ancienne que celle d'`app.json`, ce n'est pas un bug
+de l'app : Expo inscrit la version dans le code au moment où il fabrique le bundle, et ce
+travail est mis en cache. Le cache survit à l'arrêt du serveur, à `--clear`, et il n'est
+**pas** dans le dossier du projet.
+
+Le vider pour de bon :
+
+```bash
+rm -rf "$TMPDIR"metro-cache "$TMPDIR"metro-file-map-expo-* node_modules/.cache
+```
+
+puis relancer `npx expo start`. (Constaté le 11/11/2026 : le menu annonçait 2.1.0 alors
+qu'`app.json` disait 2.2.0 depuis des heures, et `npx expo config --type public` confirmait
+2.2.0. Supprimer `node_modules/.cache` ne suffisait pas.)
+
+**Ça ne concerne jamais les vraies versions** : un build EAS est fabriqué dans un
+environnement neuf, sans cache. La 2.2.0 envoyée aux stores portait bien 2.2.0.
+
 ### Le compteur Supabase semble vide
 1. Vérifie que le fichier `.env` existe bien et contient les deux lignes Supabase.
 2. Sans `.env`, l'app marche normalement mais n'envoie aucun événement — c'est volontaire.

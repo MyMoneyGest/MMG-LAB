@@ -7,6 +7,9 @@
       "developmentClient": true,
       "distribution": "internal",
       "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_MMG_CHANNEL": "development"
+      },
       "android": {
         "buildType": "apk"
       }
@@ -15,6 +18,9 @@
       "developmentClient": true,
       "distribution": "internal",
       "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_MMG_CHANNEL": "development"
+      },
       "ios": {
         "simulator": true
       }
@@ -22,6 +28,9 @@
     "preview": {
       "distribution": "internal",
       "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_MMG_CHANNEL": "preview"
+      },
       "android": {
         "buildType": "apk"
       }
@@ -29,12 +38,16 @@
     "preview-test": {
       "extends": "preview",
       "env": {
-        "EXPO_PUBLIC_MMG_TEST_TOOLS": "1"
+        "EXPO_PUBLIC_MMG_TEST_TOOLS": "1",
+        "EXPO_PUBLIC_MMG_CHANNEL": "preview-test"
       }
     },
     "production": {
       "autoIncrement": true,
-      "environment": "production"
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_MMG_CHANNEL": "production"
+      }
     }
   },
   "submit": {

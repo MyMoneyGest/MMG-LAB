@@ -133,6 +133,33 @@ revoke all on events_reels from anon, authenticated;
 --      dénominateur. APRÈS : android 31 / 160 · ios 28 / 73, soit 233 lignes sur 538.
 
 
+-- 0.f  À VENIR : écarter les builds de test par leur drapeau, plus par leur id.
+--      Depuis la 2.3.0, chaque événement porte `metadata->>'build'` (canal de
+--      distribution : development / preview / preview-test / production / local)
+--      et, uniquement sur un build de test, `metadata->>'test_build' = 'true'`.
+--      Un appareil de test n'a donc plus besoin d'être inventorié à la main —
+--      c'est ce qui avait fait vivre 4 exclusions dans le dépôt et 1 dans la base.
+--
+--      ⚠️ NE PAS l'ajouter à la vue tout de suite : les lignes antérieures à la
+--      2.3.0 n'ont pas ces clés, et un filtre `= 'true'` les laisserait passer
+--      tandis qu'un filtre mal écrit les supprimerait toutes. Quand la 2.3.0
+--      aura remplacé le parc, ajouter à `events_reels` :
+--        and (metadata->>'test_build') is distinct from 'true'
+--
+--      ⚠️ `preview` N'EST PAS un build de test : c'est l'APK reçu par les
+--      personnes au Gabon que le VPN prive du Play Store (décision du 16/09,
+--      elles comptent). Ne jamais filtrer sur `build <> 'production'`.
+--
+--      Voir d'où viennent les lignes récentes :
+--   select metadata->>'build' as canal,
+--          metadata->>'test_build' as test,
+--          count(*) as lignes,
+--          count(distinct install_id) as installs
+--   from events
+--   where created_at > now() - interval '30 days'
+--   group by 1, 2 order by lignes desc;
+
+
 -- 0.e  ⭐ FAIT LE 11/11/2026 : retirer à la clé publique les droits destructeurs.
 --      La clé anon est dans le binaire de l'app, donc publique. Seul RLS empêchait la
 --      casse — et RLS ne s'applique PAS à TRUNCATE, qui était accordé par défaut.

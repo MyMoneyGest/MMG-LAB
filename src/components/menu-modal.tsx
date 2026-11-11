@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
 import { describeBackup, type BackupFile } from '@/lib/backup';
+import { BUILD_LABEL } from '@/lib/build-info';
 import { exportBackup, pickBackup, restoreBackup } from '@/lib/backup-io';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
@@ -271,6 +272,16 @@ export function MenuModal({
                   {lastTrackFailure ? ` · dernier échec : ${lastTrackFailure.message}` : ''}
                 </Text>
               ) : null}
+              {/* Version et canal, visibles par TOUT LE MONDE et pas seulement
+                  sur un build de test — c'est précisément quand quelqu'un dit
+                  « ça ne marche pas » qu'il faut savoir sur quoi il est, et
+                  cette personne-là n'a jamais un build de test. Deux enquêtes
+                  de plusieurs jours (août, septembre 2026) ont commencé par
+                  cette question sans réponse. Sélectionnable pour être recopié
+                  dans un message. */}
+              <Text selectable style={styles.buildInfo}>
+                Version {BUILD_LABEL}
+              </Text>
             </View>
           </ScrollView>
         </Pressable>
@@ -406,6 +417,16 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     color: colors.accent,
     marginTop: 8,
+  },
+  // Discret par construction : c'est une information de dépannage, pas une
+  // fonctionnalité. Assez lisible pour être recopiée, assez effacée pour que
+  // personne ne la lise par accident.
+  buildInfo: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: colors.textSecondary,
+    marginTop: 10,
+    opacity: 0.7,
   },
   // Valeur courante à droite du libellé : on lit son prénom sans ouvrir le modal.
   actionValue: {

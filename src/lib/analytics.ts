@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+import { BUILD_CHANNEL, IS_TEST_BUILD } from './build-info';
 import { useStore } from './store';
 import { supabase } from './supabase';
 
@@ -50,7 +51,16 @@ function buildRow(
     // l'insertion actuelle est la seule forme éprouvée (201), et on ne sait pas
     // si `anon` a le droit d'écrire cette colonne. En analyse, préférer
     // `metadata->>'occurred_at'` quand il est présent.
-    metadata: { ...params?.metadata, occurred_at: new Date().toISOString() },
+    // `build` : canal de distribution, pour savoir d'où vient la ligne sans
+    // tenir un inventaire d'install_id à la main. `test_build` n'est posé QUE
+    // s'il est vrai : sa présence suffit à écarter la ligne, et les lignes
+    // d'avant la 2.3.0 ne l'ont pas (cf. retention-queries.sql).
+    metadata: {
+      ...params?.metadata,
+      occurred_at: new Date().toISOString(),
+      build: BUILD_CHANNEL,
+      ...(IS_TEST_BUILD ? { test_build: true } : null),
+    },
     platform: Platform.OS,
     app_version: Constants.expoConfig?.version ?? null,
   };
