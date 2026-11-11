@@ -79,7 +79,11 @@ const handledNotificationActions = new Set<string>();
 const handledFeedbackMessages = new Set<string>();
 
 export default function GoalScreen() {
-  const { money } = useMoney();
+  // Pas de `money` ici : sur cet écran, TOUT montant s'affiche sans qu'on ait
+  // rien touché, donc tout passe par `glance`. Masquer l'anneau en laissant
+  // « Objectif mensuel 583,34 € » en gros juste dessous ne protégerait de rien.
+  const { glance, hideAmounts } = useMoney();
+  const setHideAmounts = useStore((s) => s.setHideAmounts);
   const {
     id,
     notificationAction,
@@ -452,8 +456,8 @@ export default function GoalScreen() {
       ) : capacityExceeded && globalPlan && !rebalanceReview ? (
         <View style={styles.capacityWarning}>
           <Text style={styles.capacityWarningText}>
-            Au mois le plus exigeant, tes plans demandent {money(globalPlan.currentEffort)},
-            mais ta capacité prudente globale est de {money(globalPlan.capacity)}. Un
+            Au mois le plus exigeant, tes plans demandent {glance(globalPlan.currentEffort)},
+            mais ta capacité prudente globale est de {glance(globalPlan.capacity)}. Un
             réajustement est recommandé.
           </Text>
         </View>
@@ -473,19 +477,37 @@ export default function GoalScreen() {
         {/* L'anneau affiche le montant mis de côté et le pourcentage en son centre
             (fitFontSize interne gère les gros montants FCFA sans déborder). Les
             trois repères chiffrés sont regroupés en dessous. */}
-        <ProgressRing pct={pct} amount={money(saved)} />
+        <ProgressRing pct={pct} amount={glance(saved)} />
+
+        {/* L'œil est le seul endroit d'où l'on commande le masquage. Il est posé
+            sous l'anneau, contre les chiffres qu'il protège, plutôt qu'enfoui
+            dans le menu : la personne à qui on vient de tendre son téléphone
+            doit pouvoir remasquer d'un geste, sans chercher. */}
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityState={{ checked: hideAmounts }}
+          accessibilityLabel={
+            hideAmounts ? 'Afficher les montants' : 'Masquer les montants'
+          }
+          hitSlop={10}
+          onPress={() => setHideAmounts(!hideAmounts)}
+          style={styles.revealToggle}>
+          <Text style={styles.revealToggleLabel}>
+            {hideAmounts ? '👁 Afficher les montants' : '🙈 Masquer les montants'}
+          </Text>
+        </Pressable>
 
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Objectif</Text>
             <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={styles.statValue}>
-              {money(goal.targetAmount)}
+              {glance(goal.targetAmount)}
             </Text>
           </View>
           <View style={[styles.stat, styles.statMiddle]}>
             <Text style={styles.statLabel}>Restant</Text>
             <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={styles.statValue}>
-              {money(remaining)}
+              {glance(remaining)}
             </Text>
           </View>
           <View style={styles.stat}>
@@ -558,11 +580,11 @@ export default function GoalScreen() {
                       <Text style={styles.adviceFreeAmount}>Aucun montant imposé</Text>
                     ) : (
                       <Text
-                        style={[styles.adviceAmount, { fontSize: fitFontSize(money(suggested), 38) }]}
+                        style={[styles.adviceAmount, { fontSize: fitFontSize(glance(suggested), 38) }]}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                         minimumFontScale={0.4}>
-                        {money(suggested)}
+                        {glance(suggested)}
                       </Text>
                     )}
                   </View>
@@ -606,7 +628,7 @@ export default function GoalScreen() {
               ) : (
                 <View style={{ gap: 4 }}>
                   <Button
-                    label={`J'ai mis de côté ✓ (${money(suggested)})`}
+                    label={`J'ai mis de côté ✓ (${glance(suggested)})`}
                     onPress={() => confirm(suggested, 'one_tap')}
                     loading={actionLoading}
                     loadingLabel="Enregistrement…"
@@ -653,7 +675,7 @@ export default function GoalScreen() {
                         <Text style={styles.previewMeta}>{index === 0 ? 'Prochaine' : 'Puis'}</Text>
                       </View>
                       <Text style={styles.previewAmount}>
-                        {freeMode ? 'Montant libre' : money(row.amount)}
+                        {freeMode ? 'Montant libre' : glance(row.amount)}
                       </Text>
                     </View>
                   ))}
@@ -693,7 +715,7 @@ export default function GoalScreen() {
                   {index === 0 ? <Text style={styles.scheduleNext}>Prochain rappel</Text> : null}
                 </View>
                 <Text style={styles.scheduleAmount}>
-                  {freeMode ? 'Montant libre' : money(row.amount)}
+                  {freeMode ? 'Montant libre' : glance(row.amount)}
                 </Text>
               </View>
             ))
@@ -725,7 +747,7 @@ export default function GoalScreen() {
                       { color: c.type === 'deposit' ? colors.success : colors.accent },
                     ]}>
                     {c.type === 'deposit' ? '+' : '−'}
-                    {money(c.amount)}
+                    {glance(c.amount)}
                   </Text>
                 </View>
               ))
@@ -998,6 +1020,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   statLabel: { fontSize: 12, color: colors.textSecondary },
+  revealToggle: { alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 12 },
+  revealToggleLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   statValue: { fontSize: 15, fontWeight: '800', color: colors.text },
   savingsLocation: {
     alignSelf: 'flex-start',

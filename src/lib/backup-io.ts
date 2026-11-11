@@ -43,6 +43,7 @@ export async function exportBackup(): Promise<ExportResult> {
         balanceSnapshots: state.balanceSnapshots ?? [],
         rebalanceReview: state.rebalanceReview,
         lastViewedGoalId: state.lastViewedGoalId,
+        hideAmounts: state.hideAmounts,
       },
       { exportedAt, appVersion: Constants.expoConfig?.version ?? null }
     );

@@ -50,6 +50,14 @@ export interface BackupData {
   balanceSnapshots: BalanceSnapshot[];
   rebalanceReview?: RebalanceReview;
   lastViewedGoalId?: string;
+  /**
+   * Masquage des montants. C'est une préférence de la PERSONNE, pas de
+   * l'appareil : quelqu'un qui tient à la discrétion y tient encore sur son
+   * téléphone suivant. Facultatif pour rester compatible dans les deux sens
+   * avec les sauvegardes v1 écrites avant son existence — une sauvegarde sans
+   * la clé restaure le défaut, c'est-à-dire masqué.
+   */
+  hideAmounts?: boolean;
 }
 
 export interface BackupFile {
@@ -216,6 +224,10 @@ export function parseBackup(text: string): BackupParseResult {
         country: typeof data.country === 'string' ? data.country : undefined,
         currencyCode: data.currencyCode as CurrencyCode,
         userName: typeof data.userName === 'string' ? data.userName : undefined,
+        // Tout ce qui n'est pas explicitement `false` laisse le masquage actif.
+        // Une clé absente, nulle ou abîmée ne doit jamais révéler des montants
+        // que la personne avait choisi de cacher : en cas de doute, on masque.
+        hideAmounts: data.hideAmounts === false ? false : true,
         budget: isObject(data.budget) ? (data.budget as unknown as Budget) : undefined,
         goals: (data.goals as Goal[]).map(stripDeviceIds),
         balanceSnapshots: Array.isArray(data.balanceSnapshots)

@@ -480,7 +480,7 @@ assert.doesNotMatch(adjustGoal, /<StepIndicator|Quel projet veux-tu préparer/);
 
 assert.match(goal, /<Screen footer=\{tabBar\}>/);
 assert.match(goal, /schedule\.slice\(0, 2\)/);
-assert.match(goal, /label=\{`J'ai mis de côté ✓ \(\$\{money\(suggested\)\}\)`\}/);
+assert.match(goal, /label=\{`J'ai mis de côté ✓ \(\$\{glance\(suggested\)\}\)`\}/);
 assert.match(goal, /label="J'ai mis de côté ✓"/);
 // Fiche projet : en-tête « Bonjour, {prénom} » + marque à droite (accès au
 // menu), statut du projet en pastille, titre en serif italique, et les trois
@@ -518,7 +518,28 @@ assert.match(goal, /accessibilityRole="tab"/);
 // Onglets illustrés (tracés SVG : pas de librairie d'icônes dans le projet).
 assert.match(goal, /<Icon color=\{active \? colors\.accent : colors\.textSecondary\}/);
 assert.match(read('src/components/tab-icons.tsx'), /export function HomeIcon/);
-assert.match(goal, /<ProgressRing pct=\{pct\} amount=\{money\(saved\)\}/);
+// Masquage des montants (chantier liv-solde-masque). `glance` masque, `money`
+// ne masque pas : la distinction est le cœur de la fonctionnalité, et les trois
+// montants lisibles sans rien toucher doivent passer par `glance`.
+assert.match(goal, /<ProgressRing pct=\{pct\} amount=\{glance\(saved\)\}/);
+assert.match(goal, /\{glance\(goal\.targetAmount\)\}/);
+assert.match(goal, /\{glance\(remaining\)\}/);
+assert.match(menu, /\{glance\(remainingAmount\(g\)\)\} restants/);
+// L'œil commande le masquage depuis l'écran, contre les chiffres qu'il protège.
+assert.match(goal, /accessibilityState=\{\{ checked: hideAmounts \}\}/);
+assert.match(goal, /setHideAmounts\(!hideAmounts\)/);
+// ⚠️ Et SUR CET ÉCRAN, plus un seul `money(` : tout s'y affiche sans qu'on ait
+// rien touché. Masquer l'anneau en laissant « Objectif mensuel 583,34 € » en
+// gros juste dessous ne protégerait de rien — le défaut a existé une heure.
+assert.doesNotMatch(goal, /\bmoney\(/);
+// ⚠️ Les modales de saisie ne doivent JAMAIS masquer : on les ouvre exprès, et
+// masquer ce qu'on est en train de taper rendrait l'app inutilisable.
+for (const [name, source] of [
+  ['amount-modal', read('src/components/amount-modal.tsx')],
+  ['balance-modal', read('src/components/balance-modal.tsx')],
+]) {
+  assert.doesNotMatch(source, /glance\(/, `${name} ne doit pas masquer sa saisie`);
+}
 assert.match(goal, />Où \?</);
 assert.match(goal, /goal\.savingsLocation \?\? 'Ajouter'/);
 assert.match(goal, /<SavingsLocationModal/);

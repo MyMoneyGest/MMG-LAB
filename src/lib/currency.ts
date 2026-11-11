@@ -135,6 +135,25 @@ export function formatMoney(amount: number, code: CurrencyCode = DEFAULT_CURRENC
   return def.symbolAfter ? `${number}\u00a0${def.symbol}` : `${def.symbol}${number}`;
 }
 
+/**
+ * Ce qui remplace les chiffres quand les montants sont masqu\u00e9s. Longueur fixe
+ * et ind\u00e9pendante du montant : \u00ab \u2022\u2022\u2022 \u00bb pour 12 \u20ac comme pour 2 000 000 FCFA,
+ * sinon la largeur du masque trahirait l'ordre de grandeur.
+ */
+export const MASKED_DIGITS = '\u2022\u2022\u2022';
+
+/**
+ * Montant masqu\u00e9, devise conserv\u00e9e. On cache la somme, pas l'unit\u00e9 : savoir
+ * qu'on lit des FCFA et non des euros n'apprend rien sur l'\u00e9pargne de
+ * quelqu'un, et le garder \u00e9vite que l'\u00e9cran paraisse cass\u00e9.
+ */
+export function maskMoney(code: CurrencyCode = DEFAULT_CURRENCY): string {
+  const def = CURRENCIES[code] ?? CURRENCIES[DEFAULT_CURRENCY];
+  return def.symbolAfter
+    ? `${MASKED_DIGITS}\u00a0${def.symbol}`
+    : `${def.symbol}${MASKED_DIGITS}`;
+}
+
 /** Pays proposés au premier lancement (starter — Codex peut étendre). */
 export interface CountryDef {
   code: string; // ISO 3166-1 alpha-2

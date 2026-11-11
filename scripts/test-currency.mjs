@@ -20,6 +20,8 @@ const {
   COUNTRIES_ALPHABETICAL,
   foldAccents,
   maxAmountFor,
+  maskMoney,
+  MASKED_DIGITS,
 } = loaded.exports;
 
 // EUR : rendu IDENTIQUE à la V1 (formatEuro) — pas de « ,00 » sur un entier.
@@ -94,6 +96,40 @@ assert.equal(maxAmountFor('JPY'), 10_000_000);
 assert.ok(2_000_000 < maxAmountFor('XAF')); // 2 M FCFA, l'exemple de l'app
 assert.ok(3_500 < maxAmountFor('EUR'));
 
+// Masquage : la devise reste, les chiffres partent.
+assert.equal(maskMoney('EUR'), `${MASKED_DIGITS} €`);
+assert.equal(maskMoney('XAF'), `${MASKED_DIGITS} FCFA`);
+assert.equal(maskMoney(undefined), `${MASKED_DIGITS} €`);
+assert.equal(maskMoney('JPY'), `${MASKED_DIGITS} €`);
+// Et le symbole reste du MÊME CÔTÉ que dans l'affichage normal, quelle que
+// soit la devise : sinon l'écran changerait de forme en même temps qu'il
+// masque, et le simple fait de masquer déplacerait tout. Vérifié contre
+// formatMoney plutôt que contre des chaînes écrites à la main, pour que la
+// règle tienne encore le jour où une devise à symbole préfixé sera ajoutée.
+for (const code of Object.keys(CURRENCIES)) {
+  const { symbol } = CURRENCIES[code];
+  const normal = formatMoney(1234, code);
+  const masked = maskMoney(code);
+  assert.ok(masked.includes(symbol), `${code} : le masque doit garder la devise`);
+  assert.equal(
+    normal.indexOf(symbol) === 0,
+    masked.indexOf(symbol) === 0,
+    `${code} : le symbole doit rester du même côté qu'en affichage normal`,
+  );
+}
+// ⚠️ Le masque ne doit RIEN dire du montant. Une longueur variable trahirait
+// l'ordre de grandeur : « •• » pour 12 € et « ••••••• » pour 2 M aurait
+// l'apparence du secret sans en avoir l'effet.
+assert.equal(maskMoney('EUR'), maskMoney('EUR'));
+assert.ok(!/\d/.test(maskMoney('EUR')));
+assert.ok(!/\d/.test(maskMoney('XAF')));
+for (const amount of [0, 12, 3_500, 2_000_000, 5_000_000_000]) {
+  assert.ok(
+    !maskMoney('XAF').includes(String(amount)),
+    'le masque ne doit contenir aucun chiffre du montant',
+  );
+}
+
 console.log(
-  'Tests devises : EUR (rendu V1), FCFA sans centimes, repli, pays→devise, tri alphabétique et plafonds validés.'
+  'Tests devises : EUR (rendu V1), FCFA sans centimes, repli, pays→devise, tri alphabétique, plafonds et masquage validés.'
 );

@@ -46,7 +46,7 @@ export function MenuModal({
   onClose: () => void;
   currentGoalId?: string;
 }) {
-  const { money } = useMoney();
+  const { money, glance } = useMoney();
   const router = useRouter();
   const pathname = usePathname();
   // `useGlobalSearchParams` et non `useLocalSearchParams` : ce dernier renvoyait
@@ -196,7 +196,7 @@ export function MenuModal({
                   <View style={{ flex: 1 }}>
                     <Text style={styles.goalName}>{g.name}</Text>
                     <Text style={styles.goalMeta}>
-                      {progressPct(g)} % atteint · {money(remainingAmount(g))} restants
+                      {progressPct(g)} % atteint · {glance(remainingAmount(g))} restants
                     </Text>
                   </View>
                   <View style={styles.goalActions}>

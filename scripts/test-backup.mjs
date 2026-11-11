@@ -78,6 +78,34 @@ assert.equal(exported.name, 'Voiture');
 // L'objet d'origine n'est pas modifié au passage.
 assert.equal(goal.notificationId, 'notif-abc');
 
+// --- Masquage des montants : une préférence de personne, pas d'appareil -----
+// Quelqu'un qui tient à la discrétion y tient encore sur son téléphone suivant,
+// donc le réglage voyage. Mais il doit voyager dans le sens SÛR : en cas de
+// doute on masque. Révéler des montants que quelqu'un avait cachés serait une
+// faute qu'il ne découvrirait qu'une fois son écran lu par un autre.
+const reveleAller = buildBackup({ ...data, hideAmounts: false }, { exportedAt });
+assert.equal(reveleAller.data.hideAmounts, false);
+const reveleRetour = parseBackup(JSON.stringify(reveleAller));
+assert.equal(reveleRetour.ok, true);
+assert.equal(reveleRetour.backup.data.hideAmounts, false, 'un choix explicite de révéler survit');
+
+const masqueAller = buildBackup({ ...data, hideAmounts: true }, { exportedAt });
+assert.equal(parseBackup(JSON.stringify(masqueAller)).backup.data.hideAmounts, true);
+
+// Tout ce qui n'est pas explicitement `false` laisse le masquage actif :
+// sauvegarde d'avant la fonctionnalité, clé absente, nulle, ou abîmée.
+for (const valeurDouteuse of [undefined, null, 'false', 0, '', 'oui', {}]) {
+  const bancal = JSON.parse(JSON.stringify(buildBackup(data, { exportedAt })));
+  if (valeurDouteuse !== undefined) bancal.data.hideAmounts = valeurDouteuse;
+  const relu = parseBackup(JSON.stringify(bancal));
+  assert.equal(relu.ok, true, `une valeur douteuse ne doit pas faire échouer la restauration`);
+  assert.equal(
+    relu.backup.data.hideAmounts,
+    true,
+    `hideAmounts=${JSON.stringify(valeurDouteuse)} doit retomber sur « masqué »`,
+  );
+}
+
 // --- Aller-retour complet ---------------------------------------------------
 const roundTrip = parseBackup(JSON.stringify(backup));
 assert.equal(roundTrip.ok, true);

@@ -55,8 +55,15 @@ interface MMGState {
    * build de test.
    */
   lastTrackFailure?: { at: string; message: string };
+  /**
+   * Masque les montants lisibles d'un coup d'œil (anneau, repères chiffrés,
+   * liste des projets). Vrai par défaut, et le choix se retient — voir le
+   * commentaire sur la valeur initiale.
+   */
+  hideAmounts: boolean;
 
   setLocale: (locale: { country?: string; currencyCode: CurrencyCode }) => void;
+  setHideAmounts: (hidden: boolean) => void;
   convertLocale: (locale: {
     country?: string;
     currencyCode: CurrencyCode;
@@ -109,6 +116,13 @@ export const useStore = create<MMGState>()(
       balanceSnapshots: [],
       notifPermissionAsked: false,
       pendingEvents: [],
+      // Masqué à la première ouverture, et seulement à la première : le choix
+      // se retient. Une protection qu'il faut découvrir dans un réglage ne
+      // protège personne — surtout pas celui qui prête son téléphone sans y
+      // penser. Un seul tap suffit à qui s'en moque. Les anciens utilisateurs
+      // (store persisté sans ce champ) retombent ici par le merge de
+      // zustand/persist : ils verront leurs montants masqués une fois.
+      hideAmounts: true,
 
       // Les anciens utilisateurs (store persisté sans ces champs) retombent sur
       // EUR par défaut via le merge de zustand/persist — aucune migration requise.
@@ -125,6 +139,8 @@ export const useStore = create<MMGState>()(
         }),
 
       setBudget: (budget) => set({ budget }),
+
+      setHideAmounts: (hideAmounts) => set({ hideAmounts }),
 
       addBalanceSnapshot: (snapshot) =>
         set((state) => ({
@@ -189,6 +205,7 @@ export const useStore = create<MMGState>()(
           balanceSnapshots: data.balanceSnapshots ?? [],
           rebalanceReview: data.rebalanceReview,
           lastViewedGoalId: data.lastViewedGoalId,
+          hideAmounts: data.hideAmounts ?? true,
           // Le plan de coups de pouce référence des notifications de l'ancien
           // appareil : on repart de zéro, la reprogrammation le reconstruira.
           nudgePlan: undefined,
