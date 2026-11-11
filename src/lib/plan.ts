@@ -27,8 +27,34 @@ import {
  */
 export const REMINDER_HOUR = 9;
 
-/** Libellé prêt à afficher de `REMINDER_HOUR` (format fr-FR, sans Intl). */
-export const REMINDER_TIME_LABEL = `${REMINDER_HOUR} h`;
+/** Libellé prêt à afficher d'une heure (format fr-FR, sans Intl). */
+export function reminderTimeLabel(hour: number = REMINDER_HOUR): string {
+  return `${hour} h`;
+}
+
+/** Libellé de l'heure par défaut, pour les écrans où aucun projet n'existe encore. */
+export const REMINDER_TIME_LABEL = reminderTimeLabel(REMINDER_HOUR);
+
+/**
+ * Heures proposées au réglage. Liste courte et assumée plutôt qu'un champ
+ * libre : MMG demande un geste par mois, pas de choisir entre 24 valeurs dont
+ * 20 n'ont aucun sens pour un rappel d'épargne. Couvre le lever, la matinée,
+ * la pause de midi et deux moments de soirée.
+ */
+export const REMINDER_HOURS = [7, 9, 12, 18, 20] as const;
+
+/**
+ * Heure effective d'un projet. Borne volontairement large (0..23) : la liste
+ * ci-dessus guide le choix, elle ne doit pas invalider un projet dont l'heure
+ * viendrait d'ailleurs (restauration, version future).
+ */
+export function goalReminderHour(goal: Pick<Goal, 'reminderHour'>): number {
+  const hour = goal.reminderHour;
+  if (typeof hour !== 'number' || !Number.isInteger(hour) || hour < 0 || hour > 23) {
+    return REMINDER_HOUR;
+  }
+  return hour;
+}
 
 /** Part du reste à vivre gardée en réserve pour éviter un plan trop serré. */
 export const SAFETY_MARGIN = 0.2;
@@ -171,10 +197,14 @@ export function hasPendingAction(goal: Goal, now: Date = new Date()): boolean {
   );
 }
 
-/** Première occurrence du jour de rappel strictement après `from`, à 9h. */
-export function nextReminderAfter(from: Date, reminderDay: number): Date {
+/** Première occurrence du jour de rappel strictement après `from`, à l'heure du projet. */
+export function nextReminderAfter(
+  from: Date,
+  reminderDay: number,
+  hour: number = REMINDER_HOUR
+): Date {
   const day = Math.min(28, Math.max(1, Math.round(reminderDay)));
-  const d = new Date(from.getFullYear(), from.getMonth(), day, REMINDER_HOUR, 0, 0, 0);
+  const d = new Date(from.getFullYear(), from.getMonth(), day, hour, 0, 0, 0);
   if (d <= from) d.setMonth(d.getMonth() + 1);
   return d;
 }
@@ -190,9 +220,13 @@ function cycleFromAnchor(anchorAt: Date): ReminderCycle {
   return { id: cycleId(anchorAt), anchorAt: anchorAt.toISOString() };
 }
 
-function previousAnchorOnOrBefore(date: Date, reminderDay: number): Date {
+function previousAnchorOnOrBefore(
+  date: Date,
+  reminderDay: number,
+  hour: number = REMINDER_HOUR
+): Date {
   const day = Math.min(28, Math.max(1, Math.round(reminderDay)));
-  const anchor = new Date(date.getFullYear(), date.getMonth(), day, REMINDER_HOUR, 0, 0, 0);
+  const anchor = new Date(date.getFullYear(), date.getMonth(), day, hour, 0, 0, 0);
   if (anchor > date) anchor.setMonth(anchor.getMonth() - 1);
   return anchor;
 }
@@ -206,13 +240,13 @@ export function reminderAtForCycle(cycle: ReminderCycle): Date {
  * Milieu calendaire entre l'ancre précédente et celle du cycle, à 9 h.
  * Le calcul reste attaché aux ancres mensuelles : un report ponctuel ne le décale jamais.
  */
-export function midCycleNudgeAt(cycle: ReminderCycle): Date {
+export function midCycleNudgeAt(cycle: ReminderCycle, hour: number = REMINDER_HOUR): Date {
   const anchor = new Date(cycle.anchorAt);
   const previousAnchor = new Date(
     anchor.getFullYear(),
     anchor.getMonth() - 1,
     anchor.getDate(),
-    9,
+    hour,
     0,
     0,
     0
@@ -220,7 +254,7 @@ export function midCycleNudgeAt(cycle: ReminderCycle): Date {
   const cycleDays = calendarDayNumber(anchor) - calendarDayNumber(previousAnchor);
   const midpoint = new Date(previousAnchor);
   midpoint.setDate(previousAnchor.getDate() + Math.round(cycleDays / 2));
-  midpoint.setHours(REMINDER_HOUR, 0, 0, 0);
+  midpoint.setHours(hour, 0, 0, 0);
   return midpoint;
 }
 
@@ -237,7 +271,9 @@ export function normalizedReminderCycles(
   if (!cycles.length) {
     const primary = new Date(goal.nextReminderAt);
     const isAnchor = primary.getDate() === goal.reminderDay;
-    const anchor = isAnchor ? primary : previousAnchorOnOrBefore(primary, goal.reminderDay);
+    const anchor = isAnchor
+      ? primary
+      : previousAnchorOnOrBefore(primary, goal.reminderDay, goalReminderHour(goal));
     cycles.push({
       ...cycleFromAnchor(anchor),
       ...(isAnchor ? {} : { postponedTo: primary.toISOString() }),
@@ -258,11 +294,11 @@ export function normalizedReminderCycles(
   );
 
   const lastKnown = cycles.at(-1);
-  let cursor = lastKnown ? new Date(lastKnown.anchorAt) : nextReminderAfter(now, goal.reminderDay);
+  let cursor = lastKnown ? new Date(lastKnown.anchorAt) : nextReminderAfter(now, goal.reminderDay, goalReminderHour(goal));
   if (!lastKnown) cycles.push(cycleFromAnchor(cursor));
   let future = cycles.filter((cycle) => new Date(cycle.anchorAt) > now).length;
   while (future < futureCount) {
-    cursor = nextReminderAfter(cursor, goal.reminderDay);
+    cursor = nextReminderAfter(cursor, goal.reminderDay, goalReminderHour(goal));
     const next = cycleFromAnchor(cursor);
     if (!cycles.some((cycle) => cycle.id === next.id)) cycles.push(next);
     future += 1;
@@ -371,7 +407,11 @@ function cycleToPostpone(goal: Goal, now: Date): ReminderCycle {
 
 /** Occurrence mensuelle suivant le cycle reporté, selon l'ancre du plan. */
 export function nextRegularReminderAfterCurrent(goal: Goal, now: Date = new Date()): Date {
-  return nextReminderAfter(new Date(cycleToPostpone(goal, now).anchorAt), goal.reminderDay);
+  return nextReminderAfter(
+    new Date(cycleToPostpone(goal, now).anchorAt),
+    goal.reminderDay,
+    goalReminderHour(goal)
+  );
 }
 
 /**
@@ -427,7 +467,15 @@ export function postponeDateFloor(goal: Goal, now: Date = new Date()): Date {
  * dépendant de l'arrivée de l'ancre.
  */
 export function canPostponeReminderTo(goal: Goal, date: Date, now: Date = new Date()): boolean {
-  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), REMINDER_HOUR, 0, 0, 0);
+  const at = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    goalReminderHour(goal),
+    0,
+    0,
+    0
+  );
   return at > now && at >= postponeDateFloor(goal, now) && at <= postponeDateLimit(goal, now);
 }
 
@@ -438,7 +486,15 @@ export function cyclesAfterPostpone(
   now: Date = new Date()
 ): ReminderCycle[] {
   const target = cycleToPostpone(goal, now);
-  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), REMINDER_HOUR, 0, 0, 0);
+  const at = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    goalReminderHour(goal),
+    0,
+    0,
+    0
+  );
   return normalizedReminderCycles(goal, now).map((cycle) =>
     cycle.id === target.id
       ? {
@@ -465,26 +521,55 @@ export function recentDeposits(
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
-/** Change l'ancre du cycle courant si le nouveau jour est encore à venir. */
+/**
+ * Reconstruit les ancres à venir pour un nouveau jour ET/OU une nouvelle heure.
+ *
+ * L'heure n'est pas qu'un champ d'affichage : elle est gravée dans chaque
+ * `anchorAt`. La changer sans repasser ici laisserait les rappels partir à
+ * l'ancienne heure tout en affichant la nouvelle — le pire des deux.
+ *
+ * Le cycle courant n'est déplacé que si la nouvelle date reste à venir : on ne
+ * ressuscite jamais un rappel déjà passé, pas plus pour l'heure que pour le jour.
+ */
 export function cyclesAfterReminderDayChange(
   goal: Goal,
   newReminderDay: number,
-  now: Date = new Date()
+  now: Date = new Date(),
+  newReminderHour: number = goalReminderHour(goal)
 ): ReminderCycle[] {
   const day = Math.min(28, Math.max(1, Math.round(newReminderDay)));
+  const hour = goalReminderHour({ reminderHour: newReminderHour });
   const cycles = normalizedReminderCycles(goal, now);
   const pastOrDue = cycles.filter((cycle) => new Date(cycle.anchorAt) <= now);
   const current = cycles.find((cycle) => new Date(cycle.anchorAt) > now);
   if (!current) return pastOrDue;
 
   const oldAnchor = new Date(current.anchorAt);
-  const candidate = new Date(oldAnchor.getFullYear(), oldAnchor.getMonth(), day, REMINDER_HOUR, 0, 0, 0);
+  const candidate = new Date(oldAnchor.getFullYear(), oldAnchor.getMonth(), day, hour, 0, 0, 0);
   const scheduleReference = goalScheduleReference(goal, now);
-  const first = candidate > scheduleReference ? cycleFromAnchor(candidate) : { ...current };
+
+  /**
+   * Quand le nouveau JOUR est déjà passé ce mois-ci, le cycle courant reste où
+   * il est — on ne ressuscite pas un rappel. Mais la nouvelle HEURE, elle, peut
+   * encore s'appliquer à cette date : sans ça, quelqu'un qui règle « le 5 à
+   * 7 h » un 12 verrait son prochain rappel sonner à 9 h, et croirait à un bug.
+   * Un report explicite l'emporte et suit la même heure.
+   */
+  const keptAnchor = new Date(oldAnchor);
+  keptAnchor.setHours(hour, 0, 0, 0);
+  const kept: ReminderCycle = { ...current };
+  if (keptAnchor > scheduleReference) kept.anchorAt = keptAnchor.toISOString();
+  if (kept.postponedTo) {
+    const postponed = new Date(kept.postponedTo);
+    postponed.setHours(hour, 0, 0, 0);
+    if (postponed > now) kept.postponedTo = postponed.toISOString();
+  }
+
+  const first = candidate > scheduleReference ? cycleFromAnchor(candidate) : kept;
   const rebuilt = [...pastOrDue, first];
   let cursor = new Date(first.anchorAt);
   for (let index = 0; index < 3; index += 1) {
-    cursor = nextReminderAfter(cursor, day);
+    cursor = nextReminderAfter(cursor, day, hour);
     rebuilt.push(cycleFromAnchor(cursor));
   }
   return rebuilt;
@@ -504,9 +589,9 @@ export function upcomingSchedule(
   const dates = cycles.map(reminderAtForCycle).filter((date) => date >= now && date <= target);
   let cursor = cycles.length
     ? new Date(cycles.at(-1)!.anchorAt)
-    : nextReminderAfter(now, goal.reminderDay);
+    : nextReminderAfter(now, goal.reminderDay, goalReminderHour(goal));
   while (cursor <= target && dates.length < 600) {
-    cursor = nextReminderAfter(cursor, goal.reminderDay);
+    cursor = nextReminderAfter(cursor, goal.reminderDay, goalReminderHour(goal));
     if (cursor <= target) dates.push(new Date(cursor));
   }
   if (!dates.length) dates.push(new Date(cursor));
@@ -695,9 +780,9 @@ function targetDateForCapacity(
     const amounts = plannedAmounts(remaining, months, goal.rhythm ?? 'stable');
     const peak = Math.max(...amounts);
     if (peak <= monthlyCapacity + 0.01) {
-      let date = nextReminderAfter(goalScheduleReference(goal, now), goal.reminderDay);
+      let date = nextReminderAfter(goalScheduleReference(goal, now), goal.reminderDay, goalReminderHour(goal));
       for (let index = 1; index < months; index += 1) {
-        date = nextReminderAfter(date, goal.reminderDay);
+        date = nextReminderAfter(date, goal.reminderDay, goalReminderHour(goal));
       }
       return { date, monthly: amounts[0] };
     }

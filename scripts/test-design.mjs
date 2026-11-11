@@ -511,7 +511,20 @@ assert.match(goal, /loadingLabel="Enregistrement…"/);
 assert.match(goal, /<ActionLoadingOverlay/);
 assert.match(goal, /<FeedbackBanner/);
 assert.match(goal, /Rappel reporté/);
-assert.match(goal, /Jour de rappel modifié/);
+assert.match(goal, /'Rappel modifié'/);
+// Heure du rappel réglable par projet (chantier liv-heure-reglable). L'écran
+// doit afficher l'heure DU PROJET, jamais la constante : afficher 9 h pendant
+// qu'une notification part à 20 h serait pire que de ne rien afficher.
+assert.match(goal, /reminderTimeLabel\(goalReminderHour\(goal\)\)/);
+assert.doesNotMatch(goal, /REMINDER_TIME_LABEL/);
+assert.match(goal, /currentHour=\{goalReminderHour\(goal\)\}/);
+assert.match(goal, /changeReminderDay\(currentGoal, day, hour\)/);
+const reminderModal = read('src/components/reminder-day-modal.tsx');
+assert.match(reminderModal, /REMINDER_HOURS/);
+assert.match(reminderModal, /accessibilityRole="radio"/);
+// ⚠️ Une heure venue d'ailleurs (restauration, version future) doit rejoindre
+// la liste au lieu d'être perdue en silence à l'ouverture du modal.
+assert.match(reminderModal, /\[\.\.\.REMINDER_HOURS, currentHour\]\.sort/);
 assert.match(goal, /MIN_INLINE_LOADING_MS/);
 assert.match(goal, /waitForMinimumLoading\(loadingStartedAt\)/);
 assert.match(goal, /accessibilityRole="tab"/);
@@ -570,7 +583,8 @@ assert.match(goal, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)
 assert.match(planSummary, /Le \$\{formatReminderDay\(reminderDay\)\} du mois, à \$\{REMINDER_TIME_LABEL\}/);
 // L'heure du rappel est annoncée partout où le jour l'est : elle était codée en
 // dur à 9 h et jamais dite, un testeur a dû demander « à quelle heure ? ».
-assert.match(goal, /REMINDER_TIME_LABEL/);
+// La fiche projet dit celle DU PROJET (assertion plus haut) ; le récap de plan
+// et l'écran de création parlent avant qu'un projet existe, donc la constante.
 assert.match(newGoal, /chaque mois, à \{REMINDER_TIME_LABEL\}/);
 assert.match(planLogic, /export const REMINDER_HOUR = 9;/);
 assert.doesNotMatch(planLogic, /, 9, 0, 0, 0\)|setHours\(9,/);

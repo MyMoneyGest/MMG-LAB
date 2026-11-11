@@ -69,6 +69,15 @@ export interface Goal {
   targetDate: string;
   /** Jour du mois du rappel (1..28) */
   reminderDay: number;
+  /**
+   * Heure du rappel (0..23). Absente sur les projets créés avant le réglage :
+   * ils restent à `REMINDER_HOUR`, qui était leur comportement.
+   *
+   * ⚠️ Ce champ ne suffit PAS à déplacer un rappel. L'heure est gravée dans
+   * l'`anchorAt` de chaque cycle au moment où il est créé : la changer impose
+   * de reconstruire les ancres à venir, pas seulement d'écrire ici.
+   */
+  reminderHour?: number;
   /** Rythme d'épargne. Absent sur les anciens projets, qui restent stables. */
   rhythm?: SavingsRhythm;
   /** Mode libre sans montant conseillé. Absent sur les anciens projets, qui restent guidés. */

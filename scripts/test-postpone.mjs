@@ -17,6 +17,7 @@ const {
   cyclesAfterPostpone,
   cyclesAfterReminderDayChange,
   daysBeforeRegularReminder,
+  goalReminderHour,
   midCycleNudgeAt,
   nextRegularReminderAfterCurrent,
   nextReminderFromCycles,
@@ -211,4 +212,76 @@ const alreadyPostponed = {
 assert.equal(canPostponeReminderTo(alreadyPostponed, at(2026, 8, 1), july28), false);
 assert.equal(canPostponeReminderTo(alreadyPostponed, at(2026, 8, 10), july28), true);
 
-console.log('Tests cycles : reports, dettes, extras, extinction, changement d’ancre et sens du report validés.');
+// --- Heure du rappel réglable (chantier liv-heure-reglable) ----------------
+// L'heure est GRAVÉE dans chaque anchorAt. Écrire `reminderHour` sans
+// reconstruire les ancres ferait mentir l'app : l'écran annoncerait 20 h et la
+// notification partirait à 9 h. C'est ce que ce bloc empêche.
+
+// Par défaut, rien ne change pour les projets existants : 9 h.
+assert.equal(goalReminderHour(baseGoal), 9);
+assert.equal(goalReminderHour({ reminderHour: 20 }), 20);
+// Une valeur aberrante ne doit pas produire une date invalide : on retombe sur
+// le défaut plutôt que de programmer un rappel à l'heure -3.
+for (const aberrante of [-1, 24, 9.5, NaN, null, undefined, '20']) {
+  assert.equal(goalReminderHour({ reminderHour: aberrante }), 9, `heure ${aberrante}`);
+}
+
+// Changement d'heure seul : les ancres à venir bougent, les passées restent.
+const avecHistorique = {
+  ...baseGoal,
+  reminderCycles: [
+    { id: 'cycle-2026-06-28', anchorAt: at(2026, 6, 28).toISOString(), settledAt: at(2026, 6, 28).toISOString() },
+    { id: 'cycle-2026-07-28', anchorAt: at(2026, 7, 28).toISOString() },
+  ],
+};
+const a20h = cyclesAfterReminderDayChange(avecHistorique, 28, july12, 20);
+const passe = a20h.find((c) => c.id === 'cycle-2026-06-28');
+const aVenir = a20h.filter((c) => new Date(c.anchorAt) > july12);
+assert.equal(new Date(passe.anchorAt).getHours(), 9, 'une ancre passée ne se réécrit pas');
+assert.ok(aVenir.length >= 2);
+for (const cycle of aVenir) {
+  assert.equal(new Date(cycle.anchorAt).getHours(), 20, 'toute ancre à venir prend la nouvelle heure');
+}
+// Et le jour n'a pas bougé au passage.
+assert.equal(new Date(aVenir[0].anchorAt).getDate(), 28);
+
+// Jour ET heure ensemble : un seul chemin, un seul recalcul.
+// Le 5 est déjà passé le 12, donc le cycle courant GARDE sa date — on ne
+// ressuscite pas un rappel. Mais il prend tout de même la nouvelle heure :
+// sans ça, régler « le 5 à 7 h » ferait sonner le prochain rappel à 9 h, et
+// la personne croirait à un bug.
+const le5a7h = cyclesAfterReminderDayChange(avecHistorique, 5, july12, 7);
+const aVenir5 = le5a7h.filter((c) => new Date(c.anchorAt) > july12);
+assert.equal(new Date(aVenir5[0].anchorAt).getDate(), 28, 'le cycle courant ne recule pas');
+assert.equal(new Date(aVenir5[0].anchorAt).getHours(), 7, "mais il prend la nouvelle heure");
+// Les suivants, eux, passent bien au 5.
+assert.equal(new Date(aVenir5[1].anchorAt).getDate(), 5);
+assert.equal(new Date(aVenir5[1].anchorAt).getHours(), 7);
+
+// ⚠️ On ne ressuscite jamais un rappel déjà passé. Le 28 à 9 h est derrière
+// nous le 28 à 14 h : reculer l'heure à 7 h ne doit pas faire repartir le
+// rappel du jour, sinon une notification tomberait dans le passé.
+const le28a14h = at(2026, 7, 28, 14);
+const recule = cyclesAfterReminderDayChange(avecHistorique, 28, le28a14h, 7);
+for (const cycle of recule) {
+  assert.ok(
+    new Date(cycle.anchorAt) <= le28a14h || new Date(cycle.anchorAt).getHours() === 7,
+    'une ancre future doit porter la nouvelle heure',
+  );
+}
+assert.ok(
+  recule.filter((c) => new Date(c.anchorAt) > le28a14h).every((c) => new Date(c.anchorAt) > le28a14h),
+  'aucune ancre reconstruite ne tombe dans le passé',
+);
+
+// Le coup de pouce de mi-parcours suit l'heure du projet, lui aussi.
+assert.deepEqual(midCycleNudgeAt(augustCycle, 20), at(2026, 8, 13, 20));
+assert.deepEqual(midCycleNudgeAt(augustCycle), at(2026, 8, 13, 9));
+
+// Un report se pose à l'heure du projet, pas à 9 h en dur.
+const projet20h = { ...avecHistorique, reminderHour: 20 };
+const reporte = cyclesAfterPostpone(projet20h, at(2026, 8, 3), july12);
+const cible = reporte.find((c) => c.postponedTo);
+assert.equal(new Date(cible.postponedTo).getHours(), 20);
+
+console.log('Tests cycles : reports, dettes, extras, extinction, changement d’ancre, heure réglable et sens du report validés.');

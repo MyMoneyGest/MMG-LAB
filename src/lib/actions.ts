@@ -6,6 +6,7 @@ import {
   contributionPlan,
   cyclesAfterPostpone,
   cyclesAfterReminderDayChange,
+  goalReminderHour,
   goalActivationDelayDays,
   nextReminderAfter,
   nextRebalanceReviewAt,
@@ -267,11 +268,24 @@ export async function postponeReminder(
 }
 
 /** Change l'ancre sans altérer les dettes ni les cycles déjà échus. */
-export async function changeReminderDay(goal: Goal, reminderDay: number): Promise<void> {
+/**
+ * Change le jour et/ou l'heure du rappel.
+ *
+ * Les deux passent par le même chemin parce qu'ils ont la même conséquence :
+ * reconstruire les ancres à venir puis reprogrammer. Écrire `reminderHour` sans
+ * reconstruire ferait mentir l'app — l'écran annoncerait 20 h et la
+ * notification partirait à 9 h.
+ */
+export async function changeReminderDay(
+  goal: Goal,
+  reminderDay: number,
+  reminderHour: number = goalReminderHour(goal)
+): Promise<void> {
   await cancelGoalReminder(goal);
-  const cycles = cyclesAfterReminderDayChange(goal, reminderDay);
+  const cycles = cyclesAfterReminderDayChange(goal, reminderDay, new Date(), reminderHour);
   useStore.getState().updateGoal(goal.id, {
     reminderDay,
+    reminderHour,
     reminderCycles: cycles,
     nextReminderAt: nextReminderFromCycles(cycles).toISOString(),
     followingReminderAt: undefined,

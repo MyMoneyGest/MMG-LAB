@@ -50,7 +50,8 @@ import {
   rebalanceReviewDue,
   recentDeposits,
   remainingAmount,
-  REMINDER_TIME_LABEL,
+  goalReminderHour,
+  reminderTimeLabel,
   savedTotal,
   suggestedAmount,
   upcomingSchedule,
@@ -600,7 +601,7 @@ export default function GoalScreen() {
                   style={styles.reminderDayLink}>
                   <Text style={styles.reminderDayLinkText}>
                     Jour de rappel : le {formatReminderDay(goal.reminderDay)} à{' '}
-                    {REMINDER_TIME_LABEL} · Modifier
+                    {reminderTimeLabel(goalReminderHour(goal))} · Modifier
                   </Text>
                 </Pressable>
                 {midCycleNudgeSetting}
@@ -828,17 +829,21 @@ export default function GoalScreen() {
       <ReminderDayModal
         visible={reminderDayOpen}
         currentDay={goal.reminderDay}
+        currentHour={goalReminderHour(goal)}
         onClose={() => setReminderDayOpen(false)}
-        onConfirm={async (day) => {
+        onConfirm={async (day, hour) => {
           const loadingStartedAt = Date.now();
           const currentGoal = useStore
             .getState()
             .goals.find((candidate) => candidate.id === goal.id);
           if (!currentGoal) return;
-          await changeReminderDay(currentGoal, day);
+          await changeReminderDay(currentGoal, day, hour);
           await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setReminderDayOpen(false);
-          showFeedback('Jour de rappel modifié', `Le rappel mensuel est maintenant prévu le ${day}.`);
+          showFeedback(
+            'Rappel modifié',
+            `Le rappel mensuel est maintenant prévu le ${formatReminderDay(day)} à ${reminderTimeLabel(hour)}.`
+          );
         }}
       />
       <SavingsLocationModal

@@ -6,6 +6,7 @@ import {
   currentUpcomingCycle,
   goalActivationDate,
   goalSavingsMode,
+  goalReminderHour,
   midCycleNudgeAt,
   nextReminderFromCycles,
   normalizedReminderCycles,
@@ -436,7 +437,7 @@ export async function scheduleNudges(): Promise<void> {
     const planInput = goals.map((goal) => {
       const cycles = normalizedReminderCycles(goal, new Date(now));
       const midCycleNudges = cycles.map((cycle) => ({
-        at: midCycleNudgeAt(cycle).getTime(),
+        at: midCycleNudgeAt(cycle, goalReminderHour(goal)).getTime(),
         reminderAt: reminderAtForCycle(cycle).getTime(),
         settled: Boolean(cycle.settledAt),
       }));
