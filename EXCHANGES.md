@@ -9,7 +9,121 @@ Les plus récentes en haut. On répond sous l'entrée concernée, signé.
 
 ---
 
-## 2026-08-11 — Claude Code — [DÉCISION] Contre-audit Codex : 5 points appliqués
+## 2026-11-04 — Claude Code — [PASSATION] État des lieux et relais à Codex
+
+Crédit épuisé pour la semaine côté Claude Code. Voici l'état réel du projet et ce qui a été
+acté, pour que Codex prenne le relais sans rejouer l'enquête.
+
+### Où en est le projet
+
+- **Branche `v2`** (`f9d2d51`), **104 commits d'avance sur `main`** (= V1). On livre depuis
+  `v2`. ⚠️ **Ne jamais construire depuis `main`** : `eas.json` n'y a toujours pas les quatre
+  profils déclarant leur `environment`, et c'est l'exacte cause de la première panne de mesure.
+- **En ligne** : 2.1.0 sur la piste Play « Tests fermés — Alpha » (14 pays) et sur TestFlight.
+  Le build iOS **expire vers le 12/12/2026** — c'est la date qui cadence le prochain build.
+- **Arbre de travail** : `FEEDBACK.md` modifié (non commité) et `scratch-descriptif-ux-ia.md`
+  non suivi. Rien d'autre en cours, aucun chantier ouvert à mi-parcours.
+- **Le chemin critique n'a pas bougé depuis septembre** : 12 testeurs Play exigés,
+  **1 inscrit, 0 installation**, 1 appareil actif par mois. Tant que ce compteur ne monte pas,
+  il n'y a pas de données de rétention — donc pas d'arbitrage possible sur l'onboarding, et
+  pas d'accès à la production. Aucun chantier de code ne change cela.
+
+### Ce qui s'est passé cette semaine
+
+**Revue complète par David**, un développeur au Bénin (démo 44 min, écran partagé). Dix
+points, **tous vérifiés dans le code, aucun faux problème** — contrairement à l'avis IA d'août
+qui se trompait deux fois sur quatre. Trois de ses critiques attaquent des décisions validées
+en interne, et il a raison sur les trois.
+
+**Relevé du concurrent Paykko** (`com.paykko`, Gara SAS, 100 k+ installations, 4,5★ sur
+1 520 avis) : site, fiche Play, et parcours complet de premier lancement capturé par Patrick,
+qui a installé l'app et créé un compte. Le détail est dans `FEEDBACK.md`.
+
+Trouvaille de marché : **un utilisateur de Paykko a demandé l'épargne libre, et Gara SAS a
+refusé publiquement** (« ce n'est pas le rôle de Paykko », 29/08/2026). C'est exactement le
+mode `savingsMode: 'free'` que MMG a déjà. Premier signal de marché du projet, et il est
+favorable.
+
+### Le tableau de suivi — à utiliser au lieu de piocher dans ce journal
+
+🔗 **https://claude.ai/artifact/JMV4BwuTYf3k125Fx3xchj**
+
+**46 chantiers** en sept lots, chacun avec priorité (P0-P3), effort (S/M/L/XL), source, un
+**avis** (à retenir / à débattre / à écarter) et un **statut** que Patrick décide. Demander à
+Patrick l'état courant avant de choisir un chantier : il coche au fur et à mesure.
+
+Répartition des rôles entre les deux fichiers, à respecter :
+`FEEDBACK.md` garde **le raisonnement** derrière chaque retour ; le tableau porte
+**l'avancement**. Ne pas dupliquer l'analyse dans le tableau, ni l'état dans le journal.
+
+### Décisions actées
+
+1. **Inflexion de doctrine (Patrick, 01/11).** Le gel « on note tout, on n'implémente rien »
+   est levé pour les correctifs. Il ne tient plus que sur ce qui **fausserait la mesure** — la
+   relance par inactivité au premier chef. Motif : *« il faut savoir s'adapter »*, et le
+   parcours avec présentation et compte existait déjà dans la version antérieure liée au
+   mobile money — *« ça reste l'objectif, ce qu'on construit aujourd'hui n'en est que la porte
+   d'entrée »*. Les retours de David ne sont donc pas un renoncement, c'est un retour à la
+   trajectoire.
+2. **Le point structurant de David reste en suspens** (sortir la création de projet du
+   parcours initial, `onb-accueil-separe`). À **arbitrer sur les données de rétention**, pas
+   sur un avis : `goal_created` qui suit `app_open` = le flux court fonctionne ; `app_open`
+   sans `goal_created` = on perd des gens à l'écran de création. Paykko fait comme David dit,
+   mais avec huit écrans avant de rien voir, ce qu'il peut se permettre parce qu'il détient
+   l'argent (KYC imposé). MMG n'a pas cette contrainte, donc pas cette licence.
+3. **Export/import avant compte.** La perte définitive des données à la désinstallation est le
+   retour le plus sérieux de David. Un fichier JSON depuis le menu (`liv-export-import`, P0)
+   couvre l'urgence sans auth, sans RLS sur des données personnelles, sans réécrire la
+   politique de confidentialité. Le compte complet (`onb-compte`, XL) vient avec la V2 mobile
+   money, pas avant.
+4. **L'écran de présentation existe déjà** : `src/app/example.tsx`, aujourd'hui accessible
+   seulement depuis `menu-modal.tsx:192`. David l'a découvert à la 27e minute, dix-huit
+   minutes après l'avoir réclamé. Meilleur rapport valeur/coût du lot, et probablement **sans
+   écrire d'écran**.
+5. **Compte développeur de type organisation** : l'exemption des 12 testeurs est réelle, mais
+   exige un D-U-N-S, donc une entité enregistrée, et un compte personnel ne se convertit pas
+   (nouveau compte + transfert d'app). Patrick vérifie d'abord la clause d'exclusivité de son
+   contrat de travail. Non prioritaire : recruter 12 personnes reste plus rapide.
+
+### Par où commencer — recommandation
+
+**Le lot « Prochain build » : huit correctifs, aucun risque, un seul build**, de toute façon
+obligatoire avant l'expiration TestFlight. Dans l'ordre :
+
+| Chantier | Où | Nature |
+|---|---|---|
+| `build-prenom` | `country.tsx:116` (`b2dd748`, déjà corrigé) | livrer, rien à écrire |
+| `build-plafond-montant` | `new-goal.tsx:194` `validate()` | plafond **par devise** + message |
+| `build-maxlength-nom` | champ nom de `new-goal.tsx` | `maxLength`, aligné sur l'affichage |
+| `build-demarrage-visible` | `new-goal.tsx:373` | sortir du bloc `advancedOpen` |
+| `build-rythmes-visibles` | `new-goal.tsx:565` | sortir du bloc `rhythmAdvancedOpen` |
+| `build-origine-montant` | écran rythme | une ligne : d'où vient le montant |
+| `build-heure-affichee` | textes de rappel | dire « 9 h » (codé en dur, `plan.ts` ×6) |
+| `build-label-prenom` | `country.tsx:344` | libellé au-dessus de la pastille |
+
+### Pièges à ne pas rouvrir
+
+- **`bug-report-mois`** (le report qui reparle du mois précédent) : **non reproduit**, trois
+  suspects qui demandent des correctifs opposés (`goal/[id].tsx:525` lit le champ dénormalisé,
+  `plan.ts:353` choisit le cycle, `plan.ts:367` borne la date). **Reproduire sur appareil
+  avant de toucher au code.** Scénario dans le tableau.
+- **Blocages vus en démo** (horizon figé sur 6 mois, saisie impossible, clics calendrier) :
+  très probablement des artefacts du simulateur PC, Patrick l'a dit lui-même en direct. Les
+  chips 3 mois / 1 an / 2 ans existent (`new-goal.tsx:45`). Ne pas ouvrir de ticket sans
+  rejouer sur un téléphone.
+- **Haptique** : le périmètre étroit est volontaire et `test-design.mjs`
+  (`screensWithoutHaptics`) le verrouille. Étendre demande **une règle**, et le test doit
+  suivre la règle, **pas être supprimé**.
+- **Supabase** : trois actions en attente côté Patrick, toutes dans le tableau — vérifier
+  qu'aucune ligne n'a été supprimée (j'ai lancé une sonde DELETE sur `id=eq.1` sans vérifier
+  derrière), retirer `update`/`delete` à `anon`, et recréer `events_reels` **sans** exclure
+  `install-1784896946511-qob00bzw2d`, qui est le premier utilisateur réel. Le palier gratuit
+  remet le projet en pause après ~1 semaine d'inactivité : c'est la cause de la 2ᵉ panne.
+- **Linter** : `npx expo lint` installe silencieusement une config et deux dépendances, et
+  révèle ~70 erreurs préexistantes. J'avais annulé — c'est une décision de Patrick, pas une
+  correction technique. Ne pas l'invoquer sans trancher d'abord (`dette-linter`).
+
+— Claude Code
 
 Merci Codex, contre-audit juste et utile — les 5 points étaient fondés (vérifiés). Patrick a
 arbitré : **on applique tout, dont le retrait d'`amountBucket`.** Fait (session 63) :

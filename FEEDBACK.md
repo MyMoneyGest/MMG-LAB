@@ -13,6 +13,533 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 🔥 2026-11-01 — Revue complète par un développeur (Bénin, n=1, démo écran partagé)  ⭐⭐⭐
+
+Premier retour d'un **profil technique** (développeur, Bénin — zone XOF, déjà couverte).
+Démo de 44 min en écran partagé, l'app tournant **sur le PC de Patrick (simulateur)**, pas
+sur un téléphone. Source : `Point MMG DAVI BENIN_original.txt` (transcription automatique
+**très dégradée** — une partie des remarques ci-dessous est une **reconstruction**, marquée
+« ⚠️ à confirmer » quand le sens exact reste incertain).
+
+C'est le retour le plus dense reçu à ce jour, et le plus inconfortable : il attaque **deux
+décisions structurantes déjà prises et livrées**. Chaque point a été **vérifié dans le code**
+avant d'être qualifié — aucun n'est un faux problème (contrairement à l'avis IA du 13/08).
+
+> ⚠️ **Biais à garder en tête** : c'est exactement le profil que Patrick disait vouloir éviter
+> (cf. 39:41 de l'échange — « je ne voulais pas que ce soit des gens trop techniques, ils vont
+> tester l'application, pas le produit et l'idée »). Il teste effectivement beaucoup la
+> mécanique. Mais ses deux points structurants, eux, portent bien sur le produit.
+
+### ⭐⭐⭐ 1. « La création de projet ne peut pas être dans le parcours initial »
+
+Son point le plus insistant, répété six fois entre 04:54 et 06:40 :
+
+- « Il faudrait que la personne… il faut la créer **vous d'abord**, avant de commencer à lui
+  parler de créer un projet. »
+- « Une page d'accueil où il atterrit. Pas de création de projet en même temps dans le
+  processus d'inscription, ou dans le parcours initial. Il faudrait que ça soit **séparé**. »
+- « La personne qui vient d'arriver tombe dans un projet créé… ça ne marche pas,
+  **l'espérance est déjà gâtée**. »
+- « Il peut créer un projet **à tout moment**. Mais pas dans le parcours initial. »
+
+*Vérifié* : il a raison sur les faits. `src/app/index.tsx:32` — aucun projet ⇒
+`Redirect` direct vers `/onboarding/new-goal`. Premier lancement = **pays → formulaire de
+création**. Il n'y a ni écran d'accueil, ni écran de présentation.
+
+*Analyse* : **c'est le point dur.** Ce flux n'est pas un oubli, c'est la décision ⭐⭐ du
+13/08 (voir entrée « simplifier + inverser une partie de l'onboarding ») — retirer l'écran
+d'accueil pour réduire le parcours au minimum. Patrick l'a défendue en direct (05:42 :
+« l'idée c'était de réduire le parcours utilisateur le plus possible »), le dev n'a pas cédé.
+
+Les deux ont un argument valable et **ils ne parlent pas de la même chose** :
+- Patrick optimise le **coût** du premier pas (moins d'écrans = moins d'abandon).
+- Le dev optimise la **compréhension** avant le premier pas (on me demande un montant cible
+  alors que je ne sais pas encore ce qu'est cette app).
+
+Ce ne sont pas des positions réconciliables par compromis mou : c'est à **arbitrer sur
+données**. Et la donnée existe, ou presque — c'est précisément ce que le tracking mesure.
+`goal_created` suivant de près `app_open` = le flux court fonctionne ; `app_open` sans
+`goal_created` = il perd des gens à l'écran de création. **À regarder avant de décider.**
+Aujourd'hui l'échantillon est trop petit pour trancher (1 appareil actif/mois).
+
+*Verdict* : **ne rien changer maintenant.** Ouvrir la question quand il y aura assez
+d'installations pour lire le taux de chute à l'écran de création. Si on devait bouger, la piste
+la moins coûteuse est son point 2 ci-dessous (un seul écran de présentation), pas une refonte.
+
+### ⭐⭐ 2. Un écran de présentation avant tout (09:16)
+
+« Une fois ouvert, on passe de l'attention à l'écran de [création], alors qu'il faut un écran
+de présentation qui explique la fonctionnalité — **même si c'est un seul écran** qui présente
+brièvement l'application. »
+
+*Vérifié* : il n'existe pas. `onboarding/` ne contient que `country`, `budget`, `new-goal`.
+
+*Analyse* : **la version faible et peu coûteuse du point 1**, et de loin la plus défendable.
+Un écran, un paragraphe, un bouton — ça ne rallonge pas vraiment le parcours (c'est un tap,
+pas un formulaire) et ça répond à l'objection « je ne sais pas où je suis » sans renoncer au
+flux court.
+
+**Et l'écran existe déjà.** `src/app/example.tsx` fait exactement ce travail — Patrick le lui
+a montré pendant la démo (27:07 : « tu peux voir un exemple d'un projet ? ça t'explique
+l'objectif… »). Mais il n'est atteignable que depuis le menu (`menu-modal.tsx:192`), donc le
+dev ne l'a découvert **qu'à la 27ᵉ minute**, dix-huit minutes après avoir réclamé un écran de
+présentation. L'explication n'est pas absente : elle est hors du chemin.
+
+*Verdict* : **meilleur candidat du lot**, à spécifier pour la refonte onboarding. Faible
+risque, répond à une objection réelle, et probablement **sans écrire d'écran** — reste à
+décider comment le proposer au premier lancement (un lien discret sous le formulaire plutôt
+qu'une étape imposée, pour ne pas rallonger le parcours que le point 1 défend).
+
+### ⭐⭐⭐ 3. Tout-local = perte de données à la désinstallation (02:35 → 04:54, repris 14:23)
+
+Le sujet sur lequel il est revenu le plus souvent après le point 1.
+
+- « Il faut que l'application **suive à la désinstallation**… qu'elle demande de sauvegarder
+  en base. Et non local. »
+- « Quelqu'un suit un projet sérieusement, il tient les étapes, et après **recommencer à
+  zéro** — ça ne marche pas. »
+- Deux pistes proposées : (a) **une inscription minimale, le mail seul suffit** ;
+  (b) **deux modes explicites, local ou sauvegardé, c'est l'utilisateur qui décide**.
+
+*Vérifié* : exact. `src/lib/store.ts` persiste tout dans AsyncStorage (`mmg-store-v1`), et
+Supabase ne reçoit **que** des événements d'usage — jamais un montant, jamais un projet
+(`analytics.ts` : « AUCUNE donnée liée au montant n'est transmise »). Désinstallation, perte
+ou changement de téléphone ⇒ **tout est perdu, définitivement**. Il n'y a même pas d'export.
+
+*Analyse* : c'est le retour le plus **sérieux** du lot, parce qu'il ne porte pas sur un écran
+mais sur une promesse. Une app d'épargne sur 24 mois qui perd 24 mois d'historique, c'est un
+défaut de conception, pas une préférence. Et c'est **la rançon directe** du choix « pas de
+compte » — choix lui-même bien fondé (Patrick, 02:44 : les gens n'ouvrent pas un compte pour
+une app qu'ils ne connaissent pas ; le dev l'a d'ailleurs **validé**, 03:19).
+
+Donc le vrai sujet n'est pas « compte ou pas compte », c'est : **comment ne pas perdre les
+données sans exiger un compte à l'entrée ?** Trois niveaux, du moins cher au plus cher :
+
+1. **Export / import d'un fichier** (JSON ou presse-papiers), depuis le menu. Zéro backend,
+   zéro compte, zéro RGPD supplémentaire. Ne protège pas du téléphone perdu, mais couvre le
+   changement d'appareil et la désinstallation volontaire. **Quelques heures de travail.**
+2. **Sauvegarde système** (iCloud / Android Auto Backup). À vérifier : AsyncStorage *peut*
+   être inclus dans la sauvegarde Android, mais ce n'est ni garanti ni contrôlable, et ça ne
+   se teste pas honnêtement sans deux appareils. À ne pas annoncer à l'utilisateur.
+3. **Compte + sauvegarde optionnelle** (sa proposition). Change la nature du produit :
+   auth, RLS sur des données personnelles, politique de confidentialité à réécrire,
+   synchronisation et conflits. **C'est un chantier, pas un correctif.**
+
+*Verdict* : le niveau 1 est **le bon prochain pas** et il est quasi gratuit — à mettre dans
+le lot de la prochaine livraison. Le niveau 3 est à garder comme direction, pas comme tâche.
+À noter que ça rejoint la V2 « connectée au mobile money » déjà évoquée (35:41) : le compte
+viendra de toute façon avec elle, autant ne pas le bricoler avant.
+
+### ⭐⭐ 4. Montant mensuel : laisser saisir le sien — **2ᵉ occurrence, motif confirmé**
+
+- 19:13 : « Pourquoi des montants prédéfinis **sans explication**, alors que tu peux même pas
+  personnaliser ? »
+- 20:16 : « En plus de lui proposer, il faut **lui permettre de mettre lui-même son montant**. »
+- 20:42 : « Vous ne trouverez pas avec vos options cadrées toutes les positions. »
+
+*Vérifié* : exact et c'est structurel. `new-goal.tsx` ne propose que `RHYTHMS`
+(stable / progressif / régressif) et le montant est **toujours dérivé** de
+cible − disponible ÷ mois (`plannedAmounts`). **Aucun champ ne permet de dire « je veux mettre
+X par mois »**. De plus les trois rythmes sont eux-mêmes cachés derrière « Options avancées ·
+rythme » (`new-goal.tsx:565`), donc l'utilisateur voit un montant tomber du ciel sans voir d'où
+il vient — ce qui explique précisément son « sans explication ».
+
+*Analyse* : 🔁 **C'est mot pour mot le « double sens de calcul » que Patrick avait proposé lui
+même le 13/08** (entrée ci-dessous, point 2 : « l'utilisateur indique ce qu'il peut mettre de
+côté chaque mois → l'app dit quand il atteindra son objectif »). **Deux personnes
+indépendantes, à trois mois d'écart, sur le même manque.** Le journal demande de chercher les
+motifs récurrents : en voici un, et c'est le seul du lot.
+
+Le diagnostic d'août reste valable et n'est pas allégé par cette confirmation : ça touche
+`plannedAmounts` (qui ne résout que dans un sens) et le diagnostic
+Confortable/Juste/Trop serré, qui doit s'exprimer différemment selon le sens choisi.
+
+*Verdict* : **passe de « à creuser » à priorité haute du lot refonte**, avec une session de
+conception dédiée avant tout code. Un sous-ensemble est livrable bien plus tôt et sans toucher
+au calcul : **expliquer d'où vient le montant proposé** (une ligne : « calculé sur ton reste à
+vivre »), et **sortir les rythmes de « Options avancées »**.
+
+### ⭐⭐ 5. Ne pas cacher le choix du démarrage derrière « Options avancées » (15:54 → 17:08)
+
+« Je ne pense pas bien d'aller cacher quelque chose… il faut que ça **sorte** de l'option
+avancée. Ça fait partie du processus de création de projet, et je dois choisir
+**consciemment** maintenant ou plus tard. »
+
+*Vérifié* : exact. `new-goal.tsx:373-421` — « Quand veux-tu commencer ? » (Dès maintenant /
+Plus tard) est bien dans le bloc replié `advancedOpen`, fermé par défaut (`:90`).
+
+*Analyse* : **il a raison, et c'est le point le moins cher du lot.** Le démarrage différé
+n'est pas un réglage d'expert : c'est le retour ⭐ du 24/07 (« date de début différée »,
+priorité haute post-test) qu'on a implémenté puis **rangé dans un tiroir fermé**. Résultat :
+la fonctionnalité existe et personne ne la voit, donc elle ne sert à rien. Son argument sur le
+défaut silencieux est juste aussi — « Dès maintenant » s'applique sans que l'utilisateur
+sache qu'il a choisi.
+
+*Verdict* : **à faire au prochain build.** Déplier le bloc, ou le remonter hors du toggle.
+Modification locale, aucun risque, répond en plus à un retour antérieur.
+
+### ⭐⭐ 6. L'heure du rappel n'existe pas (22:04 → 22:57)
+
+« Est-ce qu'on peut le rappeler **à une heure donnée** ? À quel moment du jour ? Rappel le 2 :
+demain 1 h, demain 10 h ? Il faut savoir. » Puis : « change l'heure ».
+
+*Vérifié* : **codée en dur à 9 h 00**, six fois dans `src/lib/plan.ts`
+(`:163`, `:181`, `:209`, `:393`, `:404`, `:444`). Jamais affichée, jamais réglable.
+
+*Analyse* : deux défauts distincts, de coûts très différents.
+- **L'heure n'est pas dite.** L'app promet « rappel le 2 de chaque mois » et ne dit pas quand
+  dans la journée. Corriger le texte coûte une ligne et devrait être fait.
+- **L'heure n'est pas réglable.** Plus lourd (six points d'appel, plus la reprogrammation des
+  notifications déjà planifiées), et 9 h est un défaut défendable. Patrick a proposé en direct
+  de la calquer sur l'heure de création du projet (22:24) — à écarter : elle serait alors
+  invisible *et* arbitraire, le pire des deux.
+
+*Verdict* : **afficher l'heure** dans le lot cosmétique du prochain build. **Rendre l'heure
+réglable** : prochaine version, sous forme d'un réglage par projet à côté du jour.
+
+### 🐞 7. Aucune borne sur le montant cible (07:35 → 07:51, repris 10:05)
+
+Il a saisi un montant absurde ; rien ne l'a arrêté. Patrick, en direct : « il faut qu'il y ait
+une limite, ouais ».
+
+*Vérifié* : `new-goal.tsx:194-211`, `validate()` n'exige que `parsedTarget > 0`. Pas de
+plafond, et pas de `maxLength` sur le champ. Un montant délirant traverse donc tout le
+calcul de plan et l'affichage.
+
+*Verdict* : **vrai défaut, correction simple.** Plafond par devise (l'ordre de grandeur n'est
+pas le même en XAF et en EUR) + message d'erreur. Prochain build.
+
+### 🐞 8. Aucune limite de longueur sur le nom du projet
+
+Constaté par Patrick lui-même pendant la démo (23:18 : « faudra réduire, selon le nombre de
+caractères »).
+
+*Vérifié* : le champ nom de `new-goal.tsx` n'a **pas** de `maxLength`, alors que
+`name-modal.tsx:62` (prénom) et `country.tsx:150` en ont un. Incohérence interne.
+
+*Verdict* : `maxLength` sur le champ, aligné sur ce que l'affichage supporte. Prochain build.
+
+### 🐞 9. Après un report, l'écran reparle du mois précédent — **à reproduire**
+
+Patrick, 30:35 : « tout à l'heure on avait déjà fait un report au 2 décembre, et il parle
+encore de novembre… c'est revenu à novembre et ça a sauté. En tout cas ça, c'est à revoir. »
+
+*Analyse, non conclusive* : la piste la plus plausible est une **désynchronisation entre la
+source de vérité et le champ affiché**. Les cycles font foi (`nextReminderFromCycles`), mais
+l'écran projet lit le champ dénormalisé `goal.nextReminderAt`
+(`goal/[id].tsx:525`, `:543`, `:572`). Ce champ *est* réécrit à chaque mutation
+(`actions.ts:149`, `:254`, `:276`), donc je n'ai **pas** reproduit le défaut par lecture seule.
+Deux autres suspects : `cycleToPostpone` (`plan.ts:353`) renvoie le premier cycle non soldé —
+si le cycle de novembre a été soldé pendant la démo, le report a visé **décembre** sans que
+l'écran le dise ; et `postponeDateLimit` (`:367`) borne alors le report à l'ancre elle-même,
+ce qui rend l'action silencieusement inopérante.
+
+*Verdict* : **à reproduire sur appareil avant de corriger** — scénario exact : jour de rappel
+le 2, créer le projet, enregistrer un versement pour le cycle en cours, puis ouvrir le report.
+Ne pas corriger à l'aveugle : les trois suspects demandent des correctifs opposés.
+
+### ⭐ 10. Le champ prénom n'est pas lisible comme un champ (01:41 → 02:22)
+
+Il est passé devant sans le voir et a cliqué « Continuer ». Sa demande : que le champ soit
+**explicite**, et qu'on puisse très bien demander le prénom franchement même si ce n'est pas
+obligatoire.
+
+*Vérifié* : `country.tsx:344-345` — « Bienvenue » suivi d'une **pastille** « Ton prénom ✎ »,
+puis le titre « Où épargnes-tu ? ». Aucun libellé. Le seul indice est le placeholder et un
+crayon : ça se lit comme une décoration, pas comme une saisie.
+
+*Analyse* : cohérent avec le choix « le prénom est facultatif et discret » (commentaire
+`country.tsx:47`), mais le résultat dépasse l'intention — un développeur attentif ne l'a pas
+vu. Un libellé court ne le rend pas obligatoire pour autant. ⚠️ Nuance à ne pas perdre : il ne
+demande **pas** une étape dédiée, juste un champ qui se voie.
+
+*Verdict* : lot cosmétique du prochain build — ajouter un libellé au-dessus de la pastille.
+
+### ✅ Déjà corrigé, pas encore livré : le prénom du premier lancement
+
+Constaté une fois de plus pendant la démo (21:30 et 27:43 : « ici on devrait avoir bonjour
+avec le prénom »). **Corrigé le 16/09** (`b2dd748`, `country.tsx:116`) mais absent du 2.1.0 en
+ligne — voir l'entrée du 16/09. **Troisième signalement du même défaut** : à livrer.
+
+### 🧠 Sa remarque sur la méthode (06:40)
+
+« Quand on n'a pas une expertise poussée derrière, [l'IA] va te convaincre que c'est bien
+alors que ça ne l'est pas. »
+
+À noter sans complaisance : sur ce lot précis, il a **raison trois fois sur trois** là où il
+attaque une décision validée en interne (flux initial, montants prédéfinis, options
+avancées) — et deux de ces trois décisions avaient déjà reçu un avis IA favorable ou neutre.
+Le journal note aussi (13/08) que l'avis IA de Google s'était trompé **deux fois sur quatre**.
+C'est un argument pour le garder dans la boucle, pas un argument contre l'outil.
+
+### ⚠️ À re-vérifier : artefacts de la démo, pas forcément des défauts
+
+L'app tournait **sur PC en simulateur**, et plusieurs blocages constatés en direct ont été
+attribués à ça par Patrick lui-même (10:15 : « c'est peut-être parce que c'est sur le PC »,
+30:11 : « j'arrive pas à écrire, je suis sur le PC »). Ne pas ouvrir de ticket sur ces points
+sans les rejouer sur un téléphone :
+- l'horizon de temps qui semblait bloqué sur 6 mois (09:36) — les chips 3 m / 1 an / 2 ans /
+  Date précise existent bien (`new-goal.tsx:45-51`), c'est un `ScrollView` horizontal dont
+  l'amorce de défilement se voit mal ⇒ plutôt un **défaut d'affordance** qu'un blocage ;
+- la saisie de texte impossible dans certains champs ;
+- les clics sans effet sur le calendrier.
+
+### 📌 Divers
+
+- **Historique vs échéancier** (23:39, 26:10) : il ne voyait pas le lien entre les deux, et
+  demandait l'heure dans l'historique. ⚠️ Transcription trop dégradée pour en tirer une
+  demande précise — **à redemander**.
+- **Cible confirmée** : il n'a pas contesté le positionnement (personnes ayant déjà un
+  revenu, avec un projet daté), ni le tout-manuel comme point d'entrée.
+- **Il pousse implicitement à mesurer plus** (14:43 : « même les montants choisis ? », surpris
+  de la réponse négative). *À ne pas suivre* : `analytics.ts` exclut les montants **par
+  principe** (« AUCUNE donnée liée au montant n'est transmise, ni exact, ni tranche »), et
+  c'est ce qui permet de dire honnêtement qu'aucune donnée financière ne quitte le téléphone —
+  argument d'entrée bien plus précieux qu'une mesure plus fine. La rétention se lit très bien
+  avec les seuls types d'événements. À distinguer soigneusement du point 3 : **sauvegarder pour
+  l'utilisateur** et **collecter pour soi** sont deux choses opposées, et seule la première est
+  demandée.
+
+### 🎯 Le concurrent qu'il citait : **Paykko** (lien reçu le 01/11) — et ce qu'on y trouve
+
+`paykko.com` · Play Store `com.paykko` · **Gara SAS** · **100 k+ téléchargements**,
+**4,5 ★ sur 1 520 avis**, mise à jour le **29 oct. 2026** (donc très actif). Ses chiffres
+annoncés sont exacts, vérifiés sur le Store.
+
+**Ce que c'est** : la **tontine digitale** adossée au Mobile Money (MTN, Orange Money, Wave,
+Free Money…), via des partenaires de paiement certifiés (Kkiapay, InTouch), dans 10+ pays.
+L'argent transite réellement, donc : vérification d'identité obligatoire (carte CIP), retraits,
+reçus. Le modèle est un **score de crédit** construit sur la régularité d'épargne, qui ouvre
+l'accès au crédit via des microfinances partenaires. Marketplace annoncée.
+
+**Ce n'est pas le même produit que MMG**, et c'est important de ne pas se laisser
+impressionner par le « 100 000 téléchargements » : Paykko **détient l'argent**, MMG n'y touche
+pas. D'où des coûts que MMG n'a pas (KYC, conformité, partenaires financiers, support sur des
+fonds réels — un avis dit « j'ai eu peur pour mon argent ») et une confiance que MMG n'a pas à
+demander. L'épargne individuelle est d'ailleurs une **arrivée récente** chez eux (« ✨ NOUVEAU :
+ÉPARGNE INDIVIDUELLE »), explicitement positionnée comme un **« tremplin vers le groupe »** :
+c'est un entonnoir vers la tontine, pas le produit.
+
+**🔥 Et voici le point à retenir.** Avis d'un utilisateur Paykko (elom ATAYI, 28/08/2026,
+jugé utile par 12 personnes) :
+
+> « ça serait vraiment cool si vous ajoutez une **épargne à volonté**, c'est-à-dire on peut
+> épargner la somme qu'on veut et quand on le veut sans forcément avoir de date précise ou une
+> somme fixe »
+
+Réponse officielle de Gara SAS, le lendemain :
+
+> « il n'y a pas d'option pour épargner la somme que vous voulez, **c'est pas le rôle de
+> Paykko**. »
+
+**C'est exactement le mode « Épargne libre » de MMG** — l'insight ⭐⭐ du 24/07 issu du
+dogfooding de Patrick. Demandé par un utilisateur du leader du marché, et **refusé par
+principe**. C'est la première validation externe de ce mode, et elle vient du terrain, pas
+d'un avis d'ami. À noter aussi : le même avis réclame de la **souplesse sur la vérification
+d'identité** — un besoin que MMG satisfait par construction, puisqu'il n'y a pas de compte.
+
+⚠️ **Le revers, à ne pas se cacher** : la V2 « connectée au mobile money » (évoquée à 35:41 de
+l'échange) emmène MMG droit **dans la catégorie de Paykko**, où ils ont 100 k installations,
+les intégrations de paiement, les partenaires microfinance et deux ans d'avance. Tant que MMG
+ne touche pas à l'argent, il joue sur un terrain que Paykko a explicitement refusé d'occuper.
+C'est un argument sérieux pour **soigner le tout-manuel comme un produit à part entière**
+plutôt que comme une étape vers la V2.
+
+### 📱 Parcours de premier lancement de Paykko — relevé le 01/11 (20 captures)
+
+Patrick a installé l'app et créé un compte. Séquence complète observée :
+
+1. **4 écrans de présentation** (tontine · score de fiabilité · traçabilité des transactions ·
+   parrainage), puis CTA **« Créer un compte »**.
+2. **Numéro WhatsApp** → **code OTP à 6 chiffres** reçu sur WhatsApp.
+3. **Nom, prénom, genre**, avec une alerte « doivent correspondre à votre pièce d'identité ».
+4. **Mot de passe** (5 critères).
+5. Écran **« Votre compte a été créé avec succès ! »**.
+6. **Atterrissage sur un accueil** : solde masqué, « Nouvelle tontine » / « Rejoindre tontine »,
+   bandeau « Vérification d'identité » (le retrait est bloqué tant qu'elle n'est pas faite),
+   bandeau de parrainage, bouton flottant « Tutoriel ».
+7. **Modale de bienvenue** : « Paykko t'offre 1000 FCFA » si tu termines une épargne de
+   10 000 FCFA → « Je lance ma première épargne ».
+8. **Bulle d'aide contextuelle** pointant « Nouvelle tontine » : « Créons ta toute première
+   épargne avec Paykko », avec **« Passer » / « Suivant »**.
+9. Création en **3 étapes**, dont « à quelle fréquence souhaitez-vous déposer ? »
+   (jour / semaine / mois), **« Par jour » pré-sélectionné**.
+
+**Le dev ne décrivait pas une théorie : il décrivait ce parcours.** Présentation d'abord,
+compte ensuite, accueil, puis invitation à créer — avec une porte de sortie. Sur la forme, il
+avait donc un modèle en tête, et ce modèle existe.
+
+#### Mais ça ne tranche pas la question (1), et il faut le dire
+
+**Paykko n'a pas le choix d'avoir un compte** : il détient l'argent, donc OTP, nom légal et
+vérification d'identité sont imposés par la réglementation, pas par l'UX. Compter les écrans
+avant de voir quoi que ce soit : **huit**. C'est exactement ce que Patrick voulait éviter — et
+Paykko peut se le permettre parce qu'un utilisateur qui vient confier de l'argent accepte la
+procédure. MMG ne demande rien de tout ça, donc **n'a aucune raison d'imposer un compte**, et
+leurs 100 k installations ne prouvent pas que le parcours long fonctionne : on ne voit pas leur
+taux d'abandon. **La donnée de rétention de MMG reste le seul juge.**
+
+Ce qui **est** transposable, en revanche, c'est le motif séparé du compte :
+**atterrir sur un accueil, puis inviter à créer, avec un « Passer »**. Plus leur **bulle
+d'aide contextuelle** — qui est précisément l'idée « étiquettes contextuelles » du 13/08,
+ici validée par un produit à 100 k installations.
+
+#### Ce que MMG fait déjà mieux (à ne pas copier par mimétisme)
+
+- **Suggestions de mot de passe en clair, dérivées du prénom** (`Chris&22qc`, `Chris@39nz`).
+  Prévisible et lisible par-dessus l'épaule. Mauvaise pratique franche.
+- **Permission de notification demandée sur le tout premier écran**, avant d'avoir montré la
+  moindre valeur. MMG la demande après la création du projet, en contexte — meilleur, et c'est
+  aussi ce qui donne un taux d'acceptation plus élevé.
+- **Case CGU pré-cochée** et opt-out marketing formulé en double négation
+  (« Décocher ici si vous ne souhaitez pas »). Juridiquement discutable en UE.
+- **Formatage monétaire brut** : « 500.0 EUR », point décimal anglo-saxon, décimale inutile —
+  et un bonus annoncé en FCFA sur un compte en EUR. MMG a un module entier pour ça
+  (`currency.ts` : espace fine insécable, décimales par devise, `hideZeroDecimals`).
+- **Coquille** : « Bienvenu sur Paykko ! ».
+- **Le plus parlant** : à la seconde où le plan est créé, l'écran affiche
+  **« Tours en attente (contributions en attente des tours manqués) · Tour 01 · à payer »**
+  en rouge. L'utilisateur est **en retard dès l'instant zéro**. C'est l'exact opposé de la
+  doctrine MMG (« Même moins, c'est déjà bien »), et c'est le genre de cadrage qui fait
+  désinstaller. À garder comme contre-exemple.
+- Note d'intérêt : **« Par jour » est le défaut** de la fréquence, poussé par la bulle d'aide
+  (« Commençons par des versements quotidiens »). Chaque dépôt passe par Mobile Money, donc
+  par des frais d'opérateur. Le défaut n'est pas neutre.
+
+#### Ce qui vaut d'être repris
+
+- **Solde masqué par défaut** avec un œil pour révéler. Un téléphone se prête, en Afrique
+  comme ailleurs. Peu coûteux, et cohérent avec la sobriété de MMG.
+- **Bulle d'aide contextuelle avec « Passer »** — déjà dans le journal (13/08), désormais
+  validée sur le terrain.
+- **Compte à rebours jusqu'au prochain dépôt**. ⚠️ Chez eux il est anxiogène parce qu'adossé
+  à une dette ; chez MMG il ne tiendrait que relié à un rappel, pas à un retard.
+
+#### Deuxième série de captures (création de l'épargne, profil, OTP)
+
+**Leur écran de création, étape 1/3** : nom de l'épargne (**pré-rempli** : « Précieux
+Trésor »), « Pourquoi souhaitez-vous créer cette épargne ? » (liste déroulante, « Épargne
+générale »), puis **« Choisissez une icône »** — huit emoji au choix.
+
+- Le **nom pré-rempli** et le **motif** sont exactement les `CATEGORY_LABELS` /
+  `GoalCategory` de MMG. Convergence, pas inspiration : c'est le bon motif.
+- L'**icône séparée** est la seule chose qu'ils ont de plus. Mais **chez eux elle est mal
+  faite** : le motif dit « Épargne générale » et l'icône sélectionnée est une **voiture**.
+  Deux taxonomies qui se recouvrent et qui ne s'accordent pas. MMG dérive l'emoji de la
+  catégorie (`CATEGORY_EMOJI`, `types.ts:132`) — **une seule taxonomie, rien à désynchroniser**.
+  Si on ajoute un jour un choix d'icône libre, il faudra assumer de casser ce lien.
+
+**Incohérence de vocabulaire, et elle est sévère.** Le même objet s'appelle, selon l'écran :
+- « **tontine** » (accueil « Solde total des tontines », notification « Votre tontine Précieux
+  Trésor est maintenant active ») ;
+- « **épargne personnelle** » (titre de l'écran d'édition) ;
+- « **caisse d'épargne** » (section « Mes Caisses D'épargne ») ;
+- « **épargne** » tout court (« Quel nom souhaitez-vous donner à votre épargne ? »).
+
+Et ce n'est pas qu'un mot : une épargne **solo** est annoncée comme une **tontine**, alors que
+la tontine est par définition collective. MMG dit « **projet** » partout. **C'est un avantage
+réel à préserver** — la cohérence du vocabulaire est ce qui fait qu'on comprend un produit
+sans tutoriel, et eux ont dû ajouter un bouton « Tutoriel » flottant.
+
+**Le profil demande 5 champs obligatoires** : nom, prénom, **adresse e-mail**, **date de
+naissance**, genre. Le parcours avant de voir quoi que ce soit est donc encore plus long que
+compté plus haut.
+
+**Aucun garde-fou sur le montant, et c'est pire que chez MMG.** Le plan créé est
+**500,0 EUR par jour pendant 20 jours** — soit 10 000 € — accepté sans un mot, sur un compte
+dont le bonus de bienvenue est libellé en FCFA (« 1000 FCFA si tu termines une épargne de
+10 000 FCFA »). Le montant a visiblement été saisi comme s'il s'agissait de francs CFA et
+affiché en euros. C'est **exactement le défaut (7) relevé sur MMG** — à ceci près que chez eux
+il porte sur de l'argent réel. Argument supplémentaire pour plafonner **par devise**, pas dans
+l'absolu.
+
+**Le code OTP arrive d'un expéditeur WhatsApp nommé « Gara Twilio BA »** (compte professionnel,
+numéro d'origine France). Le nom de leur prestataire technique fuite dans le nom d'expéditeur,
+au moment le plus sensible du parcours — celui où l'utilisateur décide s'il fait confiance.
+À retenir si MMG ajoute un jour une vérification par SMS/WhatsApp : **le nom d'expéditeur fait
+partie du produit**.
+
+**Fautes supplémentaires** : « Votre tontine d'**epargne** […] est maintenant **actif** »
+(accord et accent), après « Bienvenu sur Paykko ! ». Trois coquilles sur les deux seules
+notifications envoyées.
+
+#### Leur écran « Mon Compte » — trois choses que MMG n'a pas
+
+- **Verrouillage par PIN** (« application sécurisée avec code PIN »). Même logique que le
+  solde masqué, poussée plus loin. À débattre pour MMG : chez eux il protège de l'argent réel.
+- **Désactiver le compte · supprimer définitivement votre compte**, depuis l'app. C'est
+  **obligatoire sur le Play Store** dès qu'une app a des comptes : à intégrer d'office au
+  chantier « inscription », pas à découvrir au moment de la soumission.
+- **`Version 0.0.41 (72) | PROD | PLAY STORE`** en pied d'écran : version, build,
+  environnement et canal de distribution d'un coup d'œil. **C'est le meilleur emprunt du
+  lot.** Les deux pannes de mesure ont duré des semaines en partie parce qu'on ne savait pas
+  quel build tournait chez qui. Tout est déjà disponible côté MMG (`Constants.expoConfig`,
+  `TEST_TOOLS_ENABLED`) — il manque juste la ligne qui l'affiche.
+
+Aussi : un bouton **« Noter Paykko »** (levier d'acquisition — 1 520 avis), un changement de
+**langue**, et le raccourci **Tutoriel** est désactivable depuis ce menu. Et une donnée qui
+remet les choses à leur place : **l'app est en version 0.0.41** avec 100 000 téléchargements.
+
+*Note* : le compte de test a été créé avec le vrai numéro et le vrai e-mail de Patrick, donc
+il est dans leur base marketing. La case d'opt-out était décochée (= il reçoit les
+communications).
+
+---
+
+## 🗂️ 2026-11-01 — Suivi des chantiers : tout est désormais dans un tableau
+
+Décision de Patrick (01/11), après les retours de David : **arrêter de piocher dans le
+journal au coup par coup**. Tout ce qui est remonté depuis juillet est rassemblé dans un
+tableau de suivi unique, avec un statut par ligne.
+
+🔗 **https://claude.ai/artifact/JMV4BwuTYf3k125Fx3xchj**
+
+**46 chantiers**, répartis en sept lots : Exploitation, Prochain build, À reproduire,
+Prochaine livraison, Refonte onboarding, Chantiers de fond, Dette technique. Chaque ligne
+porte une priorité (P0-P3), un effort (S/M/L/XL), sa source, et un **avis** — à retenir, à
+débattre, à écarter — qui reste une proposition : le statut est la décision de Patrick.
+
+Ce journal (`FEEDBACK.md`) garde son rôle : il consigne **le raisonnement** derrière chaque
+retour. Le tableau consigne **l'état d'avancement**. Ne pas dupliquer l'analyse là-bas.
+
+**Inflexion de doctrine, actée le 01/11.** Le journal posait « on note tout, on n'implémente
+rien pendant le test ». Patrick la lève partiellement : *« il faut savoir s'adapter »*, et le
+parcours avec présentation et création de compte existait déjà dans la version antérieure
+liée au mobile money — *« ça reste l'objectif, ce qu'on construit aujourd'hui n'en est que la
+porte d'entrée »*. Les retours de David ne sont donc pas un renoncement aux convictions de
+départ, c'est un retour à la trajectoire. Le gel ne tient plus que sur ce qui pourrait
+**fausser la mesure** (la relance par inactivité, notamment), pas sur les correctifs.
+
+### Verdict global et horizon
+
+**Rien n'est implémenté maintenant** — le gel des fonctionnalités tient, et ce retour est
+`n=1` sur un profil technique explicitement non ciblé.
+
+| | Quoi | Quand |
+|---|---|---|
+| 🐞 | Montant cible sans plafond (7) · nom de projet sans `maxLength` (8) | prochain build |
+| ⭐⭐ | Sortir le démarrage des « Options avancées » (5) | prochain build |
+| ⭐ | Libellé du champ prénom (10) · afficher l'heure du rappel (6a) · expliquer d'où vient le montant proposé (4 partiel) | prochain build, lot cosmétique |
+| ✅ | Livrer le correctif prénom `b2dd748` | prochain build |
+| 🐞 | Report qui reparle du mois précédent (9) | reproduire d'abord |
+| ⭐⭐⭐ | Export/import des données (3, niveau 1) | prochaine livraison |
+| ⭐⭐ | Écran de présentation (2) · heure de rappel réglable (6b) | lot refonte onboarding |
+| ⭐⭐ | Double sens de calcul (4) — **motif récurrent, 2ᵉ occurrence** | lot refonte, conception d'abord |
+| ⭐⭐⭐ | Création de projet hors du parcours initial (1) | **arbitrer sur les données de rétention**, pas sur un avis |
+| ⭐⭐⭐ | Compte + sauvegarde serveur (3, niveau 3) | direction, avec la V2 mobile money |
+| 🎯 | ~~Installer Paykko, étudier son premier lancement~~ **fait le 01/11** — ne tranche pas (1) | — |
+| ⭐ | Solde masqué par défaut (œil) · bulle d'aide contextuelle avec « Passer » | lot refonte onboarding |
+
+Le seul point à ne **pas** trancher sur conviction est le (1) : c'est une décision déjà prise,
+contestée par une personne, et mesurable. Les autres ne demandent pas d'arbitrage, juste du
+travail.
+
+**Le gain inattendu de ce retour** n'est pas dans ses critiques, c'est dans le lien vers
+Paykko : le leader du marché a **refusé publiquement** de faire l'épargne libre, que MMG fait
+déjà. C'est le premier signal de marché du projet, et il est favorable.
+
+---
+
 ## 🎉 2026-09-16 — LE TRACKING FONCTIONNE. Bloqueur du 19/08 CLOS.
 
 Premier utilisateur réel mesuré : **`install-1784896946511-qob00bzw2d`**, iOS,
