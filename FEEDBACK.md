@@ -13,6 +13,45 @@ par coup. On les **groupe pour le prochain build obligatoire** (avant l'expirati
 
 ---
 
+## 🧹 2026-11-11 — Supabase assaini : la sonde DELETE blanchie, et la moitié de la mesure était du navigateur
+
+Les trois actions Supabase en attente depuis l'audit du 01/11, passées dans l'éditeur SQL.
+
+**1. La sonde DELETE n'avait rien détruit** — et la preuve est meilleure qu'un comptage. RLS
+est actif sur `public.events` et les deux seules politiques sont des politiques **INSERT**
+(`polcmd = 'a'`). Sans politique DELETE, un `delete` venant d'`anon` porte sur zéro ligne :
+le `204` observé pendant l'audit était une suppression de rien. Le comptage corrobore —
+535 lignes, id 189 → 733 : les id manquants forment un bloc continu de 188 en tête, un
+héritage de purge, pas une ligne isolée.
+
+**2. Droits destructeurs retirés**, avec **TRUNCATE** en plus des deux prévus. Ce n'est pas
+du zèle : **RLS ne s'applique pas à TRUNCATE**. C'était le seul droit accordé par défaut
+capable de vider la table malgré la règle « insertion seule ». `SELECT` est conservé exprès
+(PostgREST en a besoin si un insert demande la ligne créée) et reste neutralisé par RLS.
+
+**3. La vue était correcte** — vérifiée par son comportement, pas par sa définition : les
+4 appareils de test à 0 ligne, le premier utilisateur réel à 18.
+
+### Ce que la vérification a trouvé, et qui comptait plus que les trois actions
+
+En regardant **qui** la vue comptait : web 32 installs / 239 lignes · android 31 / 160 ·
+ios 28 / 73. L'app n'est distribuée **que** sur Play Alpha et TestFlight. Tout
+`platform = 'web'` est une session de navigateur — Expo web, preview, démo. **Un tiers des
+« installs » mesurées et la moitié des lignes ne venaient pas d'un téléphone.** Le plus gros
+contributeur de toute la table en était un : `install-demo-delete12`, 84 lignes, identifiant
+écrit à la main — et il était compté.
+
+On excluait donc quatre téléphones à la main, un par un, pendant que 32 sessions de
+navigateur gonflaient le dénominateur. Décision de Patrick : on exclut le web, par plateforme
+et non par identifiant, ce qui règle le passé et l'avenir sans entretien. La vue tombe à
+233 lignes sur 538.
+
+**La leçon, qui prolonge celle du 16/09** : une vue de mesure ne se vérifie pas en lisant sa
+définition. Les quatre exclusions étaient exactes — et la mesure était fausse quand même. Il
+faut lui demander ce qu'elle compte, pas ce qu'elle écarte.
+
+---
+
 ## 🔥 2026-11-01 — Revue complète par un développeur (Bénin, n=1, démo écran partagé)  ⭐⭐⭐
 
 Premier retour d'un **profil technique** (développeur, Bénin — zone XOF, déjà couverte).

@@ -109,9 +109,44 @@ where install_id not in (
   -- ⚠️ NE PAS exclure 'install-1784896946511-qob00bzw2d' : premier utilisateur
   -- RÉEL (iOS, TestFlight, 16/09/2026 à 10h13). C'est lui qui a clos le
   -- bloqueur tracking du 19/08 — app_open puis contribution_logged en 37 s.
-);
+)
+-- Et on écarte les sessions de navigateur : l'app n'est distribuée QUE sur Play
+-- (Alpha) et TestFlight, donc tout `platform = 'web'` est un Expo web, une preview
+-- ou une démo — jamais un utilisateur. Exclure par plateforme plutôt qu'appareil
+-- par appareil règle le passé ET l'avenir sans entretien. `is distinct from`
+-- plutôt que `<>` pour garder les lignes dont la plateforme serait nulle.
+and platform is distinct from 'web';
 
 revoke all on events_reels from anon, authenticated;
+
+--      ✅ 11/11/2026 : exécuté et VÉRIFIÉ par le comportement, pas par la définition.
+--      Les 4 appareils ci-dessus ont 0 ligne dans la vue, et le premier utilisateur réel
+--      (qob00bzw2d) en a bien 18. L'écart dépôt/base du 01/11 est refermé.
+--
+--      Le filtre `platform` a été ajouté le même jour, sur décision de Patrick. Ce qu'il
+--      écarte n'était pas marginal — répartition de la vue AVANT :
+--        web 32 installs / 239 lignes · android 31 / 160 · ios 28 / 73
+--      Un tiers des « installs » comptées et la moitié des lignes venaient d'un navigateur.
+--      Le plus gros contributeur de toute la table en était un : 'install-demo-delete12',
+--      84 lignes, identifiant écrit à la main — et il était COMPTÉ. On excluait quatre
+--      téléphones à la main pendant que 32 sessions de navigateur gonflaient le
+--      dénominateur. APRÈS : android 31 / 160 · ios 28 / 73, soit 233 lignes sur 538.
+
+
+-- 0.e  ⭐ FAIT LE 11/11/2026 : retirer à la clé publique les droits destructeurs.
+--      La clé anon est dans le binaire de l'app, donc publique. Seul RLS empêchait la
+--      casse — et RLS ne s'applique PAS à TRUNCATE, qui était accordé par défaut.
+--
+--   revoke update, delete, truncate on public.events from anon, authenticated;
+--
+--      Après coup, anon ne garde que INSERT, REFERENCES, SELECT, TRIGGER. SELECT est
+--      conservé exprès (PostgREST en a besoin si un insert demande la ligne créée) et
+--      reste neutralisé par RLS, qui n'a aucune politique SELECT.
+--
+--      Vérifier l'état des droits à tout moment :
+--   select grantee, privilege_type from information_schema.role_table_grants
+--   where table_schema = 'public' and table_name = 'events'
+--     and grantee in ('anon','authenticated') order by grantee, privilege_type;
 
 
 -- ############################################################################
