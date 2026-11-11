@@ -99,6 +99,29 @@ vrai, et qui est plus utile : le filtre par pays n'a aucun sens pour écarter qu
 puisque le pays n'est pas stable pour un appareil donné. La cohorte US, elle, n'a pas cette
 ambiguïté — ses onze installations n'ont qu'un seul événement chacune, donc un seul pays.
 
+### La vraie géographie, elle, est dans la Play Console — et elle est brutale
+
+Statistiques → Audience ayant installé l'application, par pays, du 01/08 au 10/11 :
+
+**Une seule barre. France. Valeur 1.**
+
+Aucun autre pays sur trois mois et demi. La courbe reste à zéro jusqu'à la mi-septembre, puis
+à **1**, avec quelques pics à 2 pendant une journée. Jamais plus.
+
+C'est la mesure qui ne ment pas, et elle dit deux choses.
+
+**Le Play Store n'a jamais distribué MMG hors de France.** Tout le reste — le Gabon, les
+appareils qui explorent, la cohorte US — est arrivé **en dehors du magasin** : APK transmis de
+la main à la main, TestFlight, builds de développement. C'est cohérent avec la piste Alpha
+fermée : seuls les testeurs inscrits peuvent installer, et ils sont deux.
+
+**Et la question de Patrick trouve sa réponse, mais pas celle qu'il attendait.** Il n'y a pas
+d'utilisateurs Play hors de France ; quant à savoir s'il y en a hors Play, la métadonnée
+`country` est incapable de le dire, puisque tout pays absent de la liste des 16 est enregistré
+comme `'FR'`. **L'app ne sait pas où sont ses utilisateurs.** Ce n'est pas grave tant que la
+distribution passe par les stores, qui le savent — mais il ne faut pas chercher cette réponse
+dans Supabase.
+
 ---
 
 ## 🧹 2026-11-11 — Supabase assaini : la sonde DELETE blanchie, et la moitié de la mesure était du navigateur
