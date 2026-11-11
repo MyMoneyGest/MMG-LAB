@@ -60,6 +60,11 @@ assert.match(reportModal, /Votre prochain rappel régulier reste prévu/);
 assert.match(reportModal, /loadingLabel="Programmation…"/);
 assert.match(reportModal, /waitForMinimumLoading\(loadingStartedAt, MIN_INLINE_LOADING_MS\)/);
 assert.doesNotMatch(reportModal, /Garder le rappel du/);
+// Le calendrier ne doit jamais proposer une date que le validateur refusera :
+// ses bornes suivent le plancher et la limite, pas « demain » en dur.
+assert.match(reportModal, /minDate=\{earliestDate > inDays\(1\) \? earliestDate : inDays\(1\)\}/);
+assert.match(reportModal, /const earliestDate = postponeDateFloor\(goal\);/);
+assert.match(reportModal, /n'est pas encore arrivé\. Tu pourras le reporter à partir de ce jour-là/);
 assert.match(goalScreen, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)\} à\{' '\}/);
 // Toute saisie libre de l'app est bornée. Le nom de projet était le seul à ne
 // pas l'être, et le montant cible n'avait aucun plafond — un zéro de trop

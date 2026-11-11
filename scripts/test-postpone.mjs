@@ -19,6 +19,7 @@ const {
   daysBeforeRegularReminder,
   midCycleNudgeAt,
   nextRegularReminderAfterCurrent,
+  nextReminderFromCycles,
   normalizedReminderCycles,
   oldestUnsettledDebt,
   postponeDateLimit,
@@ -147,4 +148,47 @@ assert.deepEqual(new Date(changedTo5[1].anchorAt), at(2026, 8, 5));
 // La normalisation maintient plusieurs ancres futures sans fusionner les cycles.
 assert.ok(normalizedReminderCycles(baseGoal, july12).length >= 3);
 
-console.log('Tests cycles : reports, dettes, extras, extinction et changement d’ancre validés.');
+// --- Un report ne peut JAMAIS ramener un rappel plus tôt ---------------------
+// Scénario rejoué d'après la démo du 01/11 : jour de rappel le 2, on est le 1er
+// novembre, et le testeur vient d'enregistrer son versement de novembre. Le
+// cycle courant est donc soldé et « Reporter » vise le cycle de DÉCEMBRE, dont
+// l'ancre est à un mois. Les raccourcis du modal (demain, dans 3 jours, dans
+// 7 jours) tombent tous en novembre : appliqués tels quels, ils ramenaient le
+// rappel de décembre un mois plus tôt, et l'écran se remettait à parler de
+// novembre. C'est exactement ce que Patrick a constaté en direct.
+const nov1 = at(2026, 11, 1, 12);
+const novGoal = {
+  ...baseGoal,
+  reminderDay: 2,
+  nextReminderAt: at(2026, 11, 2).toISOString(),
+  createdAt: at(2026, 10, 1).toISOString(),
+};
+const novCycles = normalizedReminderCycles(novGoal, nov1);
+assert.deepEqual(new Date(novCycles[0].anchorAt), at(2026, 11, 2));
+const settledNov = {
+  ...novGoal,
+  reminderCycles: settleReminderCycle(novCycles, novCycles[0].id, 'contrib-nov', nov1),
+};
+// L'écran annonce bien décembre une fois novembre soldé.
+assert.deepEqual(nextReminderFromCycles(settledNov.reminderCycles), at(2026, 12, 2));
+// Les trois raccourcis du modal doivent être refusés : ils sont AVANT le rappel
+// qu'ils prétendent reporter.
+assert.equal(canPostponeReminderTo(settledNov, at(2026, 11, 2), nov1), false);
+assert.equal(canPostponeReminderTo(settledNov, at(2026, 11, 4), nov1), false);
+assert.equal(canPostponeReminderTo(settledNov, at(2026, 11, 8), nov1), false);
+// Et le rappel annoncé ne retombe pas en novembre.
+assert.deepEqual(
+  nextReminderFromCycles(cyclesAfterPostpone(settledNov, at(2026, 12, 2), nov1)),
+  at(2026, 12, 2),
+);
+// Un report déjà posé ne se laisse pas non plus ramener en arrière.
+const alreadyPostponed = {
+  ...baseGoal,
+  reminderCycles: normalizedReminderCycles(baseGoal, july28).map((cycle, i) =>
+    i === 0 ? { ...cycle, postponedTo: at(2026, 8, 5).toISOString() } : cycle,
+  ),
+};
+assert.equal(canPostponeReminderTo(alreadyPostponed, at(2026, 8, 1), july28), false);
+assert.equal(canPostponeReminderTo(alreadyPostponed, at(2026, 8, 10), july28), true);
+
+console.log('Tests cycles : reports, dettes, extras, extinction, changement d’ancre et sens du report validés.');

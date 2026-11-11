@@ -402,10 +402,27 @@ export function postponeIsNearNextAnchor(
   return gap >= 1 && gap <= CLOSE_REMINDER_DAYS;
 }
 
-/** Un report doit être futur et respecter la borne dépendant de l'arrivée de l'ancre. */
+/**
+ * Plancher d'un report : la date à laquelle le rappel est DÉJÀ prévu.
+ *
+ * Sans ce plancher, « Reporter » pouvait ramener un rappel en arrière. Le cas
+ * se produisait dès qu'on soldait un cycle en avance : « Reporter » visait
+ * alors le cycle suivant, dont l'ancre était à un mois, et les raccourcis du
+ * modal (demain, dans 3 jours, dans 7 jours) tombaient tous avant cette ancre.
+ * Le rappel de décembre se retrouvait au 8 novembre et l'écran se remettait à
+ * parler du mois précédent.
+ */
+export function postponeDateFloor(goal: Goal, now: Date = new Date()): Date {
+  return reminderAtForCycle(cycleToPostpone(goal, now));
+}
+
+/**
+ * Un report doit être futur, ne jamais avancer le rappel, et respecter la borne
+ * dépendant de l'arrivée de l'ancre.
+ */
 export function canPostponeReminderTo(goal: Goal, date: Date, now: Date = new Date()): boolean {
   const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), REMINDER_HOUR, 0, 0, 0);
-  return at > now && at <= postponeDateLimit(goal, now);
+  return at > now && at >= postponeDateFloor(goal, now) && at <= postponeDateLimit(goal, now);
 }
 
 /** Applique un report au seul cycle ciblé, sans jamais toucher à l'ancre suivante. */

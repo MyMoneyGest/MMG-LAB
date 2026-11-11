@@ -14,6 +14,7 @@ import { formatDate, formatDayMonth } from '@/lib/format';
 import {
   canPostponeReminderTo,
   nextRegularReminderAfterCurrent,
+  postponeDateFloor,
   postponeDateLimit,
   postponeIsNearNextAnchor,
 } from '@/lib/plan';
@@ -45,11 +46,15 @@ export function ReportModal({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const latestDate = postponeDateLimit(goal);
+  // Un report ne peut que repousser : le plancher est la date à laquelle le
+  // rappel est déjà prévu. Sans lui, « dans 7 jours » appliqué à un cycle dont
+  // l'ancre est à un mois ramenait le rappel un mois plus tôt.
+  const earliestDate = postponeDateFloor(goal);
   const nextRegularDate = nextRegularReminderAfterCurrent(goal);
   const anchorHasArrived = postponeIsNearNextAnchor(goal, latestDate);
   const dateLimitError = anchorHasArrived
     ? `Choisis une date au plus tard le ${formatDate(latestDate)}, la veille du prochain rappel mensuel.`
-    : `Avant le jour du rappel, tu peux reporter au plus tard au ${formatDate(latestDate)}. Tu pourras aller au-delà lorsque ce jour arrivera.`;
+    : `Ce rappel est prévu le ${formatDate(earliestDate)} et n'est pas encore arrivé : tu pourras le reporter à partir de ce jour-là.`;
 
   useEffect(() => {
     if (visible) {
@@ -128,7 +133,7 @@ export function ReportModal({
               <Text style={styles.subtitle}>
                 {anchorHasArrived
                   ? `Report possible jusqu'au ${formatDayMonth(latestDate)}, la veille du prochain rappel du ${formatDayMonth(nextRegularDate)}.`
-                  : `Ton rappel n'est pas encore arrivé. Pour le moment, tu peux choisir une date jusqu'au ${formatDayMonth(latestDate)} inclus.`}
+                  : `Ton rappel du ${formatDayMonth(earliestDate)} n'est pas encore arrivé. Tu pourras le reporter à partir de ce jour-là.`}
               </Text>
 
               {quickOptions.map((opt) => (
@@ -167,7 +172,7 @@ export function ReportModal({
         visible={calendarOpen}
         value={selectedDate}
         title="Reporter au"
-        minDate={inDays(1)}
+        minDate={earliestDate > inDays(1) ? earliestDate : inDays(1)}
         maxDate={latestDate}
         onSelect={(date) => {
           chooseDate(date);
