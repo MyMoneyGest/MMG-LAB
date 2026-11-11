@@ -4,6 +4,8 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/constants/theme';
+import { describeBackup, type BackupFile } from '@/lib/backup';
+import { exportBackup, pickBackup, restoreBackup } from '@/lib/backup-io';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
 import { TEST_TOOLS_ENABLED } from '@/lib/test-tools';
@@ -75,6 +77,58 @@ export function MenuModal({
    * `targetKey` absent = l'entrée n'ouvre pas un écran (ex. un modal) : elle ne
    * peut donc jamais être « celle où l'on est ».
    */
+  // Sauvegarde et restauration. Tout vit dans le stockage local : sans ce
+  // couple, désinstaller l'app ou changer de téléphone efface définitivement
+  // l'historique, et c'est le retour le plus sérieux de la revue du 01/11.
+  const [backupBusy, setBackupBusy] = useState<'export' | 'import' | null>(null);
+  const [backupError, setBackupError] = useState<string | null>(null);
+  const [backupDone, setBackupDone] = useState<string | null>(null);
+  const [pendingRestore, setPendingRestore] = useState<BackupFile | null>(null);
+
+  const runExport = async () => {
+    setBackupBusy('export');
+    try {
+      const result = await exportBackup();
+      if (!result.ok) setBackupError(result.reason);
+    } finally {
+      setBackupBusy(null);
+    }
+  };
+
+  const runPick = async () => {
+    setBackupBusy('import');
+    try {
+      const result = await pickBackup();
+      if ('cancelled' in result) return;
+      if (!result.ok) {
+        setBackupError(result.reason);
+        return;
+      }
+      // On ne restaure RIEN avant confirmation : l'opération écrase tout.
+      setPendingRestore(result.backup);
+    } finally {
+      setBackupBusy(null);
+    }
+  };
+
+  const confirmRestore = async () => {
+    const backup = pendingRestore;
+    if (!backup) return;
+    setBackupBusy('import');
+    try {
+      await restoreBackup(backup);
+      setPendingRestore(null);
+      setBackupDone(describeBackup(backup));
+    } catch (cause) {
+      setPendingRestore(null);
+      setBackupError(
+        cause instanceof Error ? cause.message : "La restauration n'a pas pu aboutir."
+      );
+    } finally {
+      setBackupBusy(null);
+    }
+  };
+
   const action = (
     label: string,
     targetKey: string | null,
@@ -202,6 +256,8 @@ export function MenuModal({
                     params: { settings: '1' },
                   })
                 )}
+                {action('Sauvegarder mes données', null, () => void runExport())}
+                {action('Restaurer une sauvegarde', null, () => void runPick())}
                 {action('Confidentialité · CGU', '/legal', () => router.push('/legal'))}
               </View>
               {/* État de la mesure, sur un build de test seulement. Deux pannes
@@ -228,6 +284,33 @@ export function MenuModal({
           setNameModalOpen(false);
         }}
         onClose={() => setNameModalOpen(false)}
+      />
+      <AppDialog
+        visible={pendingRestore !== null}
+        eyebrow="Action sensible"
+        title="Remplacer tes données ?"
+        message={`${pendingRestore ? describeBackup(pendingRestore) : ''} Tes projets et ton historique actuels sur ce téléphone seront remplacés. Cette action est définitive.`}
+        tone="danger"
+        cancelLabel="Annuler"
+        confirmLabel="Restaurer"
+        loading={backupBusy === 'import'}
+        loadingLabel="Restauration…"
+        onConfirm={() => void confirmRestore()}
+        onClose={() => setPendingRestore(null)}
+      />
+      <AppDialog
+        visible={backupDone !== null}
+        title="Données restaurées"
+        message={`${backupDone ?? ''} Tes rappels ont été reprogrammés sur ce téléphone.`}
+        tone="success"
+        onClose={() => setBackupDone(null)}
+      />
+      <AppDialog
+        visible={backupError !== null}
+        title="Opération interrompue"
+        message={backupError ?? ''}
+        tone="danger"
+        onClose={() => setBackupError(null)}
       />
       <AppDialog
         visible={goalToDelete !== null}

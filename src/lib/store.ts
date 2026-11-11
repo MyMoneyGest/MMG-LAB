@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { EventRow } from './analytics';
+import type { BackupData } from './backup';
 import { CurrencyCode, DEFAULT_CURRENCY } from './currency';
 import { convertFinancialData } from './currency-conversion';
 import {
@@ -79,6 +80,14 @@ interface MMGState {
   setUserName: (userName?: string) => void;
   recordAppOpen: () => void;
   setNudgePlan: (plan: ScheduledNudge[], lastNudgeAt?: string) => void;
+  /**
+   * Remplace les données utilisateur par celles d'une sauvegarde.
+   *
+   * Ne touche PAS à `installId` ni à la file de mesure : ils décrivent cet
+   * appareil-ci, pas l'épargne restaurée. Un `installId` réimporté dédoublerait
+   * un même appareil dans les statistiques de rétention.
+   */
+  restoreUserData: (data: BackupData) => void;
   queueEvents: (rows: EventRow[], failure: string) => void;
   clearQueuedEvents: (sentCount: number) => void;
   recordTrackFailure: (message: string) => void;
@@ -169,6 +178,21 @@ export const useStore = create<MMGState>()(
           nudgePlan,
           lastNudgeAt: lastNudgeAt ?? state.lastNudgeAt,
         })),
+
+      restoreUserData: (data) =>
+        set({
+          country: data.country,
+          currencyCode: data.currencyCode,
+          userName: data.userName,
+          budget: data.budget,
+          goals: data.goals,
+          balanceSnapshots: data.balanceSnapshots ?? [],
+          rebalanceReview: data.rebalanceReview,
+          lastViewedGoalId: data.lastViewedGoalId,
+          // Le plan de coups de pouce référence des notifications de l'ancien
+          // appareil : on repart de zéro, la reprogrammation le reconstruira.
+          nudgePlan: undefined,
+        }),
 
       queueEvents: (rows, failure) =>
         set((state) => ({

@@ -21,6 +21,7 @@ const newGoal = read('src/app/onboarding/new-goal.tsx');
 const adjustGoal = read('src/app/adjust-goal.tsx');
 const goal = read('src/app/goal/[id].tsx');
 const menu = read('src/components/menu-modal.tsx');
+const backupIo = read('src/lib/backup-io.ts');
 const report = read('src/components/report-modal.tsx');
 const reminderDay = read('src/components/reminder-day-modal.tsx');
 const balance = read('src/components/balance-modal.tsx');
@@ -177,6 +178,20 @@ assert.match(country, /fetchSuggestedExchangeRate\(currentCurrency, selectedCoun
 assert.match(country, /Aucun montant personnel n'est envoyé/);
 assert.match(country, /await changeLocale\(selectedCountry\.code, selectedCountry\.currency, conversionRate\)/);
 assert.match(menu, /Pays et devise/);
+// Sauvegarde et restauration : sans elles, désinstaller l'app efface
+// définitivement l'historique. La restauration écrase tout, donc elle passe
+// obligatoirement par une confirmation — jamais en un seul geste.
+assert.match(menu, /Sauvegarder mes données/);
+assert.match(menu, /Restaurer une sauvegarde/);
+assert.match(menu, /setPendingRestore\(result\.backup\)/);
+assert.match(menu, /title="Remplacer tes données \?"/);
+assert.match(menu, /tone="danger"/);
+// Et les rappels sont reprogrammés après coup, sinon le plan restauré
+// n'émettrait plus jamais la moindre notification.
+assert.match(backupIo, /scheduleGoalReminders\(goal, suggestedAmount\(goal\)\)/);
+assert.match(backupIo, /await scheduleNudges\(\);/);
+// Rien ne quitte le téléphone sans un geste : pas d'envoi réseau ici.
+assert.doesNotMatch(backupIo, /fetch\(|supabase/);
 assert.match(menu, /pathname: '\/onboarding\/country'/);
 
 // Choisir l'écran où l'on se trouve déjà ferme le menu au lieu d'empiler une
