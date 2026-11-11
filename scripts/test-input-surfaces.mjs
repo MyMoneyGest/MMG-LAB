@@ -64,7 +64,12 @@ assert.doesNotMatch(reportModal, /Garder le rappel du/);
 // ses bornes suivent le plancher et la limite, pas « demain » en dur.
 assert.match(reportModal, /minDate=\{earliestDate > inDays\(1\) \? earliestDate : inDays\(1\)\}/);
 assert.match(reportModal, /const earliestDate = postponeDateFloor\(goal\);/);
-assert.match(reportModal, /n'est pas encore arrivé\. Tu pourras le reporter à partir de ce jour-là/);
+assert.match(reportModal, /Tu peux le décaler jusqu'au \$\{formatDayMonth\(latestDate\)\}/);
+// Les raccourcis partent du rappel, jamais d'aujourd'hui : comptés depuis
+// aujourd'hui ils proposaient des dates antérieures au rappel qu'ils reportent.
+assert.match(reportModal, /const afterReminder = \(n: number\) => \{/);
+assert.match(reportModal, /date: afterReminder\(7\)/);
+assert.doesNotMatch(reportModal, /date: inDays\(3\)|date: inDays\(7\)/);
 assert.match(goalScreen, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)\} à\{' '\}/);
 // Toute saisie libre de l'app est bornée. Le nom de projet était le seul à ne
 // pas l'être, et le montant cible n'avait aucun plafond — un zéro de trop

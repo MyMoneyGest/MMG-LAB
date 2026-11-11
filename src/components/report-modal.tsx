@@ -51,10 +51,13 @@ export function ReportModal({
   // l'ancre est à un mois ramenait le rappel un mois plus tôt.
   const earliestDate = postponeDateFloor(goal);
   const nextRegularDate = nextRegularReminderAfterCurrent(goal);
-  const anchorHasArrived = postponeIsNearNextAnchor(goal, latestDate);
-  const dateLimitError = anchorHasArrived
-    ? `Choisis une date au plus tard le ${formatDate(latestDate)}, la veille du prochain rappel mensuel.`
-    : `Ce rappel est prévu le ${formatDate(earliestDate)} et n'est pas encore arrivé : tu pourras le reporter à partir de ce jour-là.`;
+  // Le rappel visé n'est pas forcément arrivé : on peut décaler une échéance
+  // qu'on sait déjà ne pas pouvoir tenir. Le plancher est alors dans le futur,
+  // et le message doit donner les deux bornes plutôt que la seule limite.
+  const floorIsAhead = earliestDate.getTime() > Date.now();
+  const dateLimitError = floorIsAhead
+    ? `Ce rappel est prévu le ${formatDate(earliestDate)} : choisis une date après celle-ci et au plus tard le ${formatDate(latestDate)}.`
+    : `Choisis une date au plus tard le ${formatDate(latestDate)}, la veille du prochain rappel mensuel.`;
 
   useEffect(() => {
     if (visible) {
@@ -111,10 +114,20 @@ export function ReportModal({
     return d;
   };
 
+  // Les raccourcis se comptent À PARTIR DU RAPPEL, pas d'aujourd'hui. Comptés
+  // depuis aujourd'hui, « dans 7 jours » appliqué à un rappel prévu dans trois
+  // semaines proposait une date antérieure au rappel lui-même — soit refusée,
+  // soit, avant le correctif du plancher, un rappel ramené en arrière.
+  const afterReminder = (n: number) => {
+    const d = new Date(earliestDate);
+    d.setDate(d.getDate() + n);
+    return d;
+  };
+
   const quickOptions: { label: string; date: Date }[] = [
-    { label: 'Demain', date: inDays(1) },
-    { label: 'Dans 3 jours', date: inDays(3) },
-    { label: 'Dans 7 jours', date: inDays(7) },
+    { label: '+ 1 jour', date: afterReminder(1) },
+    { label: '+ 3 jours', date: afterReminder(3) },
+    { label: '+ 7 jours', date: afterReminder(7) },
   ].filter((option) => canPostponeReminderTo(goal, option.date));
 
   return (
@@ -131,9 +144,9 @@ export function ReportModal({
               <Text style={styles.eyebrow}>Report</Text>
               <Text style={styles.title}>Quand te le rappeler ?</Text>
               <Text style={styles.subtitle}>
-                {anchorHasArrived
-                  ? `Report possible jusqu'au ${formatDayMonth(latestDate)}, la veille du prochain rappel du ${formatDayMonth(nextRegularDate)}.`
-                  : `Ton rappel du ${formatDayMonth(earliestDate)} n'est pas encore arrivé. Tu pourras le reporter à partir de ce jour-là.`}
+                {floorIsAhead
+                  ? `Ton rappel est prévu le ${formatDayMonth(earliestDate)}. Tu peux le décaler jusqu'au ${formatDayMonth(latestDate)}, la veille du rappel suivant.`
+                  : `Report possible jusqu'au ${formatDayMonth(latestDate)}, la veille du prochain rappel du ${formatDayMonth(nextRegularDate)}.`}
               </Text>
 
               {quickOptions.map((opt) => (

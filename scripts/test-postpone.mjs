@@ -22,6 +22,7 @@ const {
   nextReminderFromCycles,
   normalizedReminderCycles,
   oldestUnsettledDebt,
+  postponeDateFloor,
   postponeDateLimit,
   postponeIsNearNextAnchor,
   recentDeposits,
@@ -58,12 +59,21 @@ assert.deepEqual(
   at(2026, 3, 14),
 );
 
-// Avant l'ancre, impossible de la dépasser : le 29 juillet doit être refusé.
+// Avant l'ancre, on peut DÉJÀ la dépasser. Règle changée le 11/11 : l'app
+// n'impose plus de garder une échéance jusqu'au jour J — quelqu'un qui sait le
+// 12 qu'il sera absent le 28 décale tout de suite. La seule borne haute est la
+// veille de l'ancre suivante, pour qu'un cycle ne déborde pas sur le suivant.
 assert.deepEqual(nextRegularReminderAfterCurrent(baseGoal, july12), at(2026, 8, 28));
-assert.deepEqual(postponeDateLimit(baseGoal, july12), at(2026, 7, 28));
+assert.deepEqual(postponeDateLimit(baseGoal, july12), at(2026, 8, 27));
 assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 28), july12), true);
-assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 29), july12), false);
-assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 27), july12), false);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 29), july12), true);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 27), july12), true);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 8, 28), july12), false);
+// Mais jamais en arrière : le 27 juillet est avant le rappel qu'il prétend
+// reporter, même s'il est bien dans le futur.
+assert.deepEqual(postponeDateFloor(baseGoal, july12), at(2026, 7, 28));
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 27), july12), false);
+assert.equal(canPostponeReminderTo(baseGoal, at(2026, 7, 13), july12), false);
 
 // Le jour de l'ancre, le report peut aller jusqu'à la veille de l'ancre suivante.
 const july28 = at(2026, 7, 28, 10);
@@ -176,6 +186,16 @@ assert.deepEqual(nextReminderFromCycles(settledNov.reminderCycles), at(2026, 12,
 assert.equal(canPostponeReminderTo(settledNov, at(2026, 11, 2), nov1), false);
 assert.equal(canPostponeReminderTo(settledNov, at(2026, 11, 4), nov1), false);
 assert.equal(canPostponeReminderTo(settledNov, at(2026, 11, 8), nov1), false);
+// En revanche les raccourcis comptés DEPUIS LE RAPPEL tombent en décembre et
+// sont acceptés : le modal propose donc quelque chose d'utile, au lieu d'une
+// liste vide ou de dates qui ramènent en arrière.
+assert.deepEqual(postponeDateFloor(settledNov, nov1), at(2026, 12, 2));
+assert.equal(canPostponeReminderTo(settledNov, at(2026, 12, 3), nov1), true);
+assert.equal(canPostponeReminderTo(settledNov, at(2026, 12, 5), nov1), true);
+assert.equal(canPostponeReminderTo(settledNov, at(2026, 12, 9), nov1), true);
+// Et toujours pas au-delà de la veille de l'ancre de janvier.
+assert.deepEqual(postponeDateLimit(settledNov, nov1), at(2027, 1, 1));
+assert.equal(canPostponeReminderTo(settledNov, at(2027, 1, 2), nov1), false);
 // Et le rappel annoncé ne retombe pas en novembre.
 assert.deepEqual(
   nextReminderFromCycles(cyclesAfterPostpone(settledNov, at(2026, 12, 2), nov1)),

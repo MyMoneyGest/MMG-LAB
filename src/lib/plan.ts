@@ -375,12 +375,18 @@ export function nextRegularReminderAfterCurrent(goal: Goal, now: Date = new Date
 }
 
 /**
- * Avant le jour de l'ancre, le report reste borné à cette ancre. À partir de
- * ce jour seulement, il peut aller jusqu'à la veille de l'ancre suivante.
+ * Un report va au plus tard à la veille de l'ancre suivante : un cycle ne
+ * déborde jamais sur le suivant.
+ *
+ * La borne ne dépend plus de l'arrivée de l'ancre. Avant, tant que le jour du
+ * rappel n'était pas arrivé, on ne pouvait pas le dépasser — autrement dit
+ * l'app imposait de garder l'échéance jusqu'au jour J. Décision de Patrick
+ * (11/11) : « on ne peut pas forcer quelqu'un à garder une échéance s'il ne
+ * souhaite pas la maintenir ». Quelqu'un qui sait le 12 qu'il sera absent le 28
+ * doit pouvoir décaler tout de suite. C'est la même logique non-punitive que le
+ * reste du plan.
  */
 export function postponeDateLimit(goal: Goal, now: Date = new Date()): Date {
-  const currentAnchor = new Date(cycleToPostpone(goal, now).anchorAt);
-  if (calendarDayNumber(now) < calendarDayNumber(currentAnchor)) return currentAnchor;
   const limit = nextRegularReminderAfterCurrent(goal, now);
   limit.setDate(limit.getDate() - 1);
   return limit;
