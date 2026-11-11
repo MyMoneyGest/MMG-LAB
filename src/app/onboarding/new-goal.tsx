@@ -427,7 +427,21 @@ export default function NewGoalScreen() {
             style={styles.primaryAction}
           />
         </Card>
-      ) : (
+      ) : null}
+      {/* Porte de sortie vers l'explication, sous le formulaire et non devant lui.
+          L'écran d'exemple existait déjà mais n'était accessible que par le menu :
+          un développeur l'a réclamé pendant 18 min sans soupçonner qu'il existait.
+          Un lien discret le remet sur le chemin sans rallonger le parcours — la
+          décision du 13/08 (aller droit à la création) reste intacte. */}
+      {step === 1 ? (
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => router.push({ pathname: '/example', params: { from: 'new-goal' } })}
+          style={styles.exampleLink}>
+          <Text style={styles.exampleLinkLabel}>Pas sûr ? Voir un exemple de plan</Text>
+        </Pressable>
+      ) : null}
+      {step === 1 ? null : (
         <>
           <Card>
             <Text style={styles.title}>
@@ -979,6 +993,13 @@ const styles = StyleSheet.create({
   compatBody: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   error: { color: colors.accent, fontSize: 15, fontWeight: '700', marginBottom: 12, paddingHorizontal: 4 },
   primaryAction: { marginTop: 16 },
+  exampleLink: { alignSelf: 'center', paddingVertical: 14, paddingHorizontal: 12 },
+  exampleLinkLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    textDecorationLine: 'underline',
+  },
   finalActions: { gap: 4, marginBottom: 8, alignItems: 'stretch' },
   backLink: { alignSelf: 'center', paddingVertical: 10 },
   backLinkLabel: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },

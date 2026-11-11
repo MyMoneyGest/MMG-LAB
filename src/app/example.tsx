@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 
 import { AppHeader } from '@/components/app-header';
@@ -50,6 +50,7 @@ const EXAMPLE_FIGURES: Record<CurrencyCode, ExampleFigures> = {
 export default function ExampleScreen() {
   const { money, currencyCode } = useMoney();
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
   const ex = EXAMPLE_FIGURES[currencyCode] ?? EUR_FIGURES;
 
   return (
@@ -82,9 +83,21 @@ export default function ExampleScreen() {
         <Text style={styles.step}>4. Le plan se recalcule tout seul, sans pénalité.</Text>
       </Card>
 
+      {/* Depuis le 11/11 cet écran a DEUX portes d'entrée : le menu, et le lien
+          discret sous le formulaire de création. Le bouton doit donc faire deux
+          choses différentes.
+          Venu de la création, on revient en arrière — sinon on empile un second
+          formulaire par-dessus le premier, et le bouton « Retour » du téléphone
+          renvoie à l'exemple au lieu de sortir. Vérifié à l'écran : `navigate`
+          ne suffit PAS ici, malgré la doc qui annonce qu'il remonte à une route
+          déjà empilée (deux formulaires montés après l'aller-retour).
+          Venu du menu, il n'y a aucun formulaire derrière : on y va. */}
       <Button
         label="Créer mon projet"
-        onPress={() => router.push('/onboarding/new-goal')}
+        onPress={() => {
+          if (from === 'new-goal' && router.canGoBack()) router.back();
+          else router.navigate('/onboarding/new-goal');
+        }}
       />
     </Screen>
   );

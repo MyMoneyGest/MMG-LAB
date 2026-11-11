@@ -390,6 +390,25 @@ assert.match(errorToast, /setTimeout\(onFinished, duration\)/);
 assert.match(errorToast, /accessibilityRole="alert"/);
 assert.match(newGoal, /<ErrorToast key=\{error\.key\}/);
 assert.doesNotMatch(newGoal, /styles\.error\b/);
+// Porte de sortie vers l'explication. L'écran existait depuis le début mais
+// n'était atteignable que par le menu — un développeur l'a réclamé 18 minutes
+// durant sans savoir qu'il était là. Le lien doit rester SOUS le formulaire et
+// sur la seule étape 1 : devant, il redeviendrait l'étape imposée que la
+// décision du 13/08 a supprimée.
+assert.match(newGoal, /pathname: '\/example', params: \{ from: 'new-goal' \}/);
+assert.match(newGoal, /Pas sûr \? Voir un exemple de plan/);
+assert.match(newGoal, /accessibilityRole="link"/);
+// Et le retour depuis l'exemple ne doit pas empiler un SECOND formulaire par
+// -dessus celui d'où l'on vient. Mesuré à l'écran le 11/11 : `router.navigate`
+// ne démonte PAS le premier (deux formulaires montés après l'aller-retour),
+// malgré une doc qui annonce qu'il remonte à une route déjà empilée. D'où le
+// paramètre `from` et le retour explicite — et le repli `navigate` pour l'autre
+// porte d'entrée, le menu, derrière laquelle il n'y a aucun formulaire.
+const example = read('src/app/example.tsx');
+assert.match(example, /useLocalSearchParams<\{ from\?: string \}>\(\)/);
+assert.match(example, /from === 'new-goal' && router\.canGoBack\(\)/);
+assert.match(example, /router\.back\(\)/);
+assert.match(example, /router\.navigate\('\/onboarding\/new-goal'\)/);
 // Retour depuis l'étape 2 : revient à l'étape 1 au lieu de quitter l'écran.
 assert.match(newGoal, /onBack=\{step === 2 \? \(\) => setStep\(1\) : undefined\}/);
 assert.match(header, /onBack\?: \(\) => void/);
