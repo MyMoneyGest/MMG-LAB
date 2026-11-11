@@ -89,6 +89,14 @@
 --
 --      Pour ajouter un appareil à exclure plus tard : relance ce bloc en ajoutant
 --      son install_id à la liste (garde la virgule entre chaque).
+--
+--      ⚠️ Cette liste est une dette, pas une solution. CHAQUE réinstallation de
+--      Patrick crée un identifiant neuf qui compte dans la rétention jusqu'à ce
+--      que quelqu'un pense à l'ajouter ici — c'est arrivé le 11/11 : le nouveau
+--      2.2.0 de son Android a créé un projet mesuré comme celui d'un inconnu.
+--      La sortie est `dette-flag-test`, livré le 11/11 : à partir de la 2.3.0,
+--      installer le build `preview-test` sur son propre téléphone suffit, il
+--      porte `test_build: true` et s'exclut tout seul, pour toujours. Voir 0.f.
 
 --      ⚠️ SÉCURITÉ : « security_invoker = true » est indispensable. Sans lui, la vue
 --      s'exécuterait avec les droits de son créateur et contournerait la règle
@@ -103,7 +111,8 @@ where install_id not in (
   'install-1784788834062-uklf43hsnw',  -- Patrick — ancien install, téléphone habituel
   'install-1787134036038-1qnk2xwqzp',  -- Patrick — second téléphone de test (19/08/2026)
   'install-1787134747711-1dwxyrgrut',  -- Patrick — téléphone habituel, APK 2.0.0 (19/08/2026)
-  'install-1789548913830-mg7iwwsefz'   -- Patrick — Android, APK 2.1.0 (16/09/2026)
+  'install-1789548913830-mg7iwwsefz',  -- Patrick — Android, APK 2.1.0 (16/09/2026)
+  'install-1794432770361-jk4fh4ttbm'   -- Patrick — Android, 2.2.0 (11/11/2026, 21h32)
   -- , 'install-xxxx'                  -- ex. proches testant « pour voir »
   --
   -- ⚠️ NE PAS exclure 'install-1784896946511-qob00bzw2d' : premier utilisateur
