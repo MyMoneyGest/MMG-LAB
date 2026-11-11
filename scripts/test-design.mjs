@@ -32,6 +32,7 @@ const appDialog = read('src/components/app-dialog.tsx');
 const timing = read('src/lib/timing.ts');
 const theme = read('src/constants/theme.ts');
 const planSummary = read('src/components/plan-summary.tsx');
+const planLogic = read('src/lib/plan.ts');
 const iconGenerator = read('scripts/generate-app-icons.swift');
 const actions = read('src/lib/actions.ts');
 const goalTypes = read('src/lib/types.ts');
@@ -381,6 +382,16 @@ assert.match(header, /onBack\?: \(\) => void/);
 assert.doesNotMatch(newGoal, /!name\.trim\(\) \|\| nameIsSuggested/);
 // Jour de rappel ordinal (« le 1er », pas « le 1 »).
 assert.match(newGoal, /Rappel le <Text style=\{styles\.dayHintAccent\}>\{formatReminderDay\(reminderDay\)\}/);
+// Le démarrage et le rythme font partie de la décision de création : ni l'un ni
+// l'autre ne doit retourner se replier derrière « Options avancées ».
+assert.doesNotMatch(newGoal, /Options avancées|advancedOpen|rhythmAdvancedOpen/);
+assert.match(newGoal, /<Text style=\{styles\.fieldLabel\}>Quand veux-tu commencer \?<\/Text>/);
+assert.match(newGoal, /<Text style=\{styles\.fieldLabel\}>Rythme des versements<\/Text>/);
+// Et le montant proposé dit d'où il vient.
+assert.match(newGoal, /Les montants proposés se calculent sur ton objectif/);
+// L'invite du prénom ne s'affiche que tant qu'il est vide.
+assert.match(country, /\{userName \? null : \(/);
+assert.match(country, /Touche « Ton prénom » pour personnaliser l'app/);
 assert.match(newGoal, /Continuer vers le rappel/);
 assert.match(newGoal, /savingsMode === 'free'/);
 assert.match(newGoal, /savingsMode,/);
@@ -500,8 +511,14 @@ assert.match(
 assert.match(goalTypes, /midCycleNudgeEnabled\?: boolean/);
 assert.doesNotMatch(newGoal, /midCycleNudgeEnabled|Coup de pouce à mi-parcours/);
 assert.doesNotMatch(goal, /Solde global (?:pas encore )?confirmé/);
-assert.match(goal, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)\} · Modifier/);
-assert.match(planSummary, /Le \$\{formatReminderDay\(reminderDay\)\} du mois/);
+assert.match(goal, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)\} à\{' '\}/);
+assert.match(planSummary, /Le \$\{formatReminderDay\(reminderDay\)\} du mois, à \$\{REMINDER_TIME_LABEL\}/);
+// L'heure du rappel est annoncée partout où le jour l'est : elle était codée en
+// dur à 9 h et jamais dite, un testeur a dû demander « à quelle heure ? ».
+assert.match(goal, /REMINDER_TIME_LABEL/);
+assert.match(newGoal, /chaque mois, à \{REMINDER_TIME_LABEL\}/);
+assert.match(planLogic, /export const REMINDER_HOUR = 9;/);
+assert.doesNotMatch(planLogic, /, 9, 0, 0, 0\)|setHours\(9,/);
 assert.match(adjustGoal, /Le \$\{formatReminderDay\(goal\.reminderDay\)\}/);
 assert.match(goal, /accessibilityLabel="Expliquer le solde réel"/);
 assert.match(goal, /À quoi sert le solde réel/);

@@ -16,6 +16,20 @@ import {
   SavingsRhythm,
 } from './types';
 
+/**
+ * Heure à laquelle part un rappel, la même pour tous les projets.
+ *
+ * Elle était écrite en dur à six endroits et n'était affichée nulle part : un
+ * testeur a demandé « à quelle heure ? » sans pouvoir le deviner. La nommer ici
+ * sert deux choses — les textes de l'interface peuvent l'annoncer sans risque
+ * de diverger du calcul, et le jour où elle devient réglable par projet, il n'y
+ * a qu'un seul endroit à ouvrir.
+ */
+export const REMINDER_HOUR = 9;
+
+/** Libellé prêt à afficher de `REMINDER_HOUR` (format fr-FR, sans Intl). */
+export const REMINDER_TIME_LABEL = `${REMINDER_HOUR} h`;
+
 /** Part du reste à vivre gardée en réserve pour éviter un plan trop serré. */
 export const SAFETY_MARGIN = 0.2;
 export const CLOSE_REMINDER_DAYS = 3;
@@ -160,7 +174,7 @@ export function hasPendingAction(goal: Goal, now: Date = new Date()): boolean {
 /** Première occurrence du jour de rappel strictement après `from`, à 9h. */
 export function nextReminderAfter(from: Date, reminderDay: number): Date {
   const day = Math.min(28, Math.max(1, Math.round(reminderDay)));
-  const d = new Date(from.getFullYear(), from.getMonth(), day, 9, 0, 0, 0);
+  const d = new Date(from.getFullYear(), from.getMonth(), day, REMINDER_HOUR, 0, 0, 0);
   if (d <= from) d.setMonth(d.getMonth() + 1);
   return d;
 }
@@ -178,7 +192,7 @@ function cycleFromAnchor(anchorAt: Date): ReminderCycle {
 
 function previousAnchorOnOrBefore(date: Date, reminderDay: number): Date {
   const day = Math.min(28, Math.max(1, Math.round(reminderDay)));
-  const anchor = new Date(date.getFullYear(), date.getMonth(), day, 9, 0, 0, 0);
+  const anchor = new Date(date.getFullYear(), date.getMonth(), day, REMINDER_HOUR, 0, 0, 0);
   if (anchor > date) anchor.setMonth(anchor.getMonth() - 1);
   return anchor;
 }
@@ -206,7 +220,7 @@ export function midCycleNudgeAt(cycle: ReminderCycle): Date {
   const cycleDays = calendarDayNumber(anchor) - calendarDayNumber(previousAnchor);
   const midpoint = new Date(previousAnchor);
   midpoint.setDate(previousAnchor.getDate() + Math.round(cycleDays / 2));
-  midpoint.setHours(9, 0, 0, 0);
+  midpoint.setHours(REMINDER_HOUR, 0, 0, 0);
   return midpoint;
 }
 
@@ -390,7 +404,7 @@ export function postponeIsNearNextAnchor(
 
 /** Un report doit être futur et respecter la borne dépendant de l'arrivée de l'ancre. */
 export function canPostponeReminderTo(goal: Goal, date: Date, now: Date = new Date()): boolean {
-  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
+  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), REMINDER_HOUR, 0, 0, 0);
   return at > now && at <= postponeDateLimit(goal, now);
 }
 
@@ -401,7 +415,7 @@ export function cyclesAfterPostpone(
   now: Date = new Date()
 ): ReminderCycle[] {
   const target = cycleToPostpone(goal, now);
-  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0, 0, 0);
+  const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), REMINDER_HOUR, 0, 0, 0);
   return normalizedReminderCycles(goal, now).map((cycle) =>
     cycle.id === target.id
       ? {
@@ -441,7 +455,7 @@ export function cyclesAfterReminderDayChange(
   if (!current) return pastOrDue;
 
   const oldAnchor = new Date(current.anchorAt);
-  const candidate = new Date(oldAnchor.getFullYear(), oldAnchor.getMonth(), day, 9, 0, 0, 0);
+  const candidate = new Date(oldAnchor.getFullYear(), oldAnchor.getMonth(), day, REMINDER_HOUR, 0, 0, 0);
   const scheduleReference = goalScheduleReference(goal, now);
   const first = candidate > scheduleReference ? cycleFromAnchor(candidate) : { ...current };
   const rebuilt = [...pastOrDue, first];

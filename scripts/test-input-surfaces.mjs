@@ -60,7 +60,13 @@ assert.match(reportModal, /Votre prochain rappel régulier reste prévu/);
 assert.match(reportModal, /loadingLabel="Programmation…"/);
 assert.match(reportModal, /waitForMinimumLoading\(loadingStartedAt, MIN_INLINE_LOADING_MS\)/);
 assert.doesNotMatch(reportModal, /Garder le rappel du/);
-assert.match(goalScreen, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)\} · Modifier/);
+assert.match(goalScreen, /Jour de rappel : le \{formatReminderDay\(goal\.reminderDay\)\} à\{' '\}/);
+// Toute saisie libre de l'app est bornée. Le nom de projet était le seul à ne
+// pas l'être, et le montant cible n'avait aucun plafond — un zéro de trop
+// traversait tout le calcul de plan.
+assert.match(newGoal, /maxLength=\{MAX_GOAL_NAME_LENGTH\}/);
+assert.match(newGoal, /parsedTarget > maxAmountFor\(currencyCode\)/);
+assert.match(newGoal, /Montant trop élevé/);
 assert.match(goalScreen, /setReminderDayOpen\(true\)/);
 assert.doesNotMatch(goalScreen, /pathname: '\/onboarding\/new-goal'.*editId/);
 assert.match(reminderDayModal, /Jour du mois \(1 à 28\)/);

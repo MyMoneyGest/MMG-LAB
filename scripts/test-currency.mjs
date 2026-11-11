@@ -19,6 +19,7 @@ const {
   COUNTRIES,
   COUNTRIES_ALPHABETICAL,
   foldAccents,
+  maxAmountFor,
 } = loaded.exports;
 
 // EUR : rendu IDENTIQUE à la V1 (formatEuro) — pas de « ,00 » sur un entier.
@@ -76,6 +77,23 @@ assert.deepEqual(displayed.slice(0, 6), [
 assert.equal(displayed[6], 'États-Unis'); // É replié sur E, donc entre C et F
 assert.equal(displayed[displayed.length - 1], 'Togo');
 
+// Plafond de saisie : il attrape les fautes de frappe, il ne borne pas
+// l'ambition. Le point qui compte est qu'il DÉPENDE de la devise — 10 millions
+// ont un sens en euro, aucun en franc CFA, où la même somme s'écrit avec trois
+// chiffres de plus. Un plafond unique rendrait l'app inutilisable en zone CFA.
+assert.equal(maxAmountFor('EUR'), 10_000_000);
+assert.equal(maxAmountFor('USD'), 10_000_000);
+assert.equal(maxAmountFor('XAF'), 5_000_000_000);
+assert.equal(maxAmountFor('XOF'), 5_000_000_000);
+assert.ok(maxAmountFor('XAF') > maxAmountFor('EUR') * 100);
+// Devise inconnue : on retombe sur l'euro plutôt que sur undefined, sinon la
+// comparaison `montant > plafond` serait toujours fausse et le garde-fou muet.
+assert.equal(maxAmountFor(undefined), 10_000_000);
+assert.equal(maxAmountFor('JPY'), 10_000_000);
+// Un objectif réaliste passe, dans les deux zones.
+assert.ok(2_000_000 < maxAmountFor('XAF')); // 2 M FCFA, l'exemple de l'app
+assert.ok(3_500 < maxAmountFor('EUR'));
+
 console.log(
-  'Tests devises : EUR (rendu V1), FCFA sans centimes, repli, pays→devise et tri alphabétique validés.'
+  'Tests devises : EUR (rendu V1), FCFA sans centimes, repli, pays→devise, tri alphabétique et plafonds validés.'
 );

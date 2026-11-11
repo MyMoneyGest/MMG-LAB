@@ -20,6 +20,15 @@ export interface CurrencyDef {
   hideZeroDecimals: boolean;
   /** Nom lisible. */
   name: string;
+  /**
+   * Plafond de saisie d'un montant cible. Il n'est PAS là pour limiter
+   * l'ambition mais pour attraper les fautes de frappe : sans lui, un zéro de
+   * trop traverse tout le calcul de plan et casse l'affichage. Il doit donc
+   * rester large, et surtout dépendre de la devise — 10 millions ont un sens
+   * en euro, aucun en franc CFA, où la même somme s'écrit avec trois chiffres
+   * de plus.
+   */
+  maxAmount: number;
 }
 
 export const CURRENCIES: Record<CurrencyCode, CurrencyDef> = {
@@ -29,6 +38,7 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyDef> = {
     symbolAfter: true,
     decimals: 2,
     hideZeroDecimals: true,
+    maxAmount: 10_000_000,
     name: 'Euro',
   },
   // FCFA Afrique centrale (Gabon, Cameroun, Congo…). Pas de centimes en usage.
@@ -38,6 +48,7 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyDef> = {
     symbolAfter: true,
     decimals: 0,
     hideZeroDecimals: true,
+    maxAmount: 5_000_000_000,
     name: 'Franc CFA (Afrique centrale)',
   },
   // FCFA Afrique de l'Ouest (Sénégal, Côte d'Ivoire…). Même parité fixe à l'euro.
@@ -47,6 +58,7 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyDef> = {
     symbolAfter: true,
     decimals: 0,
     hideZeroDecimals: true,
+    maxAmount: 5_000_000_000,
     name: "Franc CFA (Afrique de l'Ouest)",
   },
   // Dollar : réglages provisoires (devise « plus tard » selon la roadmap).
@@ -56,6 +68,7 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyDef> = {
     symbolAfter: true,
     decimals: 2,
     hideZeroDecimals: false,
+    maxAmount: 10_000_000,
     name: 'Dollar US',
   },
 };
@@ -70,6 +83,11 @@ export function normalizeMoney(
   const def = CURRENCIES[code] ?? CURRENCIES[DEFAULT_CURRENCY];
   const factor = Math.pow(10, def.decimals);
   return Math.round(amount * factor) / factor;
+}
+
+/** Plafond de saisie de la devise (cf. `maxAmount`). */
+export function maxAmountFor(code: CurrencyCode = DEFAULT_CURRENCY): number {
+  return (CURRENCIES[code] ?? CURRENCIES[DEFAULT_CURRENCY]).maxAmount;
 }
 
 /** Convertit puis arrondit selon la précision réelle de la devise cible. */

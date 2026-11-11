@@ -50,6 +50,7 @@ import {
   rebalanceReviewDue,
   recentDeposits,
   remainingAmount,
+  REMINDER_TIME_LABEL,
   savedTotal,
   suggestedAmount,
   upcomingSchedule,
@@ -576,7 +577,8 @@ export default function GoalScreen() {
                   onPress={() => setReminderDayOpen(true)}
                   style={styles.reminderDayLink}>
                   <Text style={styles.reminderDayLinkText}>
-                    Jour de rappel : le {formatReminderDay(goal.reminderDay)} · Modifier
+                    Jour de rappel : le {formatReminderDay(goal.reminderDay)} à{' '}
+                    {REMINDER_TIME_LABEL} · Modifier
                   </Text>
                 </Pressable>
                 {midCycleNudgeSetting}

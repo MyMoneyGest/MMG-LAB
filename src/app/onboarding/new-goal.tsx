@@ -12,6 +12,7 @@ import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, DatePickerField, Field, Screen, StepIndicator } from '@/components/ui';
 import { colors, fonts, radius } from '@/constants/theme';
 import { createGoal } from '@/lib/actions';
+import { maxAmountFor } from '@/lib/currency';
 import {
   formatDate,
   formatReminderDay,
@@ -25,6 +26,7 @@ import {
   plannedAmounts,
   prudentCapacity,
   remainingAmount,
+  REMINDER_TIME_LABEL,
   scheduledMonths,
 } from '@/lib/plan';
 import { usePendingFeedbackStore } from '@/lib/pending-feedback';
@@ -55,6 +57,13 @@ function addMonths(date: Date, months: number): Date {
   return result;
 }
 const DAYS = Array.from({ length: 28 }, (_, i) => i + 1);
+/**
+ * Longueur maximale du nom d'un projet. L'en-tête de la fiche projet réduit
+ * déjà la police pour faire tenir les longs noms (`fitFontSize`), mais sans
+ * borne il finit par devenir illisible. Les autres saisies de l'app étaient
+ * déjà bornées — ce champ était le seul à ne pas l'être.
+ */
+const MAX_GOAL_NAME_LENGTH = 32;
 const RHYTHMS: {
   key: SavingsRhythm;
   title: string;
@@ -87,8 +96,6 @@ export default function NewGoalScreen() {
   const [durationKey, setDurationKey] = useState<DurationKey>('6m');
   const [customDate, setCustomDate] = useState<Date | null>(null);
   const [calendar, setCalendar] = useState<'target' | 'start' | null>(null);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [rhythmAdvancedOpen, setRhythmAdvancedOpen] = useState(false);
   const [startMode, setStartMode] = useState<StartMode>('now');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [reminderDayText, setReminderDayText] = useState(
@@ -194,6 +201,9 @@ export default function NewGoalScreen() {
   const validate = (): string | null => {
     if (!name.trim()) return 'Donne un nom à ton projet.';
     if (parsedTarget === null || parsedTarget <= 0) return 'Indique un montant cible valide.';
+    if (parsedTarget > maxAmountFor(currencyCode)) {
+      return `Montant trop élevé : reste sous ${money(maxAmountFor(currencyCode))}.`;
+    }
     if (parsedAvailable > parsedTarget) return 'Le déjà disponible dépasse le montant cible.';
     if (!parsedDate) return 'Choisis une date cible dans le calendrier.';
     if (parsedDate <= now) return 'Choisis une date cible à venir.';
@@ -298,6 +308,7 @@ export default function NewGoalScreen() {
               }
               placeholderTextColor={colors.textSecondary}
               selectionColor={colors.accent}
+              maxLength={MAX_GOAL_NAME_LENGTH}
               style={styles.nameRowInput}
             />
             <View style={styles.nameRowDivider} />
@@ -370,54 +381,44 @@ export default function NewGoalScreen() {
             <Text style={styles.durationHint}>Objectif visé pour le {formatDate(parsedDate)}.</Text>
           ) : null}
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded: advancedOpen }}
-            onPress={() => setAdvancedOpen((v) => !v)}
-            style={styles.advancedToggle}>
-            <Text style={styles.advancedToggleLabel}>Options avancées</Text>
-            <Text style={styles.advancedToggleChevron}>{advancedOpen ? '︿' : '⌄'}</Text>
-          </Pressable>
-          {advancedOpen ? (
-            <View style={styles.advancedSection}>
-              <Text style={styles.fieldLabel}>Quand veux-tu commencer ?</Text>
-              <View style={styles.startChoices}>
-                <Pressable
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: startMode === 'now' }}
-                  onPress={() => {
-                    setStartMode('now');
-                    setError(null);
-                  }}
-                  style={[styles.startChoice, startMode === 'now' && styles.startChoiceSelected]}>
-                  <Text style={styles.startChoiceTitle}>Dès maintenant</Text>
-                  <Text style={styles.startChoiceBody}>Le plan commence ce mois-ci.</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: startMode === 'later' }}
-                  onPress={() => {
-                    setStartMode('later');
-                    setError(null);
-                  }}
-                  style={[styles.startChoice, startMode === 'later' && styles.startChoiceSelected]}>
-                  <Text style={styles.startChoiceTitle}>Plus tard</Text>
-                  <Text style={styles.startChoiceBody}>Choisis une date future.</Text>
-                </Pressable>
-              </View>
-              {startMode === 'later' ? (
-                <>
-                  <DatePickerField
-                    label="Date de démarrage"
-                    value={startDate}
-                    onPress={() => setCalendar('start')}
-                  />
-                  <Text style={styles.startHint}>
-                    Aucun rappel ne partira avant cette date.
-                  </Text>
-                </>
-              ) : null}
-            </View>
+          {/* Le démarrage n'est PAS un réglage d'expert : replié par défaut, le choix
+              était invisible et « Dès maintenant » s'appliquait sans que l'utilisateur
+              sache qu'il avait choisi. Il fait partie de la décision, il reste donc à
+              l'écran. */}
+          <Text style={styles.fieldLabel}>Quand veux-tu commencer ?</Text>
+          <View style={styles.startChoices}>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: startMode === 'now' }}
+              onPress={() => {
+                setStartMode('now');
+                setError(null);
+              }}
+              style={[styles.startChoice, startMode === 'now' && styles.startChoiceSelected]}>
+              <Text style={styles.startChoiceTitle}>Dès maintenant</Text>
+              <Text style={styles.startChoiceBody}>Le plan commence ce mois-ci.</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: startMode === 'later' }}
+              onPress={() => {
+                setStartMode('later');
+                setError(null);
+              }}
+              style={[styles.startChoice, startMode === 'later' && styles.startChoiceSelected]}>
+              <Text style={styles.startChoiceTitle}>Plus tard</Text>
+              <Text style={styles.startChoiceBody}>Choisis une date future.</Text>
+            </Pressable>
+          </View>
+          {startMode === 'later' ? (
+            <>
+              <DatePickerField
+                label="Date de démarrage"
+                value={startDate}
+                onPress={() => setCalendar('start')}
+              />
+              <Text style={styles.startHint}>Aucun rappel ne partira avant cette date.</Text>
+            </>
           ) : null}
 
           <Button
@@ -463,7 +464,7 @@ export default function NewGoalScreen() {
             </ScrollView>
             <Text style={styles.dayHint}>
               Rappel le <Text style={styles.dayHintAccent}>{formatReminderDay(reminderDay)}</Text> de
-              chaque mois
+              chaque mois, à {REMINDER_TIME_LABEL}
             </Text>
 
             <View style={styles.freeModeToggleRow}>
@@ -557,15 +558,14 @@ export default function NewGoalScreen() {
 
             {savingsMode === 'guided' ? (
           <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded: rhythmAdvancedOpen }}
-              onPress={() => setRhythmAdvancedOpen((v) => !v)}
-              style={styles.advancedToggle}>
-              <Text style={styles.advancedToggleLabel}>Options avancées · rythme</Text>
-              <Text style={styles.advancedToggleChevron}>{rhythmAdvancedOpen ? '︿' : '⌄'}</Text>
-            </Pressable>
-            {rhythmAdvancedOpen ? (
+            {/* Replié, le rythme faisait tomber le montant mensuel du ciel : on voyait
+                une somme sans savoir d'où elle venait ni qu'on pouvait en changer la
+                forme. La phrase ci-dessous répond au « pourquoi ce montant ? ». */}
+            <Text style={styles.fieldLabel}>Rythme des versements</Text>
+            <Text style={styles.rhythmOrigin}>
+              Les montants proposés se calculent sur ton objectif, le délai choisi et ce qu'il
+              te reste une fois tes charges et tes autres projets déduits.
+            </Text>
               <View style={styles.rhythmChoices}>
                 {RHYTHMS.map((option) => {
                   const selected = rhythm === option.key;
@@ -601,7 +601,6 @@ export default function NewGoalScreen() {
                   );
                 })}
               </View>
-            ) : null}
           </>
         ) : (
           <View style={styles.freeReminderNote}>
@@ -792,16 +791,13 @@ const styles = StyleSheet.create({
   durationChipLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
   durationChipLabelSelected: { color: colors.textOnDark },
   durationHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 12 },
-  advancedToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    marginBottom: 4,
+  rhythmOrigin: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -3,
+    marginBottom: 10,
   },
-  advancedToggleLabel: { fontSize: 14, fontWeight: '800', color: colors.accent },
-  advancedToggleChevron: { fontSize: 16, color: colors.accent, fontWeight: '700' },
-  advancedSection: { marginBottom: 4 },
   dayPicker: { flexDirection: 'row', gap: 8, marginBottom: 8, paddingRight: 4 },
   dayChip: {
     width: 44,

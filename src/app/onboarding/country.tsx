@@ -344,6 +344,16 @@ export default function CountryScreen() {
           <Text style={styles.eyebrow}>Bienvenue</Text>
           {nameField}
         </View>
+        {/* Sans libellé, la pastille se lisait comme une décoration : un
+            développeur attentif est passé devant sans la voir et a cliqué
+            « Continuer ». L'invite ne s'affiche que tant que le prénom est vide,
+            pour préserver l'intention d'origine — une fois renseigné, il se lit
+            comme un mot de la phrase d'accueil, plus comme un champ. */}
+        {userName ? null : (
+          <Text style={styles.nameInvite}>
+            Touche « Ton prénom » pour personnaliser l'app. Facultatif.
+          </Text>
+        )}
         <Text style={styles.title}>Où épargnes-tu ?</Text>
         <Text style={styles.body}>
           MMG adapte automatiquement l'application à ta devise locale.
@@ -412,6 +422,7 @@ const styles = StyleSheet.create({
   // être centrés l'un par rapport à l'autre. Les variantes encadrées (pill
   // vide, champ en édition) repassent en centrage via alignSelf.
   eyebrowRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 6 },
+  nameInvite: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 10 },
   eyebrow: {
     color: colors.accent,
     fontSize: 12,
