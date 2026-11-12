@@ -610,10 +610,30 @@ assert.match(newGoal, /chaque mois, à \{REMINDER_TIME_LABEL\}/);
 assert.match(planLogic, /export const REMINDER_HOUR = 9;/);
 assert.doesNotMatch(planLogic, /, 9, 0, 0, 0\)|setHours\(9,/);
 assert.match(adjustGoal, /Le \$\{formatReminderDay\(goal\.reminderDay\)\}/);
-assert.match(goal, /accessibilityLabel="Expliquer le solde réel"/);
+// --- Bulles d'aide contextuelles (chantier onb-bulles-aide) ----------------
+// Un seul motif d'aide dans l'app : la pastille « i » qui ouvre une
+// explication. L'explication du solde réel, écrite à la main, passe par le
+// composant partagé — deux motifs qui se ressemblent vaudraient moins qu'un.
+assert.match(goal, /<HelpDot/);
+assert.match(goal, /label="Expliquer le solde réel"/);
 assert.match(goal, /À quoi sert le solde réel/);
 assert.match(goal, /Rien n’est connecté à ta banque/);
-assert.match(goal, /visible=\{balanceInfoOpen\}/);
+assert.doesNotMatch(goal, /balanceInfoOpen/);
+const helpDot = read('src/components/help-dot.tsx');
+// ⚠️ Muette par défaut : rien ne s'ouvre tant que personne ne touche. Un
+// tutoriel qui se lance tout seul est un tutoriel qu'on referme.
+assert.match(helpDot, /useState\(false\)/);
+assert.doesNotMatch(helpDot, /useEffect/);
+// Le seul emplacement retenu par Patrick : « Déjà disponible » à la création.
+// Le champ n'avait aucune explication, et confondre « pour ce projet » avec
+// « tout mon argent » fausse le plan entier sans que rien ne le signale.
+assert.match(newGoal, /<HelpDot/);
+assert.match(newGoal, /Ce que tu as déjà pour CE projet/);
+assert.match(newGoal, /pas tout ton argent/);
+// ⚠️ Pas de prolifération : la tentation, avec ce composant sous la main, est
+// d'en semer partout — un écran couvert de « i » dit que rien n'est clair.
+const helpDotCount = (src) => (src.match(/<HelpDot/g) ?? []).length;
+assert.equal(helpDotCount(newGoal) + helpDotCount(goal), 2, 'deux bulles, pas plus');
 assert.match(goal, /feedback\?: 'created' \| 'adjusted' \| 'deleted'/);
 assert.doesNotMatch(goal, /Alert\.alert|\bAlert\b/);
 

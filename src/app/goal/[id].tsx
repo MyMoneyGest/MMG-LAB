@@ -14,6 +14,7 @@ import type { FeedbackMessage } from '@/components/feedback-banner';
 import { ReportModal } from '@/components/report-modal';
 import { RecentContributionModal } from '@/components/recent-contribution-modal';
 import { RebalanceModal } from '@/components/rebalance-modal';
+import { HelpDot } from '@/components/help-dot';
 import { ReminderDayModal } from '@/components/reminder-day-modal';
 import { SavingsLocationModal } from '@/components/savings-location-modal';
 import { CalendarIcon, ClockIcon, HomeIcon } from '@/components/tab-icons';
@@ -114,7 +115,6 @@ export default function GoalScreen() {
   const [tab, setTab] = useState<Tab>('today');
   const [amountModal, setAmountModal] = useState<'deposit' | null>(null);
   const [balanceOpen, setBalanceOpen] = useState(false);
-  const [balanceInfoOpen, setBalanceInfoOpen] = useState(false);
   const [rebalanceProposal, setRebalanceProposal] =
     useState<GlobalRebalanceProposal | null>(null);
   const [rebalanceReason, setRebalanceReason] =
@@ -304,7 +304,6 @@ export default function GoalScreen() {
       (globalPlan.goals.length > 0 || !globalPlan.possible)
   );
   const schedule = upcomingSchedule(goal);
-  const explainRealBalance = () => setBalanceInfoOpen(true);
   const toggleMidCycleNudge = async (enabled: boolean) => {
     const currentGoal = useStore.getState().goals.find((candidate) => candidate.id === goal.id);
     if (!currentGoal) return;
@@ -696,14 +695,16 @@ export default function GoalScreen() {
               onPress={() => setBalanceOpen(true)}
               style={{ flex: 1 }}
             />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Expliquer le solde réel"
-              hitSlop={6}
-              onPress={explainRealBalance}
-              style={({ pressed }) => [styles.infoButton, pressed && styles.infoButtonPressed]}>
-              <Text style={styles.infoButtonText}>i</Text>
-            </Pressable>
+            {/* Même composant que la bulle de l'écran de création : un seul
+                motif d'aide dans l'app, pas deux qui se ressemblent. */}
+            <View style={styles.infoButton}>
+              <HelpDot
+                label="Expliquer le solde réel"
+                eyebrow="Solde réel"
+                title="À quoi sert le solde réel ?"
+                message="C’est le total que tu as réellement mis de côté, tous projets confondus. MMG l’utilise pour recaler ta progression. Rien n’est connecté à ta banque : c’est toi qui indiques ce montant."
+              />
+            </View>
           </View>
         </Card>
       ) : null}
@@ -779,13 +780,6 @@ export default function GoalScreen() {
           setModalFromTest(false);
           setAmountModal(null);
         }}
-      />
-      <AppDialog
-        visible={balanceInfoOpen}
-        eyebrow="Solde réel"
-        title="À quoi sert le solde réel ?"
-        message="C’est le total que tu as réellement mis de côté, tous projets confondus. MMG l’utilise pour recaler ta progression. Rien n’est connecté à ta banque : c’est toi qui indiques ce montant."
-        onClose={() => setBalanceInfoOpen(false)}
       />
       <BalanceModal
         visible={balanceOpen}
@@ -1096,29 +1090,10 @@ const styles = StyleSheet.create({
   plannedBody: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 7 },
   plannedNote: { color: colors.accent, fontSize: 13, fontWeight: '800', marginTop: 10 },
   balanceActionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
-  infoButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoButtonPressed: { backgroundColor: colors.cardSoft },
-  infoButtonText: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.accent,
-    color: colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    lineHeight: 17,
-    textAlign: 'center',
-  },
+  // Simple zone de centrage : la pastille apporte sa propre bordure, et en
+  // garder une ici dessinait un anneau dans un anneau. La taille reste à 44
+  // pour que la cible tactile ne rétrécisse pas avec le dessin.
+  infoButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   tabs: { flexDirection: 'row' },
   tab: { flex: 1, paddingVertical: 8, alignItems: 'center', gap: 4 },
   tabLabel: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },

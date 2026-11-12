@@ -218,18 +218,34 @@ export function StepIndicator({
 
 export function Field({
   label,
+  labelAccessory,
   suffix,
   error,
   onBlur,
   onFocus,
   style,
   ...inputProps
-}: TextInputProps & { label?: string; suffix?: string; error?: string | null }) {
+}: TextInputProps & {
+  label?: string;
+  /** Posé à droite du libellé — une bulle d'aide, par exemple. */
+  labelAccessory?: ReactNode;
+  suffix?: string;
+  error?: string | null;
+}) {
   const [focused, setFocused] = useState(false);
   const revealFocusedField = useContext(KeyboardScrollContext);
   return (
     <View style={styles.field}>
-      {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
+      {label ? (
+        labelAccessory ? (
+          <View style={styles.fieldLabelRow}>
+            <Text style={[styles.fieldLabel, styles.fieldLabelInRow]}>{label}</Text>
+            {labelAccessory}
+          </View>
+        ) : (
+          <Text style={styles.fieldLabel}>{label}</Text>
+        )
+      ) : null}
       <View
         style={[
           styles.fieldWrap,
@@ -434,6 +450,10 @@ const styles = StyleSheet.create({
   buttonLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   buttonLoadingContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   field: { marginBottom: 10 },
+  fieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  // Dans une rangée, la marge basse est portée par la rangée elle-même : la
+  // garder ici décalerait la pastille d'aide vers le haut du libellé.
+  fieldLabelInRow: { marginBottom: 0 },
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',

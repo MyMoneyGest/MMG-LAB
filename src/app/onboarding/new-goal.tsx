@@ -8,6 +8,7 @@ import { AppHeader } from '@/components/app-header';
 import { CalendarModal } from '@/components/calendar-modal';
 import { ErrorToast } from '@/components/error-toast';
 import { FeedbackBanner } from '@/components/feedback-banner';
+import { HelpDot } from '@/components/help-dot';
 import { PlanSummaryDark } from '@/components/plan-summary';
 import { Button, Card, DatePickerField, Field, Screen, StepIndicator } from '@/components/ui';
 import { colors, fonts, radius } from '@/constants/theme';
@@ -409,6 +410,14 @@ export default function NewGoalScreen() {
           />
           <Field
             label="Déjà disponible"
+            labelAccessory={
+              <HelpDot
+                label="Expliquer le champ Déjà disponible"
+                eyebrow="Déjà disponible"
+                title="Ce que tu as déjà pour CE projet"
+                message="Indique seulement la somme déjà mise de côté pour ce projet précis, pas tout ton argent. MMG la déduit de l'objectif : elle réduit ce qu'il te reste à financer, donc le montant mensuel. Si tu n'as encore rien mis de côté, laisse 0."
+              />
+            }
             value={available}
             onChangeText={(t) => {
               setAvailable(amountInput(t));
