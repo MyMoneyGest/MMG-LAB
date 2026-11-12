@@ -31,6 +31,7 @@ import {
 } from '@/lib/actions';
 import type { ContributionSource } from '@/lib/actions';
 import { fitFontSize, formatDate, formatDayMonth, formatReminderDay } from '@/lib/format';
+import { hapticSettingApplied } from '@/lib/haptics';
 import { TEST_TOOLS_ENABLED } from '@/lib/test-tools';
 import {
   hasNotificationPermission,
@@ -789,6 +790,7 @@ export default function GoalScreen() {
         onConfirm={async (amount) => {
           const loadingStartedAt = Date.now();
           const proposal = await reconcileGlobalBalance(amount);
+          hapticSettingApplied();
           await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setBalanceOpen(false);
           if (proposal && (proposal.goals.length || !proposal.possible)) {
@@ -817,6 +819,7 @@ export default function GoalScreen() {
           if (!rebalanceProposal) return;
           const loadingStartedAt = Date.now();
           await applyGlobalRebalance(rebalanceProposal);
+          hapticSettingApplied();
           await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setRebalanceProposal(null);
           showFeedback(
@@ -837,6 +840,7 @@ export default function GoalScreen() {
             .goals.find((candidate) => candidate.id === goal.id);
           if (!currentGoal) return;
           await changeReminderDay(currentGoal, day, hour);
+          hapticSettingApplied();
           await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);
           setReminderDayOpen(false);
           showFeedback(

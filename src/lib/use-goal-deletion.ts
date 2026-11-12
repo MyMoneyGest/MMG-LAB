@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import { removeGoal } from '@/lib/actions';
+import { hapticDestructive } from '@/lib/haptics';
 import { setPendingFeedback } from '@/lib/pending-feedback';
 import { useStore } from '@/lib/store';
 import { waitForMinimumLoading } from '@/lib/timing';
@@ -50,6 +51,9 @@ export function useGoalDeletion({
     setDeleteError(null);
     setDeletePending(true);
     try {
+      // Seuil franchi : des mois d'historique disparaissent. Posé ici plutôt
+      // que dans les deux écrans appelants, pour ne vibrer qu'une fois.
+      hapticDestructive();
       await waitForMinimumLoading(loadingStartedAt);
       if (!destination) {
         // Signal transitoire posé AVANT removeGoal : sur web, la redirection

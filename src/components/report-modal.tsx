@@ -10,6 +10,7 @@ import {
 
 import { colors, radius } from '@/constants/theme';
 import { postponeReminder } from '@/lib/actions';
+import { hapticSettingApplied } from '@/lib/haptics';
 import { formatDate, formatDayMonth } from '@/lib/format';
 import {
   canPostponeReminderTo,
@@ -84,6 +85,8 @@ export function ReportModal({
         setError(result.reason === 'permission' ? PERMISSION_ERROR : dateLimitError);
         return;
       }
+      // Sur le seul chemin de succès : un report refusé ne doit rien confirmer.
+      hapticSettingApplied();
       onDone();
     } finally {
       await waitForMinimumLoading(loadingStartedAt, MIN_INLINE_LOADING_MS);

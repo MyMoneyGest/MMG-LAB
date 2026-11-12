@@ -15,6 +15,7 @@ import {
   formatExchangeRateInput,
   parseExchangeRateInput,
 } from '@/lib/exchange-rate';
+import { hapticSettingApplied } from '@/lib/haptics';
 import { useStore } from '@/lib/store';
 
 function suggestedCountryCode(savedCountry?: string): string {
@@ -125,6 +126,10 @@ export default function CountryScreen() {
     setSaving(true);
     try {
       await changeLocale(selectedCountry.code, selectedCountry.currency, conversionRate);
+      // Seulement depuis les réglages : au PREMIER LANCEMENT, choisir son pays
+      // n'engage aucune donnée du plan — il n'y a pas encore de plan. Vibrer là
+      // serait un retour de navigation, exactement ce que la règle écarte.
+      if (settings === '1') hapticSettingApplied();
       if (settings === '1' && router.canGoBack()) router.back();
       // Premier lancement : on va droit à la création du projet, sans écran
       // d'accueil ni de choix de mode intermédiaire — le mode se choisit
@@ -285,6 +290,7 @@ export default function CountryScreen() {
     setSaving(true);
     try {
       await changeLocale(country.code, country.currency);
+      hapticSettingApplied();
       if (router.canGoBack()) router.back();
     } finally {
       setSaving(false);

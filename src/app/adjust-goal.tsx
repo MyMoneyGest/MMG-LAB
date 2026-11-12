@@ -9,6 +9,7 @@ import { CalendarModal } from '@/components/calendar-modal';
 import { Button, Card, DatePickerField, Field, Screen } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { changeReminderDay } from '@/lib/actions';
+import { hapticSettingApplied } from '@/lib/haptics';
 import { formatDate, formatReminderDay, parseAmountInput } from '@/lib/format';
 import {
   cyclesAfterReminderDayChange,
@@ -175,6 +176,9 @@ export default function AdjustGoalScreen() {
         const scheduled = await scheduleGoalReminders(updated, suggestedAmount(updated));
         updateGoal(goal.id, scheduled);
       }
+      // UNE seule fois pour le geste, même si l'enregistrement a enchaîné deux
+      // actions instrumentées en interne (changement de jour de rappel compris).
+      hapticSettingApplied();
       await waitForMinimumLoading(loadingStartedAt);
       router.dismissTo({
         pathname: '/goal/[id]',

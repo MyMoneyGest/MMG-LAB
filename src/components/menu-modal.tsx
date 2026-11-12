@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '@/constants/theme';
 import { describeBackup, type BackupFile } from '@/lib/backup';
 import { BUILD_LABEL } from '@/lib/build-info';
+import { hapticDestructive } from '@/lib/haptics';
 import { exportBackup, pickBackup, restoreBackup } from '@/lib/backup-io';
 import { progressPct, remainingAmount } from '@/lib/plan';
 import { useStore } from '@/lib/store';
@@ -118,6 +119,9 @@ export function MenuModal({
     setBackupBusy('import');
     try {
       await restoreBackup(backup);
+      // Seuil franchi, au même titre qu'une suppression : tout ce qui était sur
+      // ce téléphone vient d'être remplacé.
+      hapticDestructive();
       setPendingRestore(null);
       setBackupDone(describeBackup(backup));
     } catch (cause) {

@@ -40,14 +40,14 @@ const goalTypes = read('src/lib/types.ts');
 const savingsLocationModal = read('src/components/savings-location-modal.tsx');
 const haptics = read('src/lib/haptics.ts');
 
-// Le retour haptique est réservé à la confirmation d'un versement. Ces surfaces
-// sont les plus tentantes pour en ajouter « aussi » : on vérifie qu'elles n'en
-// ont pas.
+// Le retour haptique suit UNE RÈGLE (cf. haptics.ts) : vibrer sur un changement
+// de donnée du plan qui ne s'annule pas d'un geste, et rien d'autre. Ces
+// surfaces ne changent aucune donnée — elles présentent, elles naviguent — donc
+// elles restent muettes, et ce sont les plus tentantes pour en ajouter « aussi ».
 const screensWithoutHaptics = [
   ['index', index],
   ['new-goal', newGoal],
   ['budget', budget],
-  ['menu-modal', menu],
   ['app-dialog', appDialog],
   ['feedback-banner', feedbackBanner],
 ];
@@ -691,6 +691,45 @@ assert.match(haptics, /\.catch\(\(\) => \{\}\)/, 'une vibration ratée ne doit j
 for (const [name, source] of screensWithoutHaptics) {
   assert.doesNotMatch(source, /haptic/i, `${name} ne doit pas vibrer : l'effet vient de la rareté`);
 }
+
+// --- La règle haptique, étendue le 12/11 (chantier liv-haptique-etendu) ----
+// Quatre intensités, et chacune a sa raison d'être distincte.
+assert.match(haptics, /export function hapticSettingApplied/);
+assert.match(haptics, /Haptics\.selectionAsync\(\)/);
+assert.match(haptics, /export function hapticDestructive/);
+assert.match(haptics, /NotificationFeedbackType\.Warning/);
+// La règle est ÉCRITE, pas déduite d'une liste : c'est ce qui permet de trancher
+// un nouvel écran sans rouvrir le débat.
+assert.match(haptics, /ne s'annule pas/);
+
+// Les huit gestes qui engagent une donnée du plan, un appel chacun.
+const gestesQuiEngagent = [
+  ['suppression d’un projet', read('src/lib/use-goal-deletion.ts'), 'hapticDestructive'],
+  ['restauration d’une sauvegarde', menu, 'hapticDestructive'],
+  ['report d’échéance', read('src/components/report-modal.tsx'), 'hapticSettingApplied'],
+  ['fiche projet (solde, réajustement, rappel)', goal, 'hapticSettingApplied'],
+  ['ajustement d’un projet', adjustGoal, 'hapticSettingApplied'],
+  ['changement de pays', country, 'hapticSettingApplied'],
+];
+for (const [nom, source, helper] of gestesQuiEngagent) {
+  assert.match(source, new RegExp(`${helper}\\(\\)`), `${nom} doit vibrer`);
+}
+// La fiche projet en a exactement trois : solde réel, réajustement, rappel.
+assert.equal((goal.match(/hapticSettingApplied\(\)/g) ?? []).length, 3);
+// ⚠️ Et UNE seule par geste : ajuster un projet enchaîne deux actions
+// instrumentées en interne, l'écran ne doit vibrer qu'une fois.
+assert.equal((adjustGoal.match(/haptic\w+\(\)/g) ?? []).length, 1);
+
+// ⚠️ Ce qui s'annule d'un geste ne vibre PAS. Les deux interrupteurs de l'app
+// sont le test de la règle : on les rebascule aussitôt, et une vibration par
+// bascule serait exactement le bruit qu'on fuit.
+assert.doesNotMatch(goal, /toggleMidCycleNudge[\s\S]{0,400}haptic/);
+assert.doesNotMatch(goal, /setHideAmounts\(!hideAmounts\)[\s\S]{0,120}haptic/);
+// Un RETRAIT ne vibre pas : un succès y serait déplacé, un avertissement serait
+// un reproche — et MMG promet « même moins que prévu, c'est déjà bien ».
+assert.match(haptics, /Un RETRAIT ne vibre pas/);
+// La pulsation du versement reste le privilège de l'écran de confirmation.
+assert.equal((goal.match(/hapticContributionLogged/g) ?? []).length, 0);
 assert.match(reminderDay, /loadingLabel="Mise à jour…"/);
 assert.match(balance, /loadingLabel="Recalcul…"/);
 assert.match(rebalance, /loadingLabel="Application…"/);
