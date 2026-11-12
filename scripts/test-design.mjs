@@ -371,10 +371,31 @@ assert.match(ui, /labels = \['Projet', 'Rythme'\]/);
 assert.match(ui, /Étape \$\{current\} sur \$\{total\}/);
 assert.match(newGoal, /useState<1 \| 2>\(1\)/);
 assert.match(newGoal, /subtitle=\{`Étape \$\{step\} sur 2`\}/);
-assert.match(
-  newGoal,
-  /labels=\{savingsMode === 'free' \? \['Projet', 'Rappel'\] : \['Projet', 'Rythme'\]\}/
-);
+// L'étape 2 s'appelle « Rythme » seulement quand il y en a un. En mode libre et
+// en montant fixé, il n'y a pas de rythme à choisir : annoncer une étape qui
+// n'existe pas est une promesse non tenue dès le premier écran.
+assert.match(newGoal, /savingsMode === 'free' \|\| planMode === 'amount'/);
+// --- Double sens du calcul (chantier onb-double-sens) ----------------------
+// Le seul motif récurrent du journal : demandé par Patrick le 13/08 puis par
+// David le 01/11 sans qu'ils se connaissent.
+assert.match(newGoal, /Je fixe la date/);
+assert.match(newGoal, /Je fixe mon montant/);
+assert.match(newGoal, /MONTANT MENSUEL|Montant mensuel/);
+// Le sens par date reste le DÉFAUT : il aide celui qui ne sait pas combien il
+// peut mettre, et c'est le parcours que les testeurs connaissent déjà.
+assert.match(newGoal, /useState<PlanMode>\('date'\)/);
+// Le montant tapé est emporté tel quel, et jamais en mode libre.
+assert.match(newGoal, /planMode === 'amount' && savingsMode === 'guided' \? parsedMonthly!/);
+// ⚠️ Le rythme DOIT disparaître dans ce sens : « 200 € par mois » redeviendrait
+// ambigu (premier versement ? moyenne ? plus gros ?) si on proposait en plus un
+// rythme progressif. Le bloc est masqué et l'app dit pourquoi.
+assert.match(newGoal, /savingsMode === 'guided' && planMode === 'date' \? \(/);
+assert.match(newGoal, /Tu as fixé ton montant, il est donc le même chaque mois/);
+// L'annonce compte les versements pleins à part du reliquat : « 18 versements
+// de 200 €, le dernier de 100 € » se lirait comme dix-neuf versements.
+assert.match(newGoal, /\{fullMonthlyCount\} versement/);
+assert.match(newGoal, /puis \$\{money\(lastMonthlyPart\)\}/);
+assert.match(newGoal, /\['Projet', 'Rappel'\]\s*:\s*\['Projet', 'Rythme'\]/);
 assert.doesNotMatch(newGoal, /sur 3/);
 assert.match(newGoal, /\['emergency', 'car', 'moving', 'travel', 'housing', 'other'\]/);
 assert.match(newGoal, /CATEGORY_LABELS\[c\]/);

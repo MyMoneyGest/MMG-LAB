@@ -16,7 +16,11 @@ const {
   buildGlobalRebalanceProposal,
   cyclesAfterReminderDayChange,
   estimatedGlobalBalance,
+  fixedMonthlyAmounts,
   goalActivationDate,
+  goalPlannedMonthly,
+  monthsForMonthly,
+  projectedEndDate,
   goalActivationDelayDays,
   goalSavingsMode,
   goalStartsInFuture,
@@ -176,4 +180,85 @@ assert.match(actionsSource, /nextReminderAfter\(scheduleReference, input\.remind
 // AUCUNE donnée liée au montant n'est transmise (amountBucket retiré, cf. contre-audit Codex).
 assert.doesNotMatch(actionsSource, /amountBucket|bucketAmount|amountInEurReference/);
 
-console.log('Tests solde : réconciliation, trimestre, capacité globale et relance douce validés.');
+// --- Montant fixé par la personne (chantier onb-double-sens) ---------------
+// Sens inverse du calcul : au lieu de déduire la mensualité d'une date cible,
+// la personne pose sa mensualité et la date devient la conséquence.
+
+// Le montant tapé reste le montant tapé, et le reste part au dernier versement.
+assert.deepEqual(fixedMonthlyAmounts(3500, 200), [
+  ...Array.from({ length: 17 }, () => 200),
+  100,
+]);
+assert.equal(monthsForMonthly(3500, 200), 18);
+// Quand ça tombe juste, aucun versement bâtard en fin de plan.
+assert.deepEqual(fixedMonthlyAmounts(600, 200), [200, 200, 200]);
+assert.equal(monthsForMonthly(600, 200), 3);
+// Et le total versé est TOUJOURS l'objectif, jamais un centime de plus :
+// faire épargner plus que demandé serait un abus de confiance.
+for (const [total, monthly] of [[3500, 200], [1000, 300], [99.99, 10], [5, 2], [2_000_000, 220_000]]) {
+  const amounts = fixedMonthlyAmounts(total, monthly);
+  const somme = Math.round(amounts.reduce((s, a) => s + a, 0) * 100) / 100;
+  assert.equal(somme, Math.round(total * 100) / 100, `${total} à ${monthly}`);
+  assert.ok(amounts.every((a) => a <= monthly + 0.001), 'aucun versement au-dessus du montant choisi');
+  assert.equal(amounts.length, monthsForMonthly(total, monthly));
+}
+
+// Dans l'échéancier, c'est le MONTANT qui borne, plus la date cible.
+const fixe = { ...makeGoal('fixe', 0, 3500), plannedMonthly: 200 };
+const le12juillet = new Date(2026, 6, 12, 12);
+const planFixe = upcomingSchedule(fixe, le12juillet, 600);
+assert.equal(planFixe.length, 18);
+assert.equal(planFixe[0].amount, 200);
+assert.equal(planFixe.at(-1).amount, 100);
+assert.equal(peakScheduledAmount(fixe, le12juillet), 200);
+
+// ⚠️ LE POINT QUI COMPTE : un mois creux allonge le plan, il n'augmente jamais
+// l'effort. C'est l'engagement que la personne a pris en fixant son montant,
+// et l'inverse du régime classique où le montant remonte pour tenir la date.
+const moisCreux = {
+  ...fixe,
+  contributions: [{ id: 'c1', type: 'deposit', amount: 100, date: at(2026, 7, 28) }],
+};
+const planApres = upcomingSchedule(moisCreux, new Date(2026, 7, 1, 12), 600);
+assert.equal(planApres[0].amount, 200, "le montant ne bouge pas après un mois creux");
+assert.equal(planApres.length, 17, 'il reste 3 400 € à 200 €, soit 17 versements');
+// Et les deux régimes sont bien distincts — prouvé, pas supposé. Avec une date
+// cible trop courte pour le montant choisi, le régime classique COMPRIME les
+// versements pour tenir la date, là où le montant fixé l'ignore et allonge.
+const dateTropCourte = { ...fixe, targetDate: at(2027, 1, 28) };
+assert.equal(upcomingSchedule(dateTropCourte, le12juillet, 600)[0].amount, 200);
+assert.equal(upcomingSchedule(dateTropCourte, le12juillet, 600).length, 18);
+const memeDateSansMontant = { ...dateTropCourte, plannedMonthly: undefined };
+const comprime = upcomingSchedule(memeDateSansMontant, le12juillet, 600);
+assert.ok(comprime.length < 18, 'le régime classique s’arrête à la date cible');
+assert.ok(comprime[0].amount > 200, 'et remonte le montant pour y arriver');
+
+// Un projet sans montant fixé n'est pas affecté, et le mode libre l'ignore.
+assert.equal(goalPlannedMonthly(makeGoal('sans', 0, 1000)), null);
+assert.equal(goalPlannedMonthly({ ...fixe, savingsMode: 'free' }), null);
+assert.equal(goalPlannedMonthly({ ...fixe, plannedMonthly: 0 }), null);
+assert.equal(goalPlannedMonthly({ ...fixe, plannedMonthly: -5 }), null);
+assert.equal(goalPlannedMonthly(fixe), 200);
+
+// La date affichée suit le plan : elle recule quand un mois est creux, puisque
+// c'est le montant qui est l'engagement. Sur un plan classique elle ne bouge
+// pas, c'est elle l'engagement.
+// Comparaison à DATE ÉGALE, sinon le mois écoulé masque l'effet : deux projets
+// identiques au 1er août, l'un qui a versé ses 200 €, l'autre rien.
+const aJour = {
+  ...fixe,
+  contributions: [{ id: 'plein', type: 'deposit', amount: 200, date: at(2026, 7, 28) }],
+};
+const rienVerse = { ...fixe, contributions: [] };
+const le1erAout = new Date(2026, 7, 1, 12);
+assert.ok(
+  projectedEndDate(rienVerse, le1erAout) > projectedEndDate(aJour, le1erAout),
+  "un mois sauté repousse l'arrivée d'un cran",
+);
+assert.equal(
+  projectedEndDate(makeGoal('classique2', 0, 1000), le12juillet).toISOString(),
+  at(2027, 12, 28),
+  'un plan classique garde sa date cible',
+);
+
+console.log('Tests solde : réconciliation, trimestre, capacité globale, relance douce et montant fixé validés.');

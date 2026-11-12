@@ -6,6 +6,7 @@ import {
   contributionPlan,
   cyclesAfterPostpone,
   cyclesAfterReminderDayChange,
+  goalPlannedMonthly,
   goalReminderHour,
   goalActivationDelayDays,
   nextReminderAfter,
@@ -44,6 +45,8 @@ export interface NewGoalInput {
   rhythm: SavingsRhythm;
   savingsMode: SavingsMode;
   startDate?: Date;
+  /** Montant mensuel fixé par la personne, au lieu d'être déduit de la date. */
+  plannedMonthly?: number;
 }
 
 export type ContributionSource = 'one_tap' | 'custom_amount' | 'test_notification';
@@ -82,6 +85,7 @@ export async function createGoal(input: NewGoalInput): Promise<Goal> {
     reminderDay: input.reminderDay,
     rhythm: input.rhythm,
     savingsMode: input.savingsMode,
+    plannedMonthly: input.plannedMonthly,
     startDate: startDate?.toISOString(),
     nextReminderAt: nextReminderAfter(scheduleReference, input.reminderDay).toISOString(),
     createdAt: now.toISOString(),
@@ -230,7 +234,15 @@ export async function applyGlobalRebalance(
 ): Promise<void> {
   const state = useStore.getState();
   for (const item of proposal.goals) {
-    state.updateGoal(item.goalId, { targetDate: item.proposedTargetDate });
+    // Sur un projet à montant fixé, écrire la seule date cible ne ferait rien :
+    // c'est le montant qui borne son échéancier. Le réajustement doit donc
+    // déplacer le montant, sinon il paraîtrait accepté sans rien changer.
+    const goal = state.goals.find((candidate) => candidate.id === item.goalId);
+    const keepsFixedMonthly = goal ? goalPlannedMonthly(goal) !== null : false;
+    state.updateGoal(item.goalId, {
+      targetDate: item.proposedTargetDate,
+      ...(keepsFixedMonthly ? { plannedMonthly: item.proposedMonthly } : null),
+    });
   }
   for (const item of proposal.goals) await reschedule(item.goalId);
   await scheduleNudges();

@@ -178,6 +178,50 @@ export function plannedAmounts(
   return allocatedCents.map((cents) => cents / 100);
 }
 
+/**
+ * Montant mensuel fixé par la personne, ou `null` si le plan se déduit de la
+ * date cible comme avant. Le mode libre n'a jamais de montant imposé.
+ */
+export function goalPlannedMonthly(goal: Goal): number | null {
+  if (goalSavingsMode(goal) === 'free') return null;
+  const monthly = goal.plannedMonthly;
+  if (typeof monthly !== 'number' || !Number.isFinite(monthly) || monthly <= 0) return null;
+  return monthly;
+}
+
+/** Nombre de versements nécessaires pour couvrir `total` à `monthly` par mois. */
+export function monthsForMonthly(total: number, monthly: number): number {
+  const totalCents = Math.max(0, Math.round(total * 100));
+  const monthlyCents = Math.max(1, Math.round(monthly * 100));
+  return Math.max(1, Math.ceil(totalCents / monthlyCents));
+}
+
+/**
+ * Répartition à montant fixe : le montant choisi chaque mois, et le reste au
+ * dernier versement.
+ *
+ * C'est l'inverse de `plannedAmounts`, qui lisse un total sur une durée. Ici la
+ * durée est la conséquence, pas la donnée — et le nombre que la personne a tapé
+ * doit rester à l'écran tel qu'elle l'a tapé. Un plan de 3 500 € à 200 € par
+ * mois, c'est 17 fois 200 € puis 100 €, jamais 18 fois 194,44 €.
+ *
+ * Tout en centimes : à 200 € sur 18 mois, les flottants dérivent assez pour
+ * faire apparaître un dernier versement de 99,999999 €.
+ */
+export function fixedMonthlyAmounts(total: number, monthly: number, months?: number): number[] {
+  const totalCents = Math.max(0, Math.round(total * 100));
+  const monthlyCents = Math.max(1, Math.round(monthly * 100));
+  const count = Math.max(1, Math.round(months ?? monthsForMonthly(total, monthly)));
+  const amounts: number[] = [];
+  let leftCents = totalCents;
+  for (let index = 0; index < count; index += 1) {
+    const part = Math.max(0, Math.min(monthlyCents, leftCents));
+    amounts.push(part / 100);
+    leftCents -= part;
+  }
+  return amounts;
+}
+
 export type Diagnostic = 'Confortable' | 'Juste' | 'Trop serré';
 
 export function diagnostic(monthly: number, budget: Budget | undefined): Diagnostic | null {
@@ -585,24 +629,61 @@ export function upcomingSchedule(
   if (remaining <= 0) return [];
   const rows: { date: Date; amount: number }[] = [];
   const target = new Date(goal.targetDate);
+  /**
+   * Deux régimes, et c'est leur seule différence ici : qui borne l'échéancier.
+   *
+   * Plan classique : la DATE CIBLE borne, et le montant se déduit en lissant le
+   * reste sur les échéances qui tiennent avant elle. Un mois creux remonte donc
+   * les suivants.
+   *
+   * Montant fixé : le MONTANT borne, et la date est la conséquence. On génère
+   * autant d'échéances qu'il en faut pour couvrir le reste, sans regarder la
+   * date cible — sinon un mois creux rognerait le plan au lieu de l'allonger,
+   * ce qui est exactement ce que la personne a refusé en fixant son montant.
+   */
+  const monthly = goalPlannedMonthly(goal);
+  const neededCount = monthly ? monthsForMonthly(remaining, monthly) : null;
+  const withinHorizon = (date: Date) => (neededCount === null ? date <= target : true);
   const cycles = normalizedReminderCycles(goal, now, 3).filter((cycle) => !cycle.settledAt);
-  const dates = cycles.map(reminderAtForCycle).filter((date) => date >= now && date <= target);
+  const dates = cycles
+    .map(reminderAtForCycle)
+    .filter((date) => date >= now && withinHorizon(date));
   let cursor = cycles.length
     ? new Date(cycles.at(-1)!.anchorAt)
     : nextReminderAfter(now, goal.reminderDay, goalReminderHour(goal));
-  while (cursor <= target && dates.length < 600) {
+  const maxDates = neededCount ?? 600;
+  while (dates.length < maxDates && dates.length < 600 && (neededCount !== null || cursor <= target)) {
     cursor = nextReminderAfter(cursor, goal.reminderDay, goalReminderHour(goal));
-    if (cursor <= target) dates.push(new Date(cursor));
+    if (!withinHorizon(cursor)) break;
+    dates.push(new Date(cursor));
   }
   if (!dates.length) dates.push(new Date(cursor));
+  if (neededCount !== null && dates.length > neededCount) dates.length = neededCount;
   const amounts =
     goalSavingsMode(goal) === 'free'
       ? dates.map(() => 0)
-      : plannedAmounts(remaining, dates.length, goal.rhythm ?? 'stable');
+      : monthly
+        ? fixedMonthlyAmounts(remaining, monthly, dates.length)
+        : plannedAmounts(remaining, dates.length, goal.rhythm ?? 'stable');
   for (let i = 0; i < dates.length && i < maxRows; i++) {
     rows.push({ date: dates[i], amount: amounts[i] });
   }
   return rows;
+}
+
+/**
+ * Date d'arrivée réellement prévue.
+ *
+ * Sur un plan classique, c'est la date cible : elle est l'engagement, et le
+ * montant s'ajuste pour la tenir. Sur un plan à montant fixé, c'est l'inverse —
+ * la date est la conséquence, et elle recule d'un cran à chaque mois creux.
+ * L'afficher figée à sa valeur de création reviendrait à promettre une arrivée
+ * que l'échéancier ne tient plus.
+ */
+export function projectedEndDate(goal: Goal, now: Date = new Date()): Date {
+  if (goalPlannedMonthly(goal) === null) return new Date(goal.targetDate);
+  const schedule = upcomingSchedule(goal, now, 600);
+  return schedule.length ? schedule[schedule.length - 1].date : new Date(goal.targetDate);
 }
 
 /** Montant conseillé à la prochaine échéance, selon le rythme choisi. */
@@ -776,6 +857,23 @@ function targetDateForCapacity(
   const remaining = remainingAmount(goal);
   if (remaining <= 0) return { date: new Date(goal.targetDate), monthly: 0 };
   if (monthlyCapacity <= 0) return null;
+
+  /**
+   * Projet à montant fixé : la capacité EST le nouveau montant, et la date s'en
+   * déduit. Passer par la recherche ci-dessous donnerait une date calculée sur
+   * un lissage que ce projet n'applique pas — le réajustement proposerait alors
+   * une échéance que l'échéancier ne respecterait jamais.
+   */
+  const planned = goalPlannedMonthly(goal);
+  if (planned !== null) {
+    const months = monthsForMonthly(remaining, monthlyCapacity);
+    let date = nextReminderAfter(goalScheduleReference(goal, now), goal.reminderDay, goalReminderHour(goal));
+    for (let index = 1; index < months; index += 1) {
+      date = nextReminderAfter(date, goal.reminderDay, goalReminderHour(goal));
+    }
+    return { date, monthly: Math.min(monthlyCapacity, remaining) };
+  }
+
   for (let months = 1; months <= 600; months += 1) {
     const amounts = plannedAmounts(remaining, months, goal.rhythm ?? 'stable');
     const peak = Math.max(...amounts);

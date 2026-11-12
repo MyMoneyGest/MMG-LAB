@@ -27,6 +27,8 @@ import {
   prudentCapacity,
   remainingAmount,
   REMINDER_TIME_LABEL,
+  fixedMonthlyAmounts,
+  monthsForMonthly,
   scheduledMonths,
 } from '@/lib/plan';
 import { usePendingFeedbackStore } from '@/lib/pending-feedback';
@@ -43,6 +45,14 @@ import { useMoney } from '@/lib/use-money';
 
 const CATEGORIES: GoalCategory[] = ['emergency', 'car', 'moving', 'travel', 'housing', 'other'];
 type StartMode = 'now' | 'later';
+/**
+ * Sens du calcul. `date` : la personne pose une échéance, l'app en déduit la
+ * mensualité (le seul sens disponible jusqu'au 11/11). `amount` : elle pose sa
+ * mensualité, l'app en déduit l'échéance. Motif le plus récurrent du journal —
+ * demandé par Patrick le 13/08 puis par David le 01/11, sans qu'ils se
+ * connaissent.
+ */
+type PlanMode = 'date' | 'amount';
 type DurationKey = '3m' | '6m' | '1y' | '2y' | 'custom';
 const DURATIONS: { key: DurationKey; label: string; months?: number }[] = [
   { key: '3m', label: 'En 3 mois', months: 3 },
@@ -97,6 +107,8 @@ export default function NewGoalScreen() {
   const [customDate, setCustomDate] = useState<Date | null>(null);
   const [calendar, setCalendar] = useState<'target' | 'start' | null>(null);
   const [startMode, setStartMode] = useState<StartMode>('now');
+  const [planMode, setPlanMode] = useState<PlanMode>('date');
+  const [monthlyInput, setMonthlyInput] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [reminderDayText, setReminderDayText] = useState(
     String(Math.min(28, new Date().getDate()))
@@ -147,12 +159,52 @@ export default function NewGoalScreen() {
   // La date cible dérive de la durée choisie (par rapport au démarrage) sauf
   // en mode « Date précise », où elle reste saisie librement.
   const selectedDuration = DURATIONS.find((d) => d.key === durationKey);
+  const parsedMonthly = parseAmountInput(monthlyInput, currencyCode);
+  const remainingToPlan = Math.max(0, (parsedTarget ?? 0) - parsedAvailable);
+  /**
+   * Sens « je fixe mon montant » : la durée découle du montant, et la date
+   * cible de la durée. Elle n'est qu'une estimation d'affichage — dans ce
+   * régime, c'est le montant qui borne l'échéancier, pas elle.
+   */
+  const monthsFromMonthly =
+    parsedMonthly !== null && parsedMonthly > 0 && remainingToPlan > 0
+      ? monthsForMonthly(remainingToPlan, parsedMonthly)
+      : null;
+  // Versements pleins d'un côté, reliquat de l'autre : c'est ce que la personne
+  // vivra, et c'est ce qu'il faut lui annoncer sans l'additionner de travers.
+  const monthlyParts =
+    monthsFromMonthly !== null && parsedMonthly
+      ? fixedMonthlyAmounts(remainingToPlan, parsedMonthly, monthsFromMonthly)
+      : null;
+  const lastMonthlyPart =
+    monthlyParts && parsedMonthly && monthlyParts.at(-1)! < parsedMonthly
+      ? monthlyParts.at(-1)!
+      : null;
+  const fullMonthlyCount = monthlyParts
+    ? monthlyParts.length - (lastMonthlyPart !== null ? 1 : 0)
+    : 0;
+  /**
+   * La date d'arrivée se compte sur les VRAIS jours de rappel, pas en ajoutant
+   * des mois à aujourd'hui : sinon l'écran de création annonce mai et la fiche
+   * du projet affiche avril, un mois d'écart dès le premier regard.
+   */
+  const dateAfterMonthlyPayments = (count: number): Date => {
+    let date = nextReminderAfter(scheduleReference, reminderDay);
+    for (let index = 1; index < count; index += 1) {
+      date = nextReminderAfter(date, reminderDay);
+    }
+    return date;
+  };
   const parsedDate =
-    durationKey === 'custom'
-      ? customDate
-      : selectedDuration?.months
-        ? addMonths(scheduleReference, selectedDuration.months)
-        : null;
+    planMode === 'amount'
+      ? monthsFromMonthly !== null
+        ? dateAfterMonthlyPayments(monthsFromMonthly)
+        : null
+      : durationKey === 'custom'
+        ? customDate
+        : selectedDuration?.months
+          ? addMonths(scheduleReference, selectedDuration.months)
+          : null;
   const firstReminder = nextReminderAfter(scheduleReference, reminderDay);
   const previewValid =
     parsedTarget !== null &&
@@ -170,9 +222,15 @@ export default function NewGoalScreen() {
     months: number;
   } | null = null;
   if (previewValid && savingsMode === 'guided') {
-    const months = planMonths;
     const remaining = Math.max(0, parsedTarget! - parsedAvailable);
-    const amounts = plannedAmounts(remaining, months, rhythm);
+    // À montant fixé, la durée vient du montant et non du nombre d'échéances
+    // qui tiennent avant la date : c'est tout l'objet de ce sens de calcul.
+    const months =
+      planMode === 'amount' && monthsFromMonthly !== null ? monthsFromMonthly : planMonths;
+    const amounts =
+      planMode === 'amount' && parsedMonthly
+        ? fixedMonthlyAmounts(remaining, parsedMonthly, months)
+        : plannedAmounts(remaining, months, rhythm);
     preview = {
       average: Math.round((remaining / months) * 100) / 100,
       first: amounts[0],
@@ -205,6 +263,15 @@ export default function NewGoalScreen() {
       return `Montant trop élevé : reste sous ${money(maxAmountFor(currencyCode))}.`;
     }
     if (parsedAvailable > parsedTarget) return 'Le déjà disponible dépasse le montant cible.';
+    if (planMode === 'amount') {
+      if (parsedMonthly === null || parsedMonthly <= 0) {
+        return 'Indique le montant que tu veux mettre de côté chaque mois.';
+      }
+      if (parsedMonthly > maxAmountFor(currencyCode)) {
+        return `Montant trop élevé : reste sous ${money(maxAmountFor(currencyCode))}.`;
+      }
+      if (!parsedDate) return 'Indique un montant mensuel valide.';
+    }
     if (!parsedDate) return 'Choisis une date cible dans le calendrier.';
     if (parsedDate <= now) return 'Choisis une date cible à venir.';
     if (startMode === 'later') {
@@ -238,6 +305,10 @@ export default function NewGoalScreen() {
         reminderDay,
         rhythm,
         savingsMode,
+        // Le rythme est ignoré quand le montant est fixé : « 200 € par mois »
+        // ne veut rien dire d'autre que 200 € chaque mois.
+        plannedMonthly:
+          planMode === 'amount' && savingsMode === 'guided' ? parsedMonthly! : undefined,
         startDate: startMode === 'later' ? parsedStartDate! : undefined,
       });
       await waitForMinimumLoading(loadingStartedAt);
@@ -272,7 +343,11 @@ export default function NewGoalScreen() {
       />
       <StepIndicator
         current={step}
-        labels={savingsMode === 'free' ? ['Projet', 'Rappel'] : ['Projet', 'Rythme']}
+        labels={
+          savingsMode === 'free' || planMode === 'amount'
+            ? ['Projet', 'Rappel']
+            : ['Projet', 'Rythme']
+        }
       />
       {feedbackMessage ? (
         <FeedbackBanner
@@ -343,6 +418,71 @@ export default function NewGoalScreen() {
             placeholder="0"
             suffix={currency.symbol}
           />
+          {/* Les deux sens du calcul. Demandé par Patrick le 13/08 puis par
+              David le 01/11 sans qu'ils se connaissent : « en plus de lui
+              proposer, il faut lui permettre de mettre lui-même son montant ».
+              Le sens par date reste le défaut — c'est celui qui aide quelqu'un
+              qui ne sait pas combien il peut mettre. */}
+          <Text style={styles.fieldLabel}>Comment veux-tu t'y prendre ?</Text>
+          <View style={styles.planModeChoices}>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: planMode === 'date' }}
+              onPress={() => {
+                setPlanMode('date');
+                setError(null);
+              }}
+              style={[styles.planModeChoice, planMode === 'date' && styles.planModeChoiceSelected]}>
+              <Text style={styles.planModeTitle}>Je fixe la date</Text>
+              <Text style={styles.planModeBody}>MMG calcule le montant mensuel.</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: planMode === 'amount' }}
+              onPress={() => {
+                setPlanMode('amount');
+                setError(null);
+              }}
+              style={[
+                styles.planModeChoice,
+                planMode === 'amount' && styles.planModeChoiceSelected,
+              ]}>
+              <Text style={styles.planModeTitle}>Je fixe mon montant</Text>
+              <Text style={styles.planModeBody}>MMG calcule la date d'arrivée.</Text>
+            </Pressable>
+          </View>
+          {planMode === 'amount' ? (
+            <>
+              <Field
+                label="Montant mensuel"
+                value={monthlyInput}
+                onChangeText={(t) => {
+                  setMonthlyInput(amountInput(t));
+                  setError(null);
+                }}
+                keyboardType="decimal-pad"
+                placeholder="200"
+                suffix={currency.symbol}
+              />
+              {monthsFromMonthly !== null && parsedDate && parsedMonthly ? (
+                <Text style={styles.durationHint}>
+                  {/* Compter les versements pleins séparément du reliquat :
+                      « 18 versements de 200 €, le dernier de 100 € » se lit
+                      comme dix-neuf versements. */}
+                  {fullMonthlyCount} versement{fullMonthlyCount > 1 ? 's' : ''} de{' '}
+                  {money(parsedMonthly)}
+                  {lastMonthlyPart !== null ? `, puis ${money(lastMonthlyPart)}` : ''} · objectif
+                  atteint vers le {formatDate(parsedDate)}.
+                </Text>
+              ) : (
+                <Text style={styles.durationHint}>
+                  Ton montant ne bougera pas. Un mois plus creux allonge le plan, il
+                  n'augmente jamais le versement suivant.
+                </Text>
+              )}
+            </>
+          ) : (
+          <>
           <Text style={styles.fieldLabel}>Horizon de temps</Text>
           <ScrollView
             horizontal
@@ -380,6 +520,8 @@ export default function NewGoalScreen() {
           ) : parsedDate ? (
             <Text style={styles.durationHint}>Objectif visé pour le {formatDate(parsedDate)}.</Text>
           ) : null}
+          </>
+          )}
 
           {/* Le démarrage n'est PAS un réglage d'expert : replié par défaut, le choix
               était invisible et « Dès maintenant » s'appliquait sans que l'utilisateur
@@ -422,7 +564,11 @@ export default function NewGoalScreen() {
           ) : null}
 
           <Button
-            label={savingsMode === 'free' ? 'Continuer vers le rappel' : 'Continuer vers le rythme'}
+            label={
+              savingsMode === 'free' || planMode === 'amount'
+                ? 'Continuer vers le rappel'
+                : 'Continuer vers le rythme'
+            }
             onPress={continueToRhythm}
             style={styles.primaryAction}
           />
@@ -570,7 +716,16 @@ export default function NewGoalScreen() {
               </Text>
             )}
 
-            {savingsMode === 'guided' ? (
+            {savingsMode === 'guided' && planMode === 'amount' ? (
+              /* Le rythme n'a plus de sens quand le montant est fixé : « 200 €
+                 par mois » deviendrait ambigu — premier versement, moyenne, ou
+                 plus gros ? On le dit plutôt que de laisser un vide. */
+              <Text style={styles.rhythmOrigin}>
+                Tu as fixé ton montant, il est donc le même chaque mois. Pour choisir un
+                rythme progressif ou dégressif, reviens en arrière et fixe une date.
+              </Text>
+            ) : null}
+            {savingsMode === 'guided' && planMode === 'date' ? (
           <>
             {/* Replié, le rythme faisait tomber le montant mensuel du ciel : on voyait
                 une somme sans savoir d'où elle venait ni qu'on pouvait en changer la
@@ -633,14 +788,21 @@ export default function NewGoalScreen() {
                 monthly={
                   savingsMode === 'free'
                     ? 'Montant libre'
-                    : rhythm === 'stable' && preview
-                    ? `${money(preview.average)} / mois`
-                    : preview
-                      ? `${money(preview.first)} → ${money(preview.last)}`
-                      : 'À calculer'
+                    : // Montant fixé : on affiche CE QUE LA PERSONNE A TAPÉ.
+                      // Le récap est le dernier écran avant de s'engager — y
+                      // glisser une moyenne recalculée (194,44 € au lieu de
+                      // 200 €) ruinerait la promesse au moment précis où elle
+                      // est faite.
+                      planMode === 'amount' && parsedMonthly
+                      ? `${money(parsedMonthly)} / mois`
+                      : rhythm === 'stable' && preview
+                        ? `${money(preview.average)} / mois`
+                        : preview
+                          ? `${money(preview.first)} → ${money(preview.last)}`
+                          : 'À calculer'
                 }
                 targetDate={formatDate(parsedDate!)}
-                months={`${planMonths} mois`}
+                months={`${planMode === 'amount' && monthsFromMonthly !== null ? monthsFromMonthly : planMonths} mois`}
                 remaining={money(previewRemaining)}
                 diagnostic={savingsMode === 'free' ? null : previewDiagnostic}
                 reminderDay={reminderDay}
@@ -652,7 +814,12 @@ export default function NewGoalScreen() {
                 rhythm={
                   savingsMode === 'free'
                     ? 'Épargne libre'
-                    : RHYTHMS.find((option) => option.key === rhythm)!.title
+                    : // Pas de ligne « Rythme : Stable » quand le montant est
+                      // fixé : il n'y a pas eu de choix de rythme, et en
+                      // afficher un donnerait l'impression d'un réglage subi.
+                      planMode === 'amount'
+                      ? 'Montant fixe'
+                      : RHYTHMS.find((option) => option.key === rhythm)!.title
                 }
               />
               {previewDiagnostic === 'Confortable' && budget ? (
@@ -792,6 +959,20 @@ const styles = StyleSheet.create({
   startChoiceTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
   startChoiceBody: { color: colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
   startHint: { color: colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: -5, marginBottom: 12 },
+  // Mêmes formes que le choix du démarrage : c'est la même nature de décision,
+  // deux voies également valables, et rien ne justifie un traitement différent.
+  planModeChoices: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  planModeChoice: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.field,
+    padding: 12,
+    backgroundColor: colors.card,
+  },
+  planModeChoiceSelected: { borderColor: colors.accent, backgroundColor: colors.cardSoft },
+  planModeTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  planModeBody: { color: colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
   durationChoices: { flexDirection: 'row', gap: 8, marginBottom: 6, paddingRight: 4 },
   durationChip: {
     borderWidth: 1,

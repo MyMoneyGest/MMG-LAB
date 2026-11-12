@@ -80,6 +80,16 @@ export interface Goal {
   reminderHour?: number;
   /** Rythme d'épargne. Absent sur les anciens projets, qui restent stables. */
   rhythm?: SavingsRhythm;
+  /**
+   * Montant mensuel FIXÉ par la personne, au lieu d'être déduit de la date
+   * cible. Présent = c'est le montant qui est l'engagement, pas la date : un
+   * mois creux allonge le plan, il n'augmente jamais l'effort du mois suivant.
+   *
+   * Le dernier versement est le reste, forcément plus petit. Et `rhythm` est
+   * ignoré dans ce régime : « je mets 200 € par mois » ne veut rien dire
+   * d'autre que 200 € chaque mois.
+   */
+  plannedMonthly?: number;
   /** Mode libre sans montant conseillé. Absent sur les anciens projets, qui restent guidés. */
   savingsMode?: SavingsMode;
   /**

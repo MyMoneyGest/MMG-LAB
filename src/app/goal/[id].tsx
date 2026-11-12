@@ -51,6 +51,7 @@ import {
   recentDeposits,
   remainingAmount,
   goalReminderHour,
+  projectedEndDate,
   reminderTimeLabel,
   savedTotal,
   suggestedAmount,
@@ -513,8 +514,12 @@ export default function GoalScreen() {
           </View>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Échéance</Text>
+            {/* Date PRÉVUE, pas date promise : sur un plan à montant fixé elle
+                recule d'un cran à chaque mois creux, puisque c'est le montant
+                qui est l'engagement. L'afficher figée à sa valeur de création
+                promettrait une arrivée que l'échéancier ne tient plus. */}
             <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={styles.statValue}>
-              {formatDate(goal.targetDate)}
+              {formatDate(projectedEndDate(goal))}
             </Text>
           </View>
         </View>
